@@ -1,0 +1,2671 @@
+GetDependentTriple:=function(eSyst)
+  local ListSets, eSet;
+  ListSets:=[];
+  for eSet in Combinations([1..Length(eSyst)], 3)
+  do
+    if RankMat(eSyst{eSet})=2 then
+      Add(ListSets, eSet);
+    fi;
+  od;
+  return ListSets;
+end;
+
+
+
+
+
+
+
+SymplecticStabilizer:=function(eSyst, FuncTestBelong)
+  local n, eSystTotal, TheGRPperm, ListPermGens, ListMatrGens, TheGRPmatr, phi, TargetPermGrp, TargetListPermGens, TargetListMatrGens, FuncInsert, eElt, eMat, TargetMatrGrp;
+  n:=Length(eSyst[1]);
+  eSystTotal:=Concatenation(eSyst, -eSyst);
+  TheGRPperm:=LinPolytope_Automorphism(eSystTotal);
+  ListPermGens:=GeneratorsOfGroup(TheGRPperm);
+  ListMatrGens:=List(ListPermGens, x->__LemmaFindTransformation(eSystTotal, eSystTotal, x));
+  TheGRPmatr:=Group(ListMatrGens);
+  phi:=GroupHomomorphismByImagesNC(TheGRPperm, TheGRPmatr, ListPermGens, ListMatrGens);
+  TargetPermGrp:=Group(());
+  TargetListPermGens:=[];
+  TargetListMatrGens:=[];
+  FuncInsert:=function(eElt, eMat)
+    if not(eElt in TargetPermGrp) then
+      Add(TargetListPermGens, eElt);
+      TargetPermGrp:=Group(TargetListPermGens);
+      Add(TargetListMatrGens, eMat);
+    fi;
+  end;
+  for eElt in TheGRPperm
+  do
+    eMat:=__LemmaFindTransformation(eSystTotal, eSystTotal, eElt);
+    if FuncTestBelong(eMat)=true then
+      FuncInsert(eElt, eMat);
+    fi;
+  od;
+  TargetMatrGrp:=PersoGroupMatrix(TargetListMatrGens, n);
+  SetSize(TargetMatrGrp, Order(TargetPermGrp));
+  return rec(BigMatrGrp:=TheGRPmatr, BigPermGrp:=TheGRPperm, 
+             MatrGrp:=TargetMatrGrp, PermGrp:=TargetPermGrp);
+end;
+
+
+SymplecticEquivalence:=function(eSyst1, eSyst2, FuncTestBelong)
+  local n, eSystTotal1, eSystTotal2, eEquiv, TheGRPperm, eElt, eProd, eMat, ePerm;
+  n:=Length(eSyst1[1]);
+  eSystTotal1:=Concatenation(eSyst1, -eSyst1);
+  eSystTotal2:=Concatenation(eSyst2, -eSyst2);
+  eEquiv:=LinPolytope_Isomorphism(eSystTotal1, eSystTotal2);
+  if eEquiv=false then
+    return false;
+  fi;
+  ePerm:=PermList(eEquiv);
+  TheGRPperm:=LinPolytope_Automorphism(eSystTotal1);
+  for eElt in TheGRPperm
+  do
+    eProd:=eElt*ePerm;
+    eMat:=__LemmaFindTransformation(eSystTotal1, eSystTotal2, eProd);
+    if FuncTestBelong(eMat)=true then
+      return rec(eElt:=eProd, eMat:=eMat);
+    fi;
+  od;
+  return false;
+end;
+
+
+
+
+
+
+
+
+
+# eFace1 has less elements than eFace2
+# we return all matrices M in the group such that
+# eFace1*M is included in eFace2
+ListEmbedding:=function(eFace1, eFace2, FuncTestBelong)
+  local eFace1tot, eFace2tot, nb2tot, eFace1red, eMatInv, TheDim, ListSolutions, eSet, eFace2sel, eMat, relSet, eFace2totSet, pos, ListSets, ePerm, pSet;
+  TheDim:=Length(eFace1[1]);
+  eFace1tot:=Concatenation(eFace1, -eFace1);
+  eFace2tot:=Concatenation(eFace2, -eFace2);
+  eFace2totSet:=Set(eFace2tot);
+  nb2tot:=Length(eFace2tot);
+  eFace1red:=RowReduction(eFace1).EXT;
+  eMatInv:=Inverse(eFace1red);
+  ListSolutions:=[];
+  ListSets:=[];
+  for pSet in Combinations([1..nb2tot],TheDim)
+  do
+    if RankMat(eFace2tot{pSet})=TheDim then
+      for ePerm in SymmetricGroup(TheDim)
+      do
+        eSet:=Permuted(pSet, ePerm);
+        eFace2sel:=eFace2tot{eSet};
+        eMat:=eMatInv*eFace2sel;
+        if FuncTestBelong(eMat) then
+          relSet:=Set(List(eFace1tot*eMat, x->Position(eFace2totSet, x)));
+          pos:=Position(relSet, fail);
+          if pos=fail then
+            if Position(ListSets, relSet)=fail then
+              Add(ListSolutions, eMat);
+              Add(ListSets, relSet);
+            fi;
+          fi;
+        fi;
+      od;
+    fi;
+  od;
+  return rec(ListSolutions:=ListSolutions, ListSets:=ListSets);
+end;
+
+
+# We find all matrices M in the group such that
+# eFace1 is included in eFace2*M
+ListEmbeddingRev:=function(eFace1, eFace2, FuncTestBelong)
+  local eRec, eFace1tot, eFace2tot, ListMat, ListSets, eImg, eMat;
+  eFace1tot:=Set(Concatenation(eFace1, -eFace1));
+  eFace2tot:=Set(Concatenation(eFace2, -eFace2));
+  eRec:=ListEmbedding(eFace1, eFace2, FuncTestBelong);
+  ListSets:=[];
+  ListMat:=[];
+  for eMat in eRec.ListSolutions
+  do
+    eImg:=Set(eFace2tot*Inverse(eMat));
+    if Position(ListSets, eImg)=fail then
+      Add(ListSets, eImg);
+      Add(ListMat, Inverse(eMat));
+    fi;
+  od;
+  return ListMat;
+end;
+
+
+
+
+
+
+
+# Now we do it orbitwise...
+ListEmbeddingRevTotal:=function(eFace1, eFace2, FuncTestBelong)
+  local eStab, ListSolution, ListCandidates, ListStatus, nbCase, eMat, eSyst, eSystTot, TheAction, ListMat, iCase, eRec, nbEnt, iEnt, pos, eFace1tot;
+  eStab:=SymplecticStabilizer(eFace1, FuncTestBelong).MatrGrp;
+  eFace1tot:=Set(Concatenation(eFace1, -eFace1));
+  ListSolution:=ListEmbeddingRev(eFace1, eFace2, FuncTestBelong);
+  ListCandidates:=[];
+  ListStatus:=[];
+  nbCase:=Length(ListSolution);
+  for eMat in ListSolution
+  do
+    eSyst:=eFace2*eMat;
+    eSystTot:=Set(Concatenation(eSyst, -eSyst));
+    if IsSubset(eSystTot, eFace1tot)=false then
+      Error("Please debug from here 1");
+    fi;
+    Add(ListCandidates, eSystTot);
+    Add(ListStatus, 1);
+  od;
+  TheAction:=function(x,g)
+    return Set(x*g);
+  end;
+  ListMat:=[];
+  for iCase in [1..nbCase]
+  do
+    if ListStatus[iCase]=1 then
+      eRec:=OrbitWithAction(eStab, ListCandidates[iCase], TheAction);
+      nbEnt:=Length(eRec.ListCoset);
+      for iEnt in [1..nbEnt]
+      do
+        if IsSubset(eRec.ListCoset[iEnt], eFace1tot)=false then
+          Error("Please debug from here 2");
+        fi;
+        pos:=Position(ListCandidates, eRec.ListCoset[iEnt]);
+        if pos<>fail then
+          ListStatus[pos]:=0;
+        fi;
+        Add(ListMat, ListSolution[iCase]*eRec.ListElement[iEnt]);
+      od;
+    fi;
+  od;
+  return ListMat;
+end;
+
+
+
+
+GetComplexListSystems:=function(ListListFaces, FuncTestBelong)
+  local n, TheDim, ListOrbitByRank, i, FuncSignatureDet, ListRecord, ListIFace, ListSign, ListElt, TheBoundary, ListOccuringCoefficients, eAddElt, pos, eRecStab, jFace, eRec, eMulSign, eCharSystTot, ListElementM2, ListSystemsM2, eSign, iFaceM2, eEltM2, iFaceBound, eSignM2, eBound, sizBound, nbFace, eCharSyst, eElt, eMat, iFace, nbOrbSmall, iSubFace, nbOrb, eFace, iOrb, eFace1, ListSolutions, eSyst, eSystTot, ListContained, eRecSol, ListSystemsM1, eFaceTot, GetResolution, OneFace, eRotSubgroup, TheStab, ListSignGens, ListMatrGens, TheSym2, ePerm, nbOrbit, iRank, TheRank, eGen, iOrbit;
+  OneFace:=ListListFaces[1][1];
+  n:=Length(OneFace[1]);
+  TheDim:=Length(ListListFaces);
+  ListOrbitByRank:=[];
+  Add(ListOrbitByRank, [rec(eFace:=[], BoundaryImage:="irrelevant")]);
+  FuncSignatureDet:=function(iRank, iFace, eElt)
+    local TheRec, iFaceLow, eEltLow, eSignLow, eSyst, eSystTot, iBound, iFaceSec, eEltSec, eSignSec, eSystSec, eSystTotSec, eEltPres, eSystChosen, eSystChosenTot, eProd, ListContained;
+    if iRank=0 then
+      return 1;
+    fi;
+    TheRec:=ListOrbitByRank[iRank+2][iFace];
+    if not(eElt in TheRec.TheStab) then
+      Print("The Element does not stabilize\n");
+      Print("It cannot work\n");
+      Error("Please correct");
+    fi;
+    iFaceLow:=TheRec.BoundaryImage.ListIFace[1];
+    eSignLow:=TheRec.BoundaryImage.ListSign[1];
+    eEltLow:=TheRec.BoundaryImage.ListElt[1];
+    eProd:=eEltLow*eElt;
+    eSystChosen:=ListListFaces[iRank][iFaceLow]*eEltLow;
+    eSystChosenTot:=Set(Concatenation(eSystChosen, -eSystChosen));
+    eSyst:=ListListFaces[iRank][iFaceLow]*eProd;
+    eSystTot:=Set(Concatenation(eSyst, -eSyst));
+    ListContained:=[];
+    for iBound in [1..Length(TheRec.BoundaryImage.ListIFace)]
+    do
+      iFaceSec:=TheRec.BoundaryImage.ListIFace[iBound];
+      eEltSec:=TheRec.BoundaryImage.ListElt[iBound];
+      eSystSec:=ListListFaces[iRank][iFaceSec]*eEltSec;
+      eSystTotSec:=Set(Concatenation(eSystSec, -eSystSec));
+      Add(ListContained, eSystTotSec);
+    od;
+    for iBound in [1..Length(TheRec.BoundaryImage.ListIFace)]
+    do
+      iFaceSec:=TheRec.BoundaryImage.ListIFace[iBound];
+      if iFaceSec=iFaceLow then
+        eEltSec:=TheRec.BoundaryImage.ListElt[iBound];
+        eSignSec:=TheRec.BoundaryImage.ListSign[iBound];
+        eSystSec:=ListListFaces[iRank][iFaceSec]*eEltSec;
+        eSystTotSec:=Set(Concatenation(eSystSec, -eSystSec));
+        if eSystTotSec=eSystTot then
+          eEltPres:=eEltLow*eElt*(eEltSec^(-1));
+          return eSignSec*eSignLow*FuncSignatureDet(iRank-1, iFaceLow, eEltPres);
+        fi;
+      fi;
+    od;
+    Error("We should never reach that stage BUG");
+  end;
+  for i in [1..TheDim]
+  do
+    Print("i=", i, "\n");
+    ListRecord:=[];
+    nbOrb:=Length(ListListFaces[i]);
+    for iOrb in [1..nbOrb]
+    do
+      eFace:=ListListFaces[i][iOrb];
+      eFaceTot:=Set(Concatenation(eFace, -eFace));
+      eRecStab:=SymplecticStabilizer(eFace, FuncTestBelong);
+      if i=1 then
+        TheBoundary:=rec(ListIFace:=[1], ListSign:=[1], ListElt:=[IdentityMat(n)]);
+      else
+        nbOrbSmall:=Length(ListListFaces[i-1]);
+        ListIFace:=[];
+        ListElt:=[];
+        for iSubFace in [1..nbOrbSmall]
+        do
+          eFace1:=ListListFaces[i-1][iSubFace];
+          ListSolutions:=ListEmbeddingRevTotal(eFace, eFace1, FuncTestBelong);
+          for eMat in ListSolutions
+          do
+            Add(ListIFace, iSubFace);
+            Add(ListElt, eMat);
+          od;
+        od;
+        nbFace:=Length(ListElt);
+        if i=2 then
+          if nbFace<>2 then
+            Error("Deep inconsistency at level 1");
+          fi;
+          ListSign:=[1,-1];
+        else
+          ListSystemsM2:=[];
+          ListSystemsM1:=[];
+          ListElementM2:=[];
+          ListOccuringCoefficients:=[];
+          for iFace in [1..nbFace]
+          do
+            jFace:=ListIFace[iFace];
+            eElt:=ListElt[iFace];
+            eBound:=ListOrbitByRank[i][jFace].BoundaryImage;
+            sizBound:=Length(eBound.ListElt);
+            eSyst:=eFace1*Inverse(eMat);
+            eSystTot:=Set(Concatenation(eSyst, -eSyst));
+            Add(ListSystemsM1, eSystTot);
+            for iFaceBound in [1..sizBound]
+            do
+              eEltM2:=eBound.ListElt[iFaceBound];
+              eSignM2:=eBound.ListSign[iFaceBound];
+              iFaceM2:=eBound.ListIFace[iFaceBound];
+              eAddElt:=eEltM2*eElt;
+              eCharSyst:=ListListFaces[i-2][iFaceM2]*eAddElt;
+              eCharSystTot:=Set(Concatenation(eCharSyst, -eCharSyst));
+              pos:=Position(ListSystemsM2, eCharSystTot);
+              if pos=fail then
+                Add(ListSystemsM2, eCharSystTot);
+                Add(ListElementM2, eAddElt);
+                Add(ListOccuringCoefficients, [rec(Sign:=eSignM2, idx:=iFace)]);
+              else
+                eMulSign:=FuncSignatureDet(i-3, iFaceM2, ListElementM2[pos]*eAddElt^(-1));
+                Add(ListOccuringCoefficients[pos], rec(Sign:=eMulSign*eSignM2, idx:=iFace));
+              fi;
+            od;
+          od;
+          ListSign:=UntangleAllSigns(ListOccuringCoefficients, nbFace);
+        fi;
+        TheBoundary:=rec(ListIFace:=ListIFace, ListElt:=ListElt, ListSign:=ListSign);
+      fi;
+      eRec:=rec(TheStab:=eRecStab.MatrGrp, BoundaryImage:=TheBoundary);
+      Add(ListRecord, eRec);
+    od;
+    Add(ListOrbitByRank, ListRecord);
+  od;
+  TheRank:=Length(ListOrbitByRank)-2;
+  for iRank in [0..TheRank]
+  do
+    nbOrbit:=Length(ListOrbitByRank[iRank+2]);
+    for iOrbit in [1..nbOrbit]
+    do
+      TheStab:=ListOrbitByRank[iRank+2][iOrbit].TheStab;
+      ListMatrGens:=GeneratorsOfGroup(TheStab);
+      TheSym2:=SymmetricGroup(2);
+      ListSignGens:=[];
+      for eGen in ListMatrGens
+      do
+        eSign:=FuncSignatureDet(iRank, iOrbit, eGen);
+        if eSign=1 then
+          ePerm:=();
+        else
+          ePerm:=(1,2);
+        fi;
+        Add(ListSignGens, ePerm);
+      od;
+      eRotSubgroup:=GetKernelOfMapping(TheStab, TheSym2, ListMatrGens, ListSignGens);
+      ListOrbitByRank[iRank+2][iOrbit].RotationSubgroup:=eRotSubgroup;
+    od;
+  od;
+  GetResolution:=function(GRP, kLevel)
+    return ResolutionComingFromHAP(GRP, kLevel);
+  end;
+  return rec(GetResolution:=GetResolution, 
+             IdentityElt:=IdentityMat(n), 
+             ListOrbitByRank:=ListOrbitByRank);
+end;
+
+
+
+
+SP4Z_GetList_Faces:=function()
+  local eFace4, eFace3_1, eFace3_2, eFace3_3, eFace2_1, eFace2_2, eFace2_3, eFace1_1, eFace1_2, eFace0_1, eFace0_2, ListListFaces;
+  eFace4:=IdentityMat(4);
+
+  eFace3_1:=Concatenation(IdentityMat(4), [[1,0,0,1]]);
+  eFace3_2:=Concatenation(IdentityMat(4), [[1,0,1,0],[0,1,0,1]]);
+  eFace3_3:=Concatenation(IdentityMat(4), 
+  [[1,1,0,0],[0,1,0,1],[1,0,1,-1]]);
+
+  eFace2_1:=Concatenation(IdentityMat(4), 
+  [[1,0,0,1],[0,1,1,0]]);
+  eFace2_2:=Concatenation(IdentityMat(4), 
+  [[1,1,0,0],[1,0,0,-1],[0,1,0,1],[1,0,1,-1]]);
+  eFace2_3:=Concatenation(IdentityMat(4),
+  [[1,1,0,0],[1,0,1,0],[0,1,0,1],[1,0,1,-1]]);
+
+  eFace1_1:=Concatenation(IdentityMat(4), 
+  [[1,1,0,0],[1,0,1,0],[1,0,0,-1],[0,1,0,1],[1,0,1,-1]]);
+  eFace1_2:=Concatenation(IdentityMat(4), 
+  [[1,1,0,0],[0,1,0,-1],[0,0,1,-1],[1,1,-1,0],[1,0,-1,1]]);
+
+  eFace0_1:=Concatenation(IdentityMat(4), 
+  [[1,1,0,0],[1,0,1,0],[1,0,0,-1],[0,1,0,1],[1,1,1,0],[1,0,1,-1]]);
+  eFace0_2:=Concatenation(IdentityMat(4), 
+  [[1,1,0,0],[1,0,-1,0],[0,1,0,-1],[0,0,1,-1],[1,1,-1,0],[1,1,0,-1],[1,0,-1,1],[0,1,1,-1]]);
+
+  ListListFaces:=[
+  [eFace0_1,eFace0_2],
+  [eFace1_1,eFace1_2],
+  [eFace2_1,eFace2_2,eFace2_3],
+  [eFace3_1,eFace3_2,eFace3_3],
+  [eFace4]];
+  return ListListFaces;
+end;
+
+SP4Z_GetFlippingInfo_V1:=function(RecSP4Z)
+  local ListListFacesCoho, GetTotality, GetGRPconf, GetEquivConf, len, nbPerf, nbRidge, ListSHVperf, ListSHVridge, ListSHVperfTot, ListSHVridgeTot, ListGram, ListSHVgroup, ListListVect, ListListSets, ListGRPperf, ListGRPridge, GetEquivPerf, GetEquivRidge, eReply, ListArray, ListArrayEquiv, eSet, GramFlip, eSHVridge, eRecRidge, iPerf, eSHVgroup;
+  ListListFacesCoho:=RecSP4Z.ListListFacesCoho;
+  GetTotality:=function(SHV)
+    return Set(Concatenation(SHV, -SHV));
+  end;
+  GetGRPconf:=function(SHV)
+    local SHVtot, PermGRP, ListMatrGen, ePerm, eMat;
+    SHVtot:=GetTotality(SHV);
+    PermGRP:=LinPolytope_Automorphism(SHVtot);
+    ListMatrGen:=[];
+    for ePerm in GeneratorsOfGroup(PermGRP)
+    do
+      eMat:=__LemmaFindTransformation(SHVtot, SHVtot, ePerm);
+      Add(ListMatrGen, eMat);
+    od;
+    return Group(ListMatrGen);
+  end;
+  GetEquivConf:=function(SHV1, SHV2)
+    local SHVtot1, SHVtot2, eEquiv, eMat;
+    SHVtot1:=GetTotality(SHV1);
+    SHVtot2:=GetTotality(SHV2);
+    eEquiv:=LinPolytope_Isomorphism(SHVtot1, SHVtot2);
+    if eEquiv=false then
+      return false;
+    fi;
+    eMat:=__LemmaFindTransformation(SHVtot1, SHVtot2, eEquiv);
+    return eMat;
+  end;
+  len:=Length(ListListFacesCoho);
+  nbPerf:=Length(ListListFacesCoho[len]);
+  nbRidge:=Length(ListListFacesCoho[len-1]);
+  ListSHVperf:=List(ListListFacesCoho[len], x->x);
+  ListSHVridge:=List(ListListFacesCoho[len-1], x->x);
+  ListSHVperfTot:=List(ListSHVperf, GetTotality);
+  ListSHVridgeTot:=List(ListSHVridge, GetTotality);
+  ListSHVgroup:=List(ListSHVperf, y->List(y, x->[x,-x]));
+  ListListVect:=List(ListSHVperf, y->List(y, x->SymmetricMatrixToVector(TransposedMat([x])*[x])));
+  ListListSets:=List(ListListVect, DualDescriptionSets);
+  ListGRPperf:=List(ListSHVperf, GetGRPconf);
+  ListGRPridge:=List(ListSHVridge, GetGRPconf);
+  GetEquivPerf:=function(TheGram)
+    local eSHV, jPerf, eEquiv, eMat, eProd;
+    eSHV:=ShortestVectorDutourVersion(TheGram);
+    for jPerf in [1..nbPerf]
+    do
+      eEquiv:=ArithmeticIsomorphism([ListGram[jPerf]], [TheGram]);
+      if eEquiv<>false then
+        for eMat in ListGRPperf[jPerf]
+        do
+          eProd:=eMat*Inverse(eEquiv);
+          if Set(ListSHVperfTot[jPerf]*eProd)<>Set(eSHV) then
+            Print("Matrix error, please rework\n");
+            Print(NullMat(5));
+          fi;
+          if RecSP4Z.FuncTestBelong(eProd) then
+            return rec(iPerf:=jPerf, eEquiv:=eProd);
+          fi;
+        od;
+        return fail;
+      fi;
+    od;
+    Error("We should not reach that stage");
+  end;
+  GetEquivRidge:=function(eSHVridge)
+    local eSHVtot, iRidge, eEquiv, eMat, eProd;
+    eSHVtot:=GetTotality(eSHVridge);
+    for iRidge in [1..nbRidge]
+    do
+      eEquiv:=GetEquivConf(ListSHVridge[iRidge], eSHVridge);
+      if eEquiv<>false then
+        for eMat in ListGRPridge[iRidge]
+        do
+          eProd:=eMat*eEquiv;
+          if Set(ListSHVridgeTot[iRidge]*eProd)<>eSHVtot then
+            Print("Error in GetRidgeRepresentation\n");
+            Print(NullMat(5));
+          fi;
+          if RecSP4Z.FuncTestBelong(eProd) then
+            return rec(iRidge:=iRidge, eEquivRidge:=eProd);
+          fi;
+        od;
+      fi;
+    od;
+    return fail;
+  end;
+  ListArray:=[];
+  for iPerf in [1..nbPerf]
+  do
+    ListArrayEquiv:=[];
+    eSHVgroup:=ListSHVgroup[iPerf];
+    for eSet in ListListSets[iPerf]
+    do
+      GramFlip:=DoFlipping_perfectform(eSHVgroup, eSet);
+      eReply:=GetEquivPerf(GramFlip);
+      if eReply<>fail then
+        eSHVridge:=ListSHVperf[iPerf]{eSet};
+        eRecRidge:=GetEquivRidge(eSHVridge);
+        if eRecRidge<>fail then
+          eReply.iRidge:=eRecRidge.iRidge;
+          eReply.eEquivRidge:=eRecRidge.eEquivRidge;
+          Add(ListArrayEquiv, eReply);
+        fi;
+      fi;
+    od;
+    Add(ListArray, ListArrayEquiv);
+  od;
+  return rec(ListArray:=ListArray);
+end;
+
+
+
+
+
+
+SP4Z_GetList_Faces_Coho:=function()
+  local eFace6_1, eFace5_1, eFace4_1, eFace4_2, eFace3_1, eFace3_2, eFace3_3, eFace2_1, eFace2_2, eFace2_3, eFace1_1, eFace1_2, eFace0_1, eFace0_2, ListListFaces, eInvMat, FuncTestBelong1, FuncTestBelong2, ListListFacesCoho, ListListFacesCohoB, ePerm, Pmat, i, j, fInvMat;
+  ListListFaces:=SP4Z_GetList_Faces();
+  eFace0_1:=ListListFaces[1][1];
+  eFace0_2:=ListListFaces[1][2];
+  eFace1_1:=ListListFaces[2][1];
+  eFace1_2:=ListListFaces[2][2];
+  eFace2_1:=ListListFaces[3][1];
+  eFace2_2:=ListListFaces[3][2];
+  eFace2_3:=ListListFaces[3][3];
+  eFace3_1:=ListListFaces[4][1];
+  eFace3_2:=ListListFaces[4][2];
+  eFace3_3:=ListListFaces[4][3];
+  eFace4_1:=ListListFaces[5][1];
+  eFace4_2:=[[1,0,0,0],[0,1,0,0],[1,1,0,0]];
+  eFace5_1:=[[1,0,0,0],[0,1,0,0]];
+  eFace6_1:=[[1,0,0,0]];
+  ListListFacesCoho:=[
+    [eFace6_1],
+    [eFace5_1],
+    [eFace4_1,eFace4_2],
+    [eFace3_1,eFace3_2,eFace3_3],
+    [eFace2_1,eFace2_2,eFace2_3],
+    [eFace1_1,eFace1_2],
+    [eFace0_1,eFace0_2]];
+  eInvMat:=[
+[0 ,0 ,0 ,1],
+[0 ,0 ,1 ,0],
+[0 ,-1,0 ,0],
+[-1, 0,0 ,0]];
+  ePerm:=(1,2);
+  Pmat:=NullMat(4,4);
+  for i in [1..4]
+  do
+    j:=OnPoints(i, ePerm);
+    Pmat[i][j]:=1;
+  od;
+  fInvMat:=Pmat*eInvMat*TransposedMat(Pmat);
+  ListListFacesCohoB:=List(ListListFacesCoho, x->List(x, y->y*Inverse(Pmat)));
+  return rec(ListListFacesCoho:=ListListFacesCohoB,
+             eInvMat:=fInvMat);
+end;
+
+
+# This is the method for covering the case
+# of eFace2 full-dimensional and
+# eFace1 not necessarily full dimensional
+SP4Z_GetAllEmbeddings:=function(eFace1, eFace2, FuncTestBelong)
+  local eFace1span, eFace1tot, eFace2tot, FindEmbedding, ListMat, eSet, test, len, ListSet, ListMatRet, eSetSet;
+  if RankMat(eFace1)=4 then
+    return ListEmbedding(eFace1, eFace2, FuncTestBelong).ListSolutions;
+  fi;
+  if SYMPL_IsLagrangianSubspace(eFace1)=false then
+    Error("We need to build another method");
+  fi;
+  eFace1span:=RowReduction(eFace1).EXT;
+  eFace1tot:=Set(Concatenation(eFace1, -eFace1));
+  eFace2tot:=Set(Concatenation(eFace2, -eFace2));
+  len:=Length(eFace1span);
+  FindEmbedding:=function(eSet)
+    local eVect, eFace2img, i, RetMat;
+    for eVect in BuildSet(len, [-1,1])
+    do
+      eFace2img:=[];
+      for i in [1..len]
+      do
+        Add(eFace2img, eVect[i]*eFace2[eSet[i]]);
+      od;
+      RetMat:=SYMPL_LagrangianEquivalence(eFace1span, eFace2img);
+      if IsSubset(eFace2tot, eFace1tot*RetMat) then
+        return RetMat;
+      fi;
+    od;
+    return fail;
+  end;
+  ListMat:=[];
+  ListSet:=[];
+  for eSet in Combinations([1..Length(eFace2)], len)
+  do
+    if RankMat(eFace2{eSet})=len and SYMPL_IsLagrangianSubspace(eFace2{eSet}) then
+      test:=FindEmbedding(eSet);
+      if test<>fail then
+        eSet:=Set(List(eFace1*test, x->GetPositionAntipodal(eFace2, x)));
+        if Position(eSet, fail)<>fail then
+          Error("Clear error in Lagrangian business");
+        fi;
+        Add(ListMat, test);
+        Add(ListSet, eSet);
+      fi;
+    fi;
+  od;
+  eSetSet:=Set(ListSet);
+  ListMatRet:=List(eSetSet, x->ListMat[Position(ListSet, x)]);
+  return ListMatRet;
+end;
+
+
+TotSet:=function(EXT)
+  return Set(Concatenation(EXT, -EXT));
+end;
+
+TestEquality:=function(eConf1, eConf2)
+  local eConfTot1, eConfTot2;
+  eConfTot1:=Set(Concatenation(eConf1, -eConf1));
+  eConfTot2:=Set(Concatenation(eConf2, -eConf2));
+  return eConfTot1=eConfTot2;
+end;
+
+SP4Z_GetFlippingInfo:=function(RecSP4Z, FuncTestBelong)
+  local ListListFacesCoho, len, nbPerf, nbRidge, ListListAdj, ePerf, ListAdj, iRidge, eRidge, ListMat, eMat, eFace1, ListCont, jPerf, ListMatB, eMatB, eFace2, eRec, ListSide, eSide, fPerf, eAdj, iPerf, iMat, nbMat, eSet, hMat;
+  ListListFacesCoho:=RecSP4Z.ListListFacesCoho;
+  len:=Length(ListListFacesCoho);
+  nbPerf:=Length(ListListFacesCoho[len]);
+  nbRidge:=Length(ListListFacesCoho[len-1]);
+  ListListAdj:=[];
+  for iPerf in [1..nbPerf]
+  do
+    ePerf:=ListListFacesCoho[len][iPerf];
+    Print("iPerf=", iPerf, "/", nbPerf, "\n");
+    ListAdj:=[];
+    for iRidge in [1..nbRidge]
+    do
+      eRidge:=ListListFacesCoho[len-1][iRidge];
+      ListMat:=ListEmbedding(eRidge, ePerf, FuncTestBelong).ListSolutions;
+      nbMat:=Length(ListMat);
+      Print("iRidge=", iRidge, "/", nbRidge, " |ListMat|=", nbMat, "\n");
+      for iMat in [1..nbMat]
+      do
+        eMat:=ListMat[iMat];
+        Print("iMat=", iMat, "/", nbMat, "\n");
+        eFace1:=eRidge*eMat;
+        eSet:=Set(List(eFace1, x->GetPositionAntipodal(ePerf, x)));
+        if Position(eSet, fail)<>fail then
+          Error("We have a ridge error");
+        fi;
+        ListCont:=[];
+        for jPerf in [1..nbPerf]
+        do
+          fPerf:=ListListFacesCoho[len][jPerf];
+          ListMatB:=ListEmbeddingRev(eFace1, fPerf, FuncTestBelong);
+          for eMatB in ListMatB
+          do
+            eFace2:=fPerf*eMatB;
+            if IsSubset(TotSet(eFace2), TotSet(eFace1))=false then
+              Error("Ridge error B");
+            fi;
+            eRec:=rec(jPerf:=jPerf, eMatB:=eMatB, eFace2:=eFace2);
+            Add(ListCont, eRec);
+          od;
+        od;
+        if Length(ListCont)<>2 then
+          Error("Inconsistency in thinness 1\n");
+        fi;
+        ListSide:=Filtered(ListCont, x->TestEquality(x.eFace2, ePerf)=false);
+        if Length(ListSide)<>1 then
+          Error("Inconsistency in thinness 2\n");
+        fi;
+        eSide:=ListSide[1];
+        eAdj:=rec(iRidge:=iRidge, eMat:=eMat, jPerf:=eSide.jPerf, eMatB:=eSide.eMatB, eSet:=eSet);
+        Add(ListAdj, eAdj);
+      od;
+    od;
+    Add(ListListAdj, ListAdj);
+  od;
+  return ListListAdj;
+end;
+
+
+SP4Z_GetTopCells:=function(RecSP4Z, FuncTestBelong, ListListAdj, FuncGroupMembership)
+  local ListListFacesCoho, len, ListStab, TestEquivalenceCells, ListTopCells, FuncInsert, nbOrbit, IsFinished, iPerf, g, eArr, ListAdj, eCell, eIns, iOrbit, eRec, eAdj, TotalListGenerators, FuncInsertTotalGen;
+  ListListFacesCoho:=RecSP4Z.ListListFacesCoho;
+  len:=Length(ListListFacesCoho);
+  ListStab:=List(ListListFacesCoho[len], x->SymplecticStabilizer(x,FuncTestBelong).MatrGrp);
+  TotalListGenerators:=[];
+  TestEquivalenceCells:=function(eCell1, eCell2)
+    local eMat, eQuot, EXT1, EXT2;
+    if eCell1.iPerf<>eCell2.iPerf then
+      return false;
+    fi;
+    for eMat in ListStab[eCell1.iPerf]
+    do
+      eQuot:=Inverse(eCell1.g)*eMat*eCell2.g;
+      if FuncGroupMembership(eQuot) then
+        EXT1:=ListListFacesCoho[len][eCell1.iPerf]*eCell1.g;
+        EXT2:=ListListFacesCoho[len][eCell2.iPerf]*eCell2.g;
+        if TotSet(EXT1*eQuot)<>TotSet(EXT2) then
+          Error("Equivalence error");
+        fi;
+        return eQuot;
+      fi;
+    od;
+    return false;
+  end;
+  ListTopCells:=[];
+  FuncInsertTotalGen:=function(eMat)
+    if Position(TotalListGenerators, eMat)=fail then
+      Add(TotalListGenerators, eMat);
+    fi;
+  end;
+  FuncInsert:=function(eCell)
+    local iCell, fCell, test, gCell, phi, phiRed, PermGRP, PermGRPred, MatrGRP, ListPermGen, ListPermGenRed, ListMatrGen, EXT, EXTtot, FuncInsertGen, eMat, eQuot;
+    for iCell in [1..Length(ListTopCells)]
+    do
+      fCell:=ListTopCells[iCell];
+      test:=TestEquivalenceCells(fCell, eCell);
+      if test<>false then
+        FuncInsertTotalGen(test);
+        return rec(iCell:=iCell, eEquiv:=test);
+      fi;
+    od;
+    PermGRP:=Group(());
+    PermGRPred:=Group(());
+    MatrGRP:=Group([IdentityMat(4)]);
+    ListPermGen:=[];
+    ListPermGenRed:=[];
+    ListMatrGen:=[];
+    EXT:=ListListFacesCoho[len][eCell.iPerf]*eCell.g;
+    EXTtot:=Concatenation(EXT, -EXT);
+    FuncInsertGen:=function(eMat)
+      local eList, ePerm, ePermRed, eListRed;
+      eList:=List(EXTtot, x->Position(EXTtot, x*eMat));
+      eListRed:=List(EXT, x->GetPositionAntipodal(EXT, x*eMat));
+      ePerm:=PermList(eList);
+      ePermRed:=PermList(eListRed);
+      if ePerm=fail or ePermRed=fail then
+        Error("The element is not correct");
+      fi;
+      if ePerm in ListPermGen then
+        return;
+      fi;
+      Add(ListPermGen, ePerm);
+      Add(ListPermGenRed, ePermRed);
+      Add(ListMatrGen, eMat);
+      PermGRP:=Group(ListPermGen);
+      PermGRPred:=Group(ListPermGenRed);
+      MatrGRP:=Group(ListMatrGen);
+      FuncInsertTotalGen(eMat);
+    end;
+    for eMat in ListStab[eCell.iPerf]
+    do
+      eQuot:=Inverse(eCell.g)*eMat*eCell.g;
+      if FuncGroupMembership(eQuot) then
+        FuncInsertGen(eQuot);
+      fi;
+    od;
+    phi:=GroupHomomorphismByImagesNC(PermGRP, MatrGRP, ListPermGen, ListMatrGen);
+    gCell:=rec(iPerf:=eCell.iPerf, g:=eCell.g, TheStab:=MatrGRP, phi:=phi, PermGRP:=PermGRP, PermGRPred:=PermGRPred, EXT:=EXT, Status:="NO");
+    Add(ListTopCells, gCell);
+    return rec(iCell:=Length(ListTopCells), eEquiv:=IdentityMat(4));
+  end;
+  eCell:=rec(iPerf:=1, g:=IdentityMat(4));
+  FuncInsert(eCell);
+  while(true)
+  do
+    nbOrbit:=Length(ListTopCells);
+    IsFinished:=true;
+    for iOrbit in [1..nbOrbit]
+    do
+      if ListTopCells[iOrbit].Status="NO" then
+        ListTopCells[iOrbit].Status:="YES";
+        IsFinished:=false;
+        iPerf:=ListTopCells[iOrbit].iPerf;
+        g:=ListTopCells[iOrbit].g;
+        ListAdj:=[];
+        for eAdj in ListListAdj[iPerf]
+        do
+          eCell:=rec(iPerf:=eAdj.jPerf, g:=eAdj.eMatB*g);
+          eIns:=FuncInsert(eCell);
+          eIns.eSet:=eAdj.eSet;
+          if IsSubset(TotSet(ListTopCells[eIns.iCell].EXT*eIns.eEquiv), TotSet(ListTopCells[iOrbit].EXT{eAdj.eSet}))=false then
+            Error("Inclusion error");
+          fi;
+          Add(ListAdj, eIns);
+        od;
+        ListTopCells[iOrbit].ListAdj:=ListAdj;
+      fi;
+    od;
+    if IsFinished then
+      break;
+    fi;
+  od;
+  return rec(ListTopCells:=ListTopCells,
+             TotalListGenerators:=TotalListGenerators);
+end;
+
+
+TestEquivalenceTriple:=function(ListTopCells, eTriple1, eTriple2)
+  local test, testMatr, EXT, EXTtot, EXT1tot, EXT2tot, eSet1Tot, eSet2Tot, testB, eMatRet, EXT1, EXT2;
+  if eTriple1.iTopCell<>eTriple2.iTopCell then
+    return false;
+  fi;
+  test:=RepresentativeAction(ListTopCells[eTriple1.iTopCell].PermGRPred, eTriple1.eSet, eTriple2.eSet, OnSets);
+  if test=fail then
+    return false;
+  fi;
+  EXT:=ListTopCells[eTriple1.iTopCell].EXT;
+  EXTtot:=Concatenation(EXT, -EXT);
+  EXT1tot:=Concatenation(EXT{eTriple1.eSet}, -EXT{eTriple1.eSet});
+  EXT2tot:=Concatenation(EXT{eTriple2.eSet}, -EXT{eTriple2.eSet});
+  eSet1Tot:=Set(List(EXT1tot, x->Position(EXTtot, x)));
+  eSet2Tot:=Set(List(EXT2tot, x->Position(EXTtot, x)));
+  testB:=RepresentativeAction(ListTopCells[eTriple1.iTopCell].PermGRP, eSet1Tot, eSet2Tot, OnSets);
+  testMatr:=Image(ListTopCells[eTriple1.iTopCell].phi, testB);
+  eMatRet:=Inverse(eTriple1.eMat)*testMatr*eTriple2.eMat;
+  EXT1:=ListTopCells[eTriple1.iTopCell].EXT{eTriple1.eSet}*eTriple1.eMat;
+  EXT2:=ListTopCells[eTriple2.iTopCell].EXT{eTriple2.eSet}*eTriple2.eMat;
+  if TotSet(EXT1*eMatRet)<>TotSet(EXT2) then
+    Error("Error in TestEquivalenceTriple");
+  fi;
+  return eMatRet;
+end;
+
+
+SP4Z_GetCellComplex:=function(RecSP4Z, FuncTestBelong, ListArray, ListTopCells, FuncGroupMembership)
+  local ListListFacesCoho, len, SaturationAndStabilizer, nbPerf, nbTopCells, LLLL_Embed, LLL_Embed, ListListEmbed, ListRec, nbOrbit, iOrbit, eFace1, iPerf, ePerf, ListMat, eSet, eRec, FuncInsertOrbit, eTopCell, iTopCell, jTopCell, eAdjInfo, i, eMat, TotalListOrbit, ListOrbit, eTriple, g, iPerfect, LLL_Index, LL_Index, L_Index, eInfo, EXT, nbOrbitB, iOrbitB, ListSign, ListSetM1, ListSetM2, iFaceM1, ListEltM2, iRec, iFace, ListElt, ListIFace, eSetM1, len2, iFaceM2, eAddElt, TheBoundary, EXTfaceM2, pos, iDim, eQuad, idx, eEltM1, EXTfaceM1, EXTimg, eList, eMulSign, TheSym2, eElt1, eGen, eSignPerm, ePerm, i2, eSignM2, eEltM2, SetImg, ListOccuringCoefficients, ListMatrGens, iFace1, eSet1, eSign1, ListFacesM2, eQuot, ListPermGen, EXTspec, eSignTot, PermGrpOr, EXT1, eSet1Img, eSign, ListSignGens, PermGrp, eOrbit, PermGRPsing, uMat, EXTface;
+  ListListFacesCoho:=RecSP4Z.ListListFacesCoho;
+  len:=Length(ListListFacesCoho);
+  #
+  # The triple business.
+  #
+  SaturationAndStabilizer:=function(eTriple)
+    local ListGenStab, ListTriple, ListStatus, FuncInsertTriple, nbTriple, IsFinished, iTriple, eSet, fSet, eMat, fMat, eMatF, EXTimg, fTriple, eBasis, FuncInsertMatrGen, TheStab, eGen, eGenMatr, TheStabB, EXT, EXTtot, eSetTot, EXTcell, NewTriple, iTopCell, NewGen;
+    ListGenStab:=[];
+    ListTriple:=[];
+    ListStatus:=[];
+    EXT:=ListTopCells[eTriple.iTopCell].EXT{eTriple.eSet}*eTriple.eMat;
+    EXTcell:=ListTopCells[eTriple.iTopCell].EXT;
+    EXTtot:=Concatenation(EXTcell, -EXTcell);
+    FuncInsertMatrGen:=function(eMat)
+      local eList, ePerm;
+      if First(EXT, x->GetPositionAntipodal(EXT, x*eMat)=fail)<>fail then
+        Error("Clearly the generator is wrong");
+      fi;
+      if Position(ListGenStab, eMat)=fail then
+        Add(ListGenStab, eMat);
+      fi;
+#      eList:=List(EXT, x->GetPositionAntipodal(EXT, x*eMat));
+#      ePerm:=PermList(eList);
+#      Print("ePerm=", ePerm, "\n");
+    end;
+    eSetTot:=Set(List(Concatenation(EXTcell{eTriple.eSet}, -EXTcell{eTriple.eSet}), x->Position(EXTtot, x)));
+    TheStab:=Stabilizer(ListTopCells[eTriple.iTopCell].PermGRP, eSetTot, OnSets);
+    for eGen in GeneratorsOfGroup(TheStab)
+    do
+      eGenMatr:=Image(ListTopCells[eTriple.iTopCell].phi, eGen);
+      NewGen:=Inverse(eTriple.eMat)*eGenMatr*eTriple.eMat;
+      FuncInsertMatrGen(NewGen);
+    od;
+    FuncInsertTriple:=function(eTriple)
+      local fTriple, test;
+      for fTriple in ListTriple
+      do
+        test:=TestEquivalenceTriple(ListTopCells, eTriple, fTriple);
+        if test<>false then
+          FuncInsertMatrGen(test);
+          return;
+        fi;
+      od;
+      Add(ListTriple, eTriple);
+      Add(ListStatus, 1);
+    end;
+    FuncInsertTriple(eTriple);
+    while(true)
+    do
+      nbTriple:=Length(ListTriple);
+      IsFinished:=true;
+      for iTriple in [1..nbTriple]
+      do
+        if ListStatus[iTriple]=1 then
+          ListStatus[iTriple]:=0;
+          NewTriple:=ListTriple[iTriple];
+          iTopCell:=NewTriple.iTopCell;
+          eSet:=NewTriple.eSet;
+          eMat:=NewTriple.eMat;
+          IsFinished:=false;
+          for eAdjInfo in ListTopCells[iTopCell].ListAdj
+          do
+            if IsSubset(eAdjInfo.eSet, eSet) then
+              jTopCell:=eAdjInfo.iCell;
+              fMat:=eAdjInfo.eEquiv*eMat;
+              EXTimg:=ListTopCells[jTopCell].EXT*fMat;
+              fSet:=Set(List(EXT, x->GetPositionAntipodal(EXTimg, x)));
+              if Position(fSet, fail)<>fail then
+                Error("Equivalence matrix error");
+              fi;
+              fTriple:=rec(iTopCell:=jTopCell, eMat:=fMat, eSet:=fSet);
+              FuncInsertTriple(fTriple);
+            fi;
+          od;
+        fi;
+      od;
+      if IsFinished=true then
+        break;
+      fi;
+    od;
+    TheStabB:=Group(ListGenStab);
+    return rec(ListTriple:=ListTriple, TheStab:=TheStabB, EXT:=EXT);
+  end;
+  #
+  # Enumeration of orbits
+  #
+  nbPerf:=Length(ListListFacesCoho[len]);
+  nbTopCells:=Length(ListTopCells);
+  LLLL_Embed:=[];
+  for iDim in [1..len]
+  do
+    nbOrbit:=Length(ListListFacesCoho[iDim]);
+    LLL_Embed:=[];
+    for iOrbit in [1..nbOrbit]
+    do
+      eFace1:=ListListFacesCoho[iDim][iOrbit];
+      ListListEmbed:=[];
+      for iPerf in [1..nbPerf]
+      do
+        ePerf:=ListListFacesCoho[len][iPerf];
+        ListMat:=SP4Z_GetAllEmbeddings(eFace1, ePerf, FuncTestBelong);
+        ListRec:=[];
+        for eMat in ListMat
+        do
+          eSet:=Set(List(eFace1*eMat, x->GetPositionAntipodal(ePerf, x)));
+          eRec:=rec(eSet:=eSet, eMat:=eMat, iPerf:=iPerf, iOrbit:=iOrbit, EXT:=eFace1*eMat);
+          Add(ListRec, eRec);
+        od;
+        Add(ListListEmbed, ListRec);
+      od;
+      Add(LLL_Embed, ListListEmbed);
+    od;
+    Add(LLLL_Embed, LLL_Embed);
+  od;
+  TotalListOrbit:=[];
+  LLL_Index:=[];
+  for iDim in [1..len]
+  do
+    ListOrbit:=[];
+    Print("iDim=", iDim, "\n");
+    FuncInsertOrbit:=function(eTriple)
+      local nbOrbit, iOrbit, eOrbit, fTriple, test;
+      nbOrbit:=Length(ListOrbit);
+      for iOrbit in [1..nbOrbit]
+      do
+        eOrbit:=ListOrbit[iOrbit];
+        for fTriple in eOrbit.ListTriple
+        do
+          test:=TestEquivalenceTriple(ListTopCells, fTriple, eTriple);
+          if test<>false then
+            return rec(iOrbit:=iOrbit, eEquiv:=test);
+          fi;
+        od;
+      od;
+      eOrbit:=SaturationAndStabilizer(eTriple);
+      Add(ListOrbit, eOrbit);
+      return rec(iOrbit:=Length(ListOrbit), eEquiv:=IdentityMat(4));
+    end;
+    nbOrbit:=Length(ListListFacesCoho[iDim]);
+    LL_Index:=[];
+    for iTopCell in [1..nbTopCells]
+    do
+      eTopCell:=ListTopCells[iTopCell];
+      iPerfect:=eTopCell.iPerf;
+      g:=eTopCell.g;
+      L_Index:=[];
+      for iOrbit in [1..nbOrbit]
+      do
+        for eRec in LLLL_Embed[iDim][iOrbit][iPerfect]
+        do
+#          uMat:=eRec.eMat*g;
+          uMat:=IdentityMat(4);
+          eTriple:=rec(eSet:=eRec.eSet, eMat:=uMat, iTopCell:=iTopCell);
+          eInfo:=FuncInsertOrbit(eTriple);
+          eTriple.eInfo:=eInfo;
+          EXTimg:=eTopCell.EXT{eRec.eSet}*uMat;
+          if IsSubset(TotSet(eTopCell.EXT), TotSet(EXTimg))=false then
+            Error("EXTimg should be contained in eTopCell");
+          fi;
+          Add(L_Index, eTriple);
+        od;
+      od;
+      Add(LL_Index, L_Index);
+    od;
+    Add(LLL_Index, LL_Index);
+    Add(TotalListOrbit, ListOrbit);
+    Print("   |ListOrbit|=", Length(ListOrbit), "\n");
+  od;
+  #
+  # Now computing the boundaries
+  #
+  for iFace in [1..Length(TotalListOrbit[1])]
+  do
+    TotalListOrbit[1][iFace].BoundaryImage:=rec(PermGrp:=Group(()), PermGrpOr:=Group(()) );
+  od;
+  for iDim in [2..len]
+  do
+    Print("Computing boundaries iDim=", iDim, "\n");
+    nbOrbit:=Length(TotalListOrbit[iDim]);
+    for iOrbit in [1..nbOrbit]
+    do
+      eOrbit:=TotalListOrbit[iDim][iOrbit];
+      eTriple:=eOrbit.ListTriple[1];
+      iTopCell:=eTriple.iTopCell;
+      eSet:=eTriple.eSet;
+      eMat:=eTriple.eMat;
+      EXT:=ListTopCells[iTopCell].EXT{eSet}*eMat;
+      nbOrbitB:=Length(LLL_Index[iDim-1][iTopCell]);
+      ListMatrGens:=GeneratorsOfGroup(TotalListOrbit[iDim][iOrbit].TheStab);
+      ListPermGen:=[];
+      for eGen in ListMatrGens
+      do
+        eList:=List(EXT, x->GetPositionAntipodal(EXT, x*eGen));
+        ePerm:=PermList(eList);
+        Add(ListPermGen, ePerm);
+      od;
+      PermGRPsing:=Group(ListPermGen);
+      ListIFace:=[];
+      ListElt:=[];
+      ListSetM1:=[];
+      for eQuad in LLL_Index[iDim-1][iTopCell]
+      do
+        if IsSubset(eSet, eQuad.eSet) then
+          eInfo:=eQuad.eInfo;
+          Add(ListIFace, eInfo.iOrbit);
+          Add(ListElt, eInfo.eEquiv);
+          eSetM1:=Set(List(eQuad.eSet, x->Position(eSet, x)));
+          Add(ListSetM1, eSetM1);
+        fi;
+      od;
+      if iDim=2 then
+        if Length(ListElt)<>2 then
+          Error("Conceptual error on the differential");
+        fi;
+        ListSign:=[1,-1];
+      else
+        len:=Length(ListIFace);
+        ListSetM2:=[];
+        ListEltM2:=[];
+        ListOccuringCoefficients:=[];
+        for iFace in [1..len]
+        do
+          iFaceM1:=ListIFace[iFace];
+          eEltM1:=ListElt[iFace];
+          TheBoundary:=TotalListOrbit[iDim-1][iFaceM1].BoundaryImage;
+          len2:=Length(TheBoundary.ListIFace);
+          for i2 in [1..len2]
+          do
+            iFaceM2:=TheBoundary.ListIFace[i2];
+            eSignM2:=TheBoundary.ListSign[i2];
+            eEltM2:=TheBoundary.ListElt[i2];
+            eAddElt:=eEltM2*eEltM1;
+            EXTfaceM2:=TotalListOrbit[iDim-2][iFaceM2].EXT;
+            EXTimg:=EXTfaceM2*eAddElt;
+            SetImg:=Set(List(EXTimg, x->GetPositionAntipodal(EXT, x)));
+            pos:=Position(ListSetM2, SetImg);
+            if pos=fail then
+              Add(ListSetM2, SetImg);
+              Add(ListEltM2, eAddElt);
+              Add(ListOccuringCoefficients, [rec(Sign:=eSignM2, idx:=iFace)]);
+            else
+              eQuot:=ListEltM2[pos]*Inverse(eAddElt);
+              eList:=List(EXTfaceM2*eQuot, x->GetPositionAntipodal(EXTfaceM2, x));
+              ePerm:=PermList(eList);
+              if ePerm=fail then
+                Error("We have a fail for permutation");
+              fi;
+              if not(ePerm in TotalListOrbit[iDim-2][iFaceM2].BoundaryImage.PermGrp) then
+                Print("Error in building the permutation\n");
+                Print(NullMat(5));
+              fi;
+              if ePerm in TotalListOrbit[iDim-2][iFaceM2].BoundaryImage.PermGrpOr then
+                eMulSign:=1;
+              else
+                eMulSign:=-1;
+              fi;
+              Add(ListOccuringCoefficients[pos], rec(Sign:=eSignM2*eMulSign, idx:=iFace));
+            fi;
+          od;
+        od;
+        if First(ListOccuringCoefficients, x->Length(x)<>2)<>fail then
+          Print("Please debug from here\n");
+          Print(NullMat(5));
+        fi;
+        ListSign:=UntangleAllSigns(ListOccuringCoefficients, len);
+      fi;
+      TheSym2:=SymmetricGroup(2);
+      ListPermGen:=[];
+      ListSignGens:=[];
+      iFace1:=ListIFace[1];
+      eSet1:=ListSetM1[1];
+      eSign1:=ListSign[1];
+      eElt1:=ListElt[1];
+      EXT1:=EXT{eSet1};
+      EXTspec:=TotalListOrbit[iDim-1][iFace1].EXT;
+      for eGen in ListMatrGens
+      do
+        eList:=List(EXT, x->GetPositionAntipodal(EXT, x*eGen));
+        ePerm:=PermList(eList);
+        if ePerm=fail then
+          Error("fail in perm, debug 1");
+        fi;
+        Add(ListPermGen, ePerm);
+        if iDim=2 then
+          eSignPerm:=ePerm;
+        else
+          eSet1Img:=Set(List(EXT1*eGen, x->GetPositionAntipodal(EXT, x)));
+          pos:=Position(ListSetM1, eSet1Img);
+          eQuot:=eElt1*eGen*Inverse(ListElt[pos]);
+          ePerm:=PermList(List(EXTspec*eQuot, x->GetPositionAntipodal(EXTspec, x)));
+          if ePerm=fail then
+            Error("fail in perm, debug 2");
+          fi;
+          if ePerm in TotalListOrbit[iDim-1][iFace1].BoundaryImage.PermGrpOr then
+            eSign:=1;
+          else
+            eSign:=-1;
+          fi;
+          eSignTot:=eSign1*ListSign[pos]*eSign;
+          if eSignTot=1 then
+            eSignPerm:=();
+          else
+            eSignPerm:=(1,2);
+          fi;
+        fi;
+        Add(ListSignGens, eSignPerm);
+      od;
+      PermGrp:=Group(ListPermGen);
+      PermGrpOr:=GetKernelOfMapping(PermGrp, TheSym2, ListPermGen, ListSignGens);
+      TheBoundary:=rec(ListIFace:=ListIFace, ListSign:=ListSign, ListElt:=ListElt, ListSetM1:=ListSetM1, PermGrp:=PermGrp, PermGrpOr:=PermGrpOr);
+      TotalListOrbit[iDim][iOrbit].BoundaryImage:=TheBoundary;
+    od;
+  od;
+  #
+  #
+  #
+  return rec(TotalListOrbit:=TotalListOrbit, 
+             LLL_Index:=LLL_Index);
+end;
+
+
+# We have a double coset Gamma q Gamma
+# and we split it into right cosets
+# x1 Gamma , ....., xr Gamma
+HECKE_DoubleCosetToRightCosets:=function(RecGroup, TheMatrix)
+  local ListStatus, ListCoset, FuncInsert, nbCos, IsFinished, iCos, eProd, eGen, DoProduct;
+  ListStatus:=[];
+  ListCoset:=[];
+  FuncInsert:=function(eMat)
+    local len, eInvMat, eCoset, eInv;
+    eInvMat:=Inverse(eMat);
+    for eCoset in ListCoset
+    do
+      eInv:=eInvMat*eCoset;
+      if RecGroup.IsInGroup(eInv)=true then
+        return;
+      fi;
+    od;
+    Add(ListStatus, 0);
+    Add(ListCoset, eMat);
+  end;
+  FuncInsert(TheMatrix);
+  while(true)
+  do
+    nbCos:=Length(ListCoset);
+    IsFinished:=true;
+    for iCos in [1..nbCos]
+    do
+      if ListStatus[iCos]=0 then
+        ListStatus[iCos]:=1;
+        IsFinished:=false;
+        for eGen in RecGroup.ListGen
+        do
+          eProd:=eGen*ListCoset[iCos];
+          FuncInsert(eProd);
+        od;
+      fi;
+    od;
+    if IsFinished=true then
+      break;
+    fi;
+  od;
+  # g in is Gamma
+  # h is one coset
+  # we return hp * gp
+  # with hp being one coset
+  #  and gp being in Gamma
+  DoProduct:=function(g, h)
+    local eProd, eH, gP, iCoset;
+    eProd:=g * h;
+    for iCoset in [1..Length(ListCoset)]
+    do
+      eH:=ListCoset[iCoset];
+      gP:=Inverse(eH)*eProd;
+      if eProd<>ListCoset[iCoset]*gP then
+        Error("Clear error here");
+      fi;
+      if RecGroup.IsInGroup(gP)=true then
+        return rec(hP:=eH, iCoset:=iCoset, gP:=gP);
+      fi;
+    od;
+    Error("We should never reach that stage");
+  end;
+  return rec(ListCoset:=ListCoset, DoProduct:=DoProduct);
+end;
+
+
+SP4Z_SequenceReduction:=function(TotalListCell)
+  local nbCell, GRA, iCell, jCell, eInt, ePath;
+  nbCell:=Length(TotalListCell);
+  GRA:=NullGraph(Group(()), nbCell);
+  for iCell in [1..nbCell-1]
+  do
+    for jCell in [iCell+1..nbCell]
+    do
+      eInt:=Intersection(TotSet(TotalListCell[iCell].EXTcell), TotSet(TotalListCell[jCell].EXTcell));
+      if Length(eInt)=18 then
+        AddEdgeOrbit(GRA, [iCell, jCell]);
+        AddEdgeOrbit(GRA, [jCell, iCell]);
+      fi;
+    od;
+  od;
+  ePath:=FindShortestPath(GRA, 1, nbCell);
+#  Print("nbCell=", nbCell, "  ePath=", ePath, "\n");
+  if nbCell>1 and Length(ePath)=1 then
+    Error("Path computation is broken");
+  fi;
+  return TotalListCell{ePath};
+end;
+
+
+SP4Z_GetSequenceToRay_General:=function(ListTopCells, eVect, ListContVert, eStartCell)
+  local eRayVect, TotalListCell, FuncInsertECell, eInsCell, GetAdjInfoFromCell, DoFlowering, SequenceStrategy, eANS1, eANS2, nbCell, GRA, iCell, jCell, eInt, ePath, IsSubsetContained, GetCellPosition;
+  eRayVect:=SymmetricMatrixToVector(TransposedMat([eVect])*[eVect]);
+  TotalListCell:=[];
+  IsSubsetContained:=function(eCell)
+    local EXTcell;
+    EXTcell:=ListTopCells[eCell.iTopCell].EXT*eCell.eMat;
+    if IsSubset(TotSet(EXTcell), TotSet(ListContVert)) then
+      return true;
+    fi;
+    return false;
+  end;
+  GetCellPosition:=function(eCell)
+    local EXTcell, iCell, rCell;
+    EXTcell:=ListTopCells[eCell.iTopCell].EXT*eCell.eMat;
+    for iCell in [1..Length(TotalListCell)]
+    do
+      rCell:=TotalListCell[iCell];
+      if TotSet(rCell.EXTcell)=TotSet(EXTcell) then
+        return iCell;
+      fi;
+    od;
+    return -1;
+  end;
+  FuncInsertECell:=function(eCell)
+    local iTopCell, eMat, EXTcell, iCell, rCell, fCell;
+    iTopCell:=eCell.iTopCell;
+    eMat:=eCell.eMat;
+    EXTcell:=ListTopCells[eCell.iTopCell].EXT*eCell.eMat;
+    for iCell in [1..Length(TotalListCell)]
+    do
+      rCell:=TotalListCell[iCell];
+      if TotSet(rCell.EXTcell)=TotSet(EXTcell) then
+        return rec(iCell:=iCell, IsNew:=false);
+      fi;
+    od;
+    fCell:=rec(iTopCell:=iTopCell, eMat:=eMat, EXTcell:=EXTcell);
+    Add(TotalListCell, fCell);
+#    Print("|TotaListCell|=", Length(TotalListCell), "\n");
+    return rec(iCell:=Length(TotalListCell), IsNew:=true);
+  end;
+  eInsCell:=FuncInsertECell(eStartCell);
+  GetAdjInfoFromCell:=function(eCell)
+    local EXTcell, PerfDom, eAdjInfo, eFAC, NewCell, fMat;
+    PerfDom:=List(eCell.EXTcell, x->SymmetricMatrixToVector(TransposedMat([x])*[x]));
+    for eAdjInfo in ListTopCells[eCell.iTopCell].ListAdj
+    do
+      eFAC:=__FindFacetInequality(PerfDom, eAdjInfo.eSet);
+      if eFAC*eRayVect<0 then
+        fMat:=eAdjInfo.eEquiv*eCell.eMat;
+        NewCell:=rec(iTopCell:=eAdjInfo.iCell, eMat:=fMat);
+        if IsSubsetContained(NewCell) then
+          return NewCell;
+        fi;
+      fi;
+    od;
+    return "irrelevant";
+  end;
+  DoFlowering:=function()
+    local ListICell, ListStatus, nbCase, iCase, iCell, eCell, eAdjInfo, fMat, fCell, eRecIns, uCell, NewCell, iCellPos;
+#    Print("Beginning of flowering operation\n");
+    ListICell:=[Length(TotalListCell)];
+    ListStatus:=[0];
+    while(true)
+    do
+      nbCase:=Length(ListStatus);
+      for iCase in [1..nbCase]
+      do
+        if ListStatus[iCase]=0 then
+          ListStatus[iCase]:=1;
+          iCell:=ListICell[iCase];
+          eCell:=TotalListCell[iCell];
+          for eAdjInfo in ListTopCells[eCell.iTopCell].ListAdj
+          do
+            fMat:=eAdjInfo.eEquiv*eCell.eMat;
+            fCell:=rec(iTopCell:=eAdjInfo.iCell, eMat:=fMat);
+            if IsSubsetContained(fCell) then
+              eRecIns:=FuncInsertECell(fCell);
+              if eRecIns.IsNew then
+                uCell:=TotalListCell[eRecIns.iCell];
+                if GetPositionAntipodal(uCell.EXTcell, eVect)<>fail then
+#                  Print("Leaving flowering here A\n");
+                  return rec(eSuccess:=true);
+                fi;
+                NewCell:=GetAdjInfoFromCell(uCell);
+                if GetAdjInfoFromCell(uCell)<>"irrelevant" then
+                  iCellPos:=GetCellPosition(NewCell);
+                  if iCellPos=-1 then
+#                    Print("Leaving flowering here B\n");
+                    return rec(eSuccess:=false);
+                  fi;
+                fi;
+                Add(ListICell, Length(TotalListCell));
+                Add(ListStatus, 1);
+              fi;
+            fi;
+          od;
+        fi;
+      od;
+    od;
+  end;
+  SequenceStrategy:=function()
+    local iter, NewCell, fMat, eCell;
+    iter:=0;
+    while(true)
+    do
+      eCell:=TotalListCell[Length(TotalListCell)];
+      iter:=iter+1;
+#      Print("iter=", iter, "\n");
+      if GetPositionAntipodal(eCell.EXTcell, eVect)<>fail then
+        return rec(eSuccess:=true);
+      fi;
+      NewCell:=GetAdjInfoFromCell(eCell);
+#      Print("NewCell=", NewCell, "\n");
+      if NewCell="irrelevant" then
+        return rec(eSuccess:=false);
+      fi;
+      eInsCell:=FuncInsertECell(NewCell);
+      if eInsCell.IsNew=false then
+        Print("It should not be there already\n");
+        Print(NullMat(5));
+      fi;
+    od;
+  end;
+  #
+  #
+  while(true)
+  do
+    eANS1:=SequenceStrategy();
+    if eANS1.eSuccess then
+      break;
+    fi;
+    eANS2:=DoFlowering();
+    if eANS2.eSuccess then
+      break;
+    fi;
+  od;
+  return SP4Z_SequenceReduction(TotalListCell);
+end;
+
+
+SP4Z_GetSequenceToRay:=function(ListTopCells, eVect, eStartCell)
+  local ListContVert;
+  ListContVert:=[];
+#  Print("Calling from SP4Z_GetSequenceToRay\n");
+  return SP4Z_GetSequenceToRay_General(ListTopCells, eVect, ListContVert, eStartCell);
+end;
+
+
+SP4Z_GetSequenceToCell:=function(ListTopCells, EXTcell, eStartCell)
+  local nbVert, RetSeq, iVert, ListContVert, eGoodCell, TheSeq;
+  nbVert:=Length(EXTcell);
+  RetSeq:=[eStartCell];
+  for iVert in [1..nbVert]
+  do
+    ListContVert:=EXTcell{[1..iVert-1]};
+    eGoodCell:=RetSeq[Length(RetSeq)];
+#    Print("Calling from SP4Z_GetSequenceToCell\n");
+    TheSeq:=SP4Z_GetSequenceToRay_General(ListTopCells, EXTcell[iVert], ListContVert, eGoodCell);
+    Append(RetSeq, TheSeq{[2..Length(TheSeq)]});
+  od;
+  return SP4Z_SequenceReduction(RetSeq);
+end;
+
+
+
+
+SP4Z_ComputeHomologySpaces:=function(TotalListOrbit)
+  local ListRecOri, iDim, nbOrbit, ListOri, iOrbit, BndImg, iOri, nbOri, ListOriRev, eRecOri, ListMat, eDim1, eDim2, eMat, i2, iOrbit2, eImg, len, TheDim, iOrbit1, TheKernel, eDim, TheSpace, TheImage, i, iFace, ListSpaces, dimKer, rnk, TheImagePre, NSP, eRecSpace;
+  #
+  # Determining orientable orbits
+  #
+  TheDim:=Length(TotalListOrbit);
+  ListRecOri:=[];
+  for iDim in [1..TheDim]
+  do
+    nbOrbit:=Length(TotalListOrbit[iDim]);
+    ListOri:=[];
+    for iOrbit in [1..nbOrbit]
+    do
+      BndImg:=TotalListOrbit[iDim][iOrbit].BoundaryImage;
+      if Order(BndImg.PermGrp) = Order(BndImg.PermGrpOr) then
+        Add(ListOri, iOrbit);
+      fi;
+    od;
+    nbOri:=Length(ListOri);
+    ListOriRev:=ListWithIdenticalEntries(nbOrbit,0);
+    for iOri in [1..nbOri]
+    do
+      ListOriRev[ListOri[iOri]]:=iOri;
+    od;
+    eRecOri:=rec(nbOri:=nbOri, ListOri:=ListOri, ListOriRev:=ListOriRev);
+    Add(ListRecOri, eRecOri);
+  od;
+  #
+  # Computing differentials with
+  # ---Killed G actions
+  # ---Killed orientable faces
+  #
+  ListMat:=[];
+  for iDim in [2..TheDim]
+  do
+    eDim1:=ListRecOri[iDim-1].nbOri;
+    eDim2:=ListRecOri[iDim].nbOri;
+    eMat:=[];
+    for i2 in [1..eDim2]
+    do
+      iOrbit2:=ListRecOri[iDim].ListOri[i2];
+      BndImg:=TotalListOrbit[iDim][iOrbit2].BoundaryImage;
+      eImg:=ListWithIdenticalEntries(eDim1,0);
+      len:=Length(BndImg.ListIFace);
+      for i in [1..len]
+      do
+        iFace:=BndImg.ListIFace[i];
+        iOrbit1:=ListRecOri[iDim-1].ListOriRev[iFace];
+        if iOrbit1>0 then
+          eImg[iOrbit1]:=eImg[iOrbit1] + BndImg.ListSign[i];
+        fi;
+      od;
+      Add(eMat, eImg);
+    od;
+    Add(ListMat, eMat);
+  od;
+  #
+  # Computing Rational Homology groups
+  # We directly kill the torsion.
+  # maybe later we can take care of it.
+  #
+  ListSpaces:=[];
+  for iDim in [1..TheDim]
+  do
+    eDim:=ListRecOri[iDim].nbOri;
+    if iDim=1 then
+      TheKernel:=IdentityMat(eDim);
+    else
+      if eDim=0 then
+        TheKernel:=[];
+      else
+        if Length(ListMat[iDim-1]) = 0 then
+          TheKernel:=IdentityMat(eDim);
+        else
+          if Length(ListMat[iDim-1][1])=0 then
+            TheKernel:=IdentityMat(Length(ListMat[iDim-1]));
+          else
+            TheKernel:=NullspaceIntMat(ListMat[iDim-1]);
+          fi;
+        fi;
+      fi;
+    fi;
+    if iDim=TheDim then
+      TheSpace:=TheKernel;
+      TheImage:=[];
+    else
+      dimKer:=Length(TheKernel);
+      if dimKer > 0 then
+        TheImagePre:=List(ListMat[iDim], x->SolutionMat(TheKernel, x));
+        rnk:=RankMat(TheImagePre);
+        if rnk=dimKer then
+          TheImage:=IdentityMat(dimKer);
+          TheSpace:=[];
+        else
+          if rnk=0 then
+            TheImage:=[];
+            TheSpace:=IdentityMat(dimKer);
+          else
+            NSP:=NullspaceIntMat(TransposedMat(TheImagePre));
+            TheImage:=NullspaceIntMat(TransposedMat(NSP));
+            TheSpace:=SubspaceCompletion(TheImage, dimKer);
+          fi;
+        fi;
+      else
+        TheSpace:=[];
+        TheImage:=[];
+      fi;
+    fi;
+    eRecSpace:=rec(TheKernel:=TheKernel, TheImage:=TheImage, TheSpace:=TheSpace);
+    Add(ListSpaces, eRecSpace);
+  od;
+  return rec(ListSpaces:=ListSpaces, ListMat:=ListMat, ListRecOri:=ListRecOri);
+end;
+
+#
+# Test if the matrix is admissible for Hecke operators
+# computations
+SP4Z_IsInExtendedGroup:=function(eMat)
+  local eInvMat, eProd, eProdRed;
+  eInvMat:=SYMPL_GetSymplecticForm(2);
+  eProd:=eMat*eInvMat*TransposedMat(eMat);
+  eProdRed:=RemoveFractionMatrix(eProd);
+  if eProdRed=eInvMat or eProdRed=-eInvMat then
+    return true;
+  fi;
+  return false;
+end;
+
+
+Norm_L1:=function(eVect)
+  return Sum(List(eVect, AbsInt));
+end;
+
+
+#
+# Solution of the contracting homotopy.
+#
+SP4Z_SolutionInComplex:=function(iDim, TotalArray, TheChain)
+  local nbOrbitM1, nbOrbit, ListVertices, iOrbitM1, eEnt, eG, EXTcell, eVect, CoveringCells, TotalVertexSet, TheSeq, eStartCell, iVert, eVert, eGoodCell, FuncInsertCoveringCell, ListTopCells, LLL_Index, TheDim, AttemptSystemSolution, nbVert, TotalListOrbit, eCell, iCell, pos, DoFlowering, uCell, TotalLength, RecSol;
+  ListTopCells:=TotalArray.ListTopCells;
+  TotalListOrbit:=TotalArray.CellComplex.TotalListOrbit;
+  LLL_Index:=TotalArray.CellComplex.LLL_Index;
+  TheDim:=Length(TotalListOrbit);
+  nbOrbit:=Length(TotalListOrbit[iDim]);
+  if iDim > 1 then
+    nbOrbitM1:=Length(TotalListOrbit[iDim-1]);
+  fi;
+  #
+  # Compute initial set of vertices
+  #
+  TotalLength:=0;
+  ListVertices:=[];
+  for iOrbitM1 in [1..nbOrbitM1]
+  do
+    eEnt:=TheChain[iOrbitM1];
+    for eG in eEnt.ListElt
+    do
+      EXTcell:=TotalListOrbit[iDim-1][iOrbitM1].EXT*eG;
+      TotalLength:=TotalLength+1;
+      for eVect in EXTcell
+      do
+        if GetPositionAntipodal(ListVertices, eVect)=fail then
+          Add(ListVertices, eVect);
+        fi;
+      od;
+    od;
+  od;
+  #
+  # Compute a first stage covering set
+  # We want it as small as possible, but we have
+  # no systematic method for building it.
+  #
+  nbVert:=Length(ListVertices);
+  CoveringCells:=[];
+  TotalVertexSet:=[];
+  FuncInsertCoveringCell:=function(eCell)
+    local fCell, eVert;
+    for fCell in CoveringCells
+    do
+      if TotSet(fCell.EXTcell)=TotSet(eCell.EXTcell) then
+        return;
+      fi;
+    od;
+    Add(CoveringCells, eCell);
+    for eVert in eCell.EXTcell
+    do
+      if GetPositionAntipodal(TotalVertexSet, eVert)=fail then
+        Add(TotalVertexSet, eVert);
+      fi;
+    od;
+  end;
+  eStartCell:=rec(iTopCell:=1, eMat:=IdentityMat(4));
+  TheSeq:=SP4Z_GetSequenceToRay(ListTopCells, ListVertices[1], eStartCell);
+  eGoodCell:=TheSeq[Length(TheSeq)];
+  FuncInsertCoveringCell(eGoodCell);
+  for iVert in [2..nbVert]
+  do
+    eVert:=ListVertices[iVert];
+    if GetPositionAntipodal(TotalVertexSet, eVert)=fail then
+      TheSeq:=SP4Z_GetSequenceToRay(ListTopCells, eVert, eGoodCell);
+      for eCell in TheSeq
+      do
+        FuncInsertCoveringCell(eCell);
+      od;
+    fi;
+  od;
+  #
+  # Next stage verifying the inclusions
+  # If not then agressively include cells
+  #
+  for iOrbitM1 in [1..nbOrbitM1]
+  do
+    eEnt:=TheChain[iOrbitM1];
+    for eG in eEnt.ListElt
+    do
+      EXTcell:=TotalListOrbit[iDim-1][iOrbitM1].EXT*eG;
+      pos:=First(CoveringCells, x->IsSubset(TotSet(x.EXTcell), TotSet(EXTcell))=true);
+      if pos=fail then
+        eGoodCell:=First(CoveringCells, x->GetPositionAntipodal(x.EXTcell, EXTcell[1])<>fail);
+        TheSeq:=SP4Z_GetSequenceToCell(ListTopCells, EXTcell, eGoodCell);
+        for eCell in TheSeq
+        do
+          FuncInsertCoveringCell(eCell);
+        od;
+      fi;
+    od;
+  od;
+  #
+  # Flowering operations
+  #
+  DoFlowering:=function(CoveringCells)
+    local NewCoveringCells, nbCov, FuncInsertCoveringCell, iCov, eCellCov, eAdjInfo, fMat, EXTcell, NewCell;
+    NewCoveringCells:=List(CoveringCells, x->x);
+    nbCov:=Length(CoveringCells);
+    FuncInsertCoveringCell:=function(eCell)
+      local fCell, eVert;
+      for fCell in NewCoveringCells
+      do
+        if TotSet(fCell.EXTcell)=TotSet(eCell.EXTcell) then
+          return;
+        fi;
+      od;
+      Add(NewCoveringCells, eCell);
+    end;
+    for iCov in [1..nbCov]
+    do
+      eCellCov:=CoveringCells[iCov];
+      for eAdjInfo in ListTopCells[eCell.iTopCell].ListAdj
+      do
+        fMat:=eAdjInfo.eEquiv*eCellCov.eMat;
+        EXTcell:=ListTopCells[eAdjInfo.iCell].EXT*fMat;
+        NewCell:=rec(iTopCell:=eAdjInfo.iCell, eMat:=fMat, EXTcell:=EXTcell);
+        FuncInsertCoveringCell(NewCell);
+      od;
+    od;
+    return NewCoveringCells;
+  end;
+  #
+  # Procedure for Computing the included cells
+  # and solving if that is possible
+  #
+  AttemptSystemSolution:=function(CoveringCells)
+    local LL_Cell, eIter, ListJDim, ListJDimRev, iIter, jDim, ListCell, eGline, FuncInsertCell, eRecCov, jTopCell, fMat, L_Index, eQuad, iOrbitB, eEquiv, uMat, GRA, ListEdges, pos1, pos2, posPt1, posPt2, eEdge, BndImg, nbCell, nbCellM1, ListMatrixDiff, MatrixDiff, eLine, eVectBig, eCell, idx, ePath, ListICell, eRecAsk, eReply, GetMatrixEntry, iDimSrc, ListJDimSrc, SolInt, posNZ, ListPosCell, iLine, ListListBound, ListBound, eFace, ListListBoundTot, posTot, ListTot, ListTotNb, EXTcellTot, ListBoundTot, ListTotRec, TheRecOrig, EXTcont, ListBadCell, lenC, ListLenC, nbCM1, eMat, iEnt, eImg, len, i, eProdMat, eElt;
+    LL_Cell:=[];
+    if iDim=2 then
+      eIter:=1;
+    else
+      eIter:=0;
+    fi;
+    ListJDim:=[];
+    ListJDimRev:=ListWithIdenticalEntries(iDim,0);
+    idx:=0;
+    for iIter in [eIter..2]
+    do
+      idx:=idx+1;
+      jDim:=iIter-2 + iDim;
+      Add(ListJDim, jDim);
+      ListJDimRev[jDim]:=idx;
+      ListCell:=[];
+      FuncInsertCell:=function(eCell)
+        local fCell;
+        for fCell in ListCell
+        do
+          if TotSet(fCell.EXTcell)=TotSet(eCell.EXTcell) then
+            return;
+          fi;
+        od;
+        Add(ListCell, eCell);
+      end;
+      for eRecCov in CoveringCells
+      do
+        jTopCell:=eRecCov.iTopCell;
+        fMat:=eRecCov.eMat;
+        L_Index:=LLL_Index[jDim][jTopCell];
+        for eQuad in L_Index
+        do
+          iOrbitB:=eQuad.eInfo.iOrbit;
+          eEquiv:=eQuad.eInfo.eEquiv;
+          uMat:=eEquiv*fMat;
+          EXTcell:=TotalListOrbit[jDim][iOrbitB].EXT*uMat;
+          if IsSubset(TotSet(eRecCov.EXTcell), TotSet(EXTcell))=false then
+            Error("Clear error 2");
+          fi;
+          uCell:=rec(iOrbit:=iOrbitB, eMat:=uMat, EXTcell:=EXTcell);
+          FuncInsertCell(uCell);
+        od;
+      od;
+      Print("jDim=", jDim, " |ListCell|=", Length(ListCell), "\n");
+      Add(LL_Cell, ListCell);
+    od;
+    #
+    # For dimension 2 this is a shortest path problem.
+    # and so we can reduce things and get better solutions.
+    #
+    if iDim=2 and TotalLength=2 then
+      GRA:=NullGraph(Group(()), Length(LL_Cell[1]));
+      ListEdges:=[];
+      for iCell in [1..Length(LL_Cell[2])]
+      do
+        eCell:=LL_Cell[2][iCell];
+        pos1:=GetPositionAntipodal(TotalVertexSet, eCell.EXTcell[1]);
+        pos2:=GetPositionAntipodal(TotalVertexSet, eCell.EXTcell[2]);
+        eEdge:=Set([pos1, pos2]);
+        Add(ListEdges, eEdge);
+        AddEdgeOrbit(GRA, [pos1, pos2]);
+        AddEdgeOrbit(GRA, [pos2, pos1]);
+      od;
+      if IsConnectedGraph(GRA)=false then
+        Error("GRA should be connected");
+      fi;
+      posPt1:=GetPositionAntipodal(TotalVertexSet, ListVertices[1]);
+      posPt2:=GetPositionAntipodal(TotalVertexSet, ListVertices[2]);
+      if posPt1=fail or posPt2=fail then
+        Error("The point do not belong and that is not allowed");
+      fi;
+      ePath:=FindShortestPath(GRA, posPt1, posPt2);
+      ListICell:=[];
+      for iVert in [2..Length(ePath)]
+      do
+        eEdge:=Set([ePath[iVert-1], ePath[iVert]]);
+        iCell:=Position(ListEdges, eEdge);
+        Add(ListICell, iCell);
+      od;
+      LL_Cell[2]:=LL_Cell[2]{ListICell};
+    fi;
+    nbCellM1:=Length(LL_Cell[ListJDimRev[iDim-1]]);
+    nbCell:=Length(LL_Cell[ListJDimRev[iDim]]);
+    #
+    # Function for finding matrix entry
+    #
+    GetMatrixEntry:=function(eDim, eRecAsk)
+      local EXTcell, iCell, fRec, iOrbitLoc, eQuot, EXT, eList, ePerm, eSignOr, BndImg, xPos;
+      EXTcell:=TotalListOrbit[eDim][eRecAsk.iOrbit].EXT*eRecAsk.eMat;
+      iOrbitLoc:=eRecAsk.iOrbit;
+      xPos:=ListJDimRev[eDim];
+      for iCell in [1..nbCellM1]
+      do
+        fRec:=LL_Cell[xPos][iCell];
+        if iOrbitLoc=fRec.iOrbit then
+          if TotSet(fRec.EXTcell)=TotSet(EXTcell) then
+            eQuot:=fRec.eMat*Inverse(eRecAsk.eMat);
+            EXT:=TotalListOrbit[eDim][iOrbitLoc].EXT;
+            eList:=List(EXT*eQuot, x->GetPositionAntipodal(EXT, x));
+            ePerm:=PermList(eList);
+            if ePerm=fail then
+              Error("Wrong eList");
+            fi;
+            BndImg:=TotalListOrbit[eDim][iOrbitLoc].BoundaryImage;
+            if not(ePerm in BndImg.PermGrp) then
+              Error("Belonging error to solve");
+            fi;
+            if ePerm in BndImg.PermGrpOr then
+              eSignOr:=1;
+            else
+              eSignOr:=-1;
+            fi;
+            return rec(pos:=iCell, val:=eSignOr*eRecAsk.eSign);
+          fi;
+        fi;
+      od;
+      Error("No entry found in GetMatrixEntry");
+    end;
+    #
+    # Now building the differential matrix d
+    # and the preceding one if that make sense.
+    #
+    ListJDimSrc:=ListJDim{[2..Length(ListJDim)]};
+    ListMatrixDiff:=[];
+    for iDimSrc in ListJDimSrc
+    do
+      MatrixDiff:=[];
+      nbCM1:=Length(LL_Cell[ListJDimRev[iDimSrc-1]]);
+      for eCell in LL_Cell[ListJDimRev[iDimSrc]]
+      do
+        eLine:=ListWithIdenticalEntries(nbCM1,0);
+        iOrbitB:=eCell.iOrbit;
+        eMat:=eCell.eMat;
+        BndImg:=TotalListOrbit[iDimSrc][iOrbitB].BoundaryImage;
+        for iEnt in [1..Length(BndImg.ListSign)]
+        do
+          uMat:=BndImg.ListElt[iEnt]*eMat;
+          eRecAsk:=rec(iOrbit:=BndImg.ListIFace[iEnt], eMat:=uMat, eSign:=BndImg.ListSign[iEnt]);
+          eReply:=GetMatrixEntry(iDimSrc-1, eRecAsk);
+          eLine[eReply.pos]:=eLine[eReply.pos] + eReply.val;
+        od;
+        Add(MatrixDiff, eLine);
+      od;
+      Add(ListMatrixDiff, MatrixDiff);
+    od;
+    #
+    # Build the Vector T_g(dF)
+    #
+    eVectBig:=ListWithIdenticalEntries(nbCellM1, 0);
+    for iOrbitM1 in [1..nbOrbitM1]
+    do
+      eEnt:=TheChain[iOrbitM1];
+      len:=Length(eEnt.ListElt);
+      for i in [1..len]
+      do
+        eRecAsk:=rec(iOrbit:=iOrbitM1, eMat:=eEnt.ListElt[i], eSign:=eEnt.ListVal[i]);
+        eReply:=GetMatrixEntry(iDim-1, eRecAsk);
+        eVectBig[eReply.pos]:=eVectBig[eReply.pos] + eReply.val;
+      od;
+    od;
+    #
+    # Checking that d(T_g (du) ) = 0
+    # Also checking that the square of the differential is zero.
+    #
+    if iDim>2 then
+      eProdMat:=ListMatrixDiff[2]*ListMatrixDiff[1];
+      for eLine in eProdMat
+      do
+        if First(eLine, x->x<>0)<>fail then
+          Error("The matrix product should be zero");
+        fi;
+      od;
+    fi;
+    eImg:=eVectBig*ListMatrixDiff[1];
+    if First(eImg, x->x<>0)<>fail then
+      return rec(result:="dx is not zero");
+    fi;
+    #
+    # Now solving the system and storing the image
+    #
+#    SolInt:=SolutionIntMat(ListMatrixDiff[2-eIter], eVectBig);
+    SolInt:=SolutionIntMatShort(ListMatrixDiff[2-eIter], eVectBig);
+    if SolInt=fail then
+      return fail;
+    fi;
+    eGline:=GMOD_GetZeroVector(nbOrbit);
+    for iCell in [1..nbCell]
+    do
+      if SolInt[iCell]<>0 then
+        eCell:=LL_Cell[ListJDimRev[iDim]][iCell];
+        iOrbitB:=eCell.iOrbit;
+        eElt:=eCell.eMat;
+        Add(eGline[iOrbitB].ListVal, SolInt[iCell]);
+        Add(eGline[iOrbitB].ListElt, eElt);
+      fi;
+    od;
+    return rec(result:="success", eGline:=eGline);
+  end;
+  while(true)
+  do
+    RecSol:=AttemptSystemSolution(CoveringCells);
+    if RecSol.result="success" then
+      return RecSol;
+    fi;
+    Print("Do Flowering operation\n");
+    CoveringCells:=DoFlowering(CoveringCells);
+  od;
+end;
+
+
+
+SP4Z_ComputeHeckeOperators:=function(TotalArray, FuncGroupMembership, TheRatMatrix)
+  local EXT, EXTimg, nbVert, CoveringCells, FuncInsertCoveringCell, eStartCell, TheSeq, eGoodCell, iVert, eCell, iDim, LL_Cell, ListCell, FuncInsertCell, eRec, L_Index, TheGmat, eEquiv, uMat, EXTcell, nbOrbit, fMat, iOrbit, uCell, nbCellM1, fRec, ePerm, eQuot, eList, L_IndexM1, iCell, nbOrbitM1, nbCell,  eMat, len, eVect, i, eOrbit, eVert, eEnt, ListIFace, ListElt, ListSign, iEnt, eSign, iFace, eGmodEnt, eGmodLine, iOrbitM1, lenB, iEntB, eVal, eElt, iOrbitB, ListGRA, GRA, jCell, eInt, eVertImg, nbNonZero, eRecPos, pos, NewTriple, ListVertices, iIter, jDim, BndImg, eRecCov, ListTopCells, TotalListOrbit, LLL_Index, TheDim, GetPositionInOrbit, RecGroup, RecHecke, nbCosMat, LL_GmoduleMatrix, L_GmoduleMatrix, iCosMat, OneRatMatrix, eRecHE, eCosMat, ListRelevantCell, TotalVertexSet, eRecCell, eRelCell, EXTadd, eIter, nbCM1, eImg, eProdMat, nbEntry, EXTcellImg, EXTimgCos, eInvMat, AttemptSystemSolution, eGline, DoFlowering, LL_ListBoundaries, L_ListBoundaries, ListBoundaries, TheRecBoundary, ListRecordCoset, FuncInsertRecordCoset, IsFinished, iRecordCoset, nbRecordCoset, eGen, zMat, RecCell, EXTface, lenTot, L_MatrixHistoryOperation, MatrixHistoryOperation, eSet, EXTfaceImg, M2_ListEXTtot, M2_ListRecTot, M2_ListNb_Tot, EXTcellTot, TotRec, eG, vMat, M2_EXTexpand, M2_EXTexpand_nb, M2_ListOrigin, eG1, eG2, iFaceB, nbOrbitM2, M2_ListIent, M2_ListListPos, ListPos, EXTcellBig, EXTcellBigTot, iOrbitM2, eG3, nPos, M2_ListCellSingleIdx, M2_ListGroupSingleIdx, ListMult, TheFirst, ListRes, M2_EXTexpandCellIdx, M2_ListREC, eREC, hMat, eLine, zList;
+  eInvMat:=SYMPL_GetSymplecticForm(2);
+  if SP4Z_IsInExtendedGroup(TheRatMatrix)=false then
+    Error("The matrix should be in the extended symplectic group");
+  fi;
+  #
+  # Define the necessary variables.
+  #
+  ListTopCells:=TotalArray.ListTopCells;
+  TotalListOrbit:=TotalArray.CellComplex.TotalListOrbit;
+  LLL_Index:=TotalArray.CellComplex.LLL_Index;
+  TheDim:=Length(TotalListOrbit);
+  #
+  # Now computing the action on the polyhedral resolution
+  #
+  GetPositionInOrbit:=function(iDim, eTriple)
+    local nbOrbit, iOrbit, fTriple, test;
+    for iOrbit in [1..Length(TotalListOrbit[iDim])]
+    do
+      for fTriple in TotalListOrbit[iDim][iOrbit].ListTriple
+      do
+        test:=TestEquivalenceTriple(ListTopCells, fTriple, eTriple);
+        if test<>false then
+          return rec(iOrbit:=iOrbit, eEquiv:=test);
+        fi;
+      od;
+    od;
+    Error("Triple not found, please panic");
+  end;
+  #
+  # Double coset splitting and relevant functionality
+  #
+  RecGroup:=rec(ListGen:=TotalArray.TotalListGenerators,
+                IsInGroup:=FuncGroupMembership);
+  RecHecke:=HECKE_DoubleCosetToRightCosets(RecGroup, TheRatMatrix);
+  nbCosMat:=Length(RecHecke.ListCoset);
+  Print("|ListMat|=", nbCosMat, "\n");
+  #
+  # The big computation
+  #
+  LL_GmoduleMatrix:=[];
+  LL_ListBoundaries:=[];
+  L_MatrixHistoryOperation:=[];
+  for iDim in [1..TheDim]
+  do
+    Print("-------------------------------------\n");
+    Print("iDim=", iDim, "\n");
+    nbOrbit:=Length(TotalListOrbit[iDim]);
+    if iDim > 1 then
+      nbOrbitM1:=Length(TotalListOrbit[iDim-1]);
+    fi;
+    if iDim > 2 then
+      nbOrbitM2:=Length(TotalListOrbit[iDim-2]);
+    fi;
+    L_GmoduleMatrix:=[];
+    for iCosMat in [1..nbCosMat]
+    do
+      TheGmat:=GMOD_GetZeroMatrix(nbOrbit, nbOrbit);
+      Add(L_GmoduleMatrix, TheGmat);
+    od;
+    L_ListBoundaries:=[];
+    for iCosMat in [1..nbCosMat]
+    do
+      ListBoundaries:=[];
+      for iOrbit in [1..nbOrbit]
+      do
+        TheRecBoundary:=rec(stat:="unset");
+        Add(ListBoundaries, TheRecBoundary);
+      od;
+      Add(L_ListBoundaries, ListBoundaries);
+    od;
+    MatrixHistoryOperation:=[];
+    for iOrbit in [1..nbOrbit]
+    do
+      eLine:=[];
+      for iCosMat in [1..nbCosMat]
+      do
+        Add(eLine, rec(status:="undone"));
+      od;
+      Add(MatrixHistoryOperation, eLine);
+    od;
+    for iCosMat in [1..nbCosMat]
+    do
+      Print("  iCosMat=", iCosMat, " / ", nbCosMat, "\n");
+      eCosMat:=RecHecke.ListCoset[iCosMat];
+      for iOrbit in [1..nbOrbit]
+      do
+        Print("    iOrbit=", iOrbit, " / ", nbOrbit, " iCosMat=", iCosMat, "/", nbCosMat, " iDim=", iDim, "\n");
+        eOrbit:=TotalListOrbit[iDim][iOrbit];
+        EXTimgCos:=List(eOrbit.EXT*eCosMat, RemoveFraction);
+        if iDim=1 then
+          eVertImg:=EXTimgCos[1];
+          eStartCell:=rec(iTopCell:=1, eMat:=IdentityMat(4));
+          TheSeq:=SP4Z_GetSequenceToRay(ListTopCells, eVertImg, eStartCell);
+          eGoodCell:=TheSeq[Length(TheSeq)];
+          EXTcellImg:=ListTopCells[eGoodCell.iTopCell].EXT*eGoodCell.eMat;
+          pos:=GetPositionAntipodal(EXTcellImg, eVertImg);
+          NewTriple:=rec(iTopCell:=eGoodCell.iTopCell, eMat:=eGoodCell.eMat, eSet:=[pos]);
+          eRecPos:=GetPositionInOrbit(iDim, NewTriple);
+          eEnt:=rec(ListVal:=[1], ListElt:=[eRecPos.eEquiv]);
+          L_GmoduleMatrix[iCosMat].TheMat[iOrbit][eRecPos.iOrbit]:=eEnt;
+          L_ListBoundaries[iCosMat][iOrbit]:=rec(stat:="irrelevant");
+        elif MatrixHistoryOperation[iOrbit][iCosMat].status="undone" then
+          ListIFace:=eOrbit.BoundaryImage.ListIFace;
+          ListElt:=eOrbit.BoundaryImage.ListElt;
+          ListSign:=eOrbit.BoundaryImage.ListSign;
+          len:=Length(ListIFace);
+          #
+          # Compute the set of vertices
+          #
+          ListVertices:=[];
+          ListRelevantCell:=[];
+          for iEnt in [1..len]
+          do
+            iFace:=ListIFace[iEnt];
+            eMat:=ListElt[iEnt];
+            EXTface:=TotalListOrbit[iDim-1][iFace].EXT*eMat;
+            eSet:=Set(List(EXTface, x->GetPositionAntipodal(TotalListOrbit[iDim][iOrbit].EXT, x)));
+            EXTfaceImg:=EXTimgCos{eSet};
+            eRecHE:=RecHecke.DoProduct(eMat, eCosMat);
+            eGmodLine:=LL_GmoduleMatrix[iDim-1][eRecHE.iCoset].TheMat[iFace];
+            lenTot:=Sum(List(eGmodLine, x->Length(x.ListVal)));
+            for iOrbitM1 in [1..nbOrbitM1]
+            do
+              eGmodEnt:=eGmodLine[iOrbitM1];
+              lenB:=Length(eGmodEnt.ListVal);
+              for iEntB in [1..lenB]
+              do
+                uMat:=eGmodEnt.ListElt[iEntB]*eRecHE.gP;
+                EXTcell:=TotalListOrbit[iDim-1][iOrbitM1].EXT*uMat;
+                RecCell:=rec(iOrbitM1:=iOrbitM1, uMat:=uMat, EXTcell:=EXTcell, iEnt:=iEnt, iFace:=iFace, EXTface:=EXTface, eRecHE:=eRecHE, lenTot:=lenTot, iFace:=iFace, eMat:=eMat, iCosMat:=iCosMat, EXTfaceImg:=EXTfaceImg, iOrbitM1:=iOrbitM1, iEntB:=iEntB, lenB:=lenB);
+                Add(ListRelevantCell, RecCell);
+                for eVect in EXTcell
+                do
+                  if GetPositionAntipodal(ListVertices, eVect)=fail then
+                    Add(ListVertices, eVect);
+                  fi;
+                od;
+              od;
+            od;
+          od;
+          #
+          # Check that every level 2 cell is covered two times
+          # (rudimentary check that d( c g) = 0 )
+          #
+          if iDim > 3 then
+            M2_ListEXTtot:=[];
+            M2_ListRecTot:=[];
+            M2_ListNb_Tot:=[];
+            M2_ListIent:=[];
+            for eRelCell in ListRelevantCell
+            do
+              BndImg:=TotalListOrbit[iDim-1][eRelCell.iOrbitM1].BoundaryImage;
+              lenB:=Length(BndImg.ListIFace);
+              for iEntB in [1..lenB]
+              do
+                iFace:=BndImg.ListIFace[iEntB];
+                eG:=BndImg.ListElt[iEntB];
+                vMat:=eG*eRelCell.uMat;
+                EXTcell:=TotalListOrbit[iDim-2][iFace].EXT*vMat;
+                EXTcellTot:=TotSet(EXTcell);
+                pos:=Position(M2_ListEXTtot, EXTcellTot);
+                TotRec:=rec(eRelCell:=eRelCell, iFace:=iFace, eG:=eG);
+                if pos=fail then
+                  Add(M2_ListEXTtot, EXTcellTot);
+                  Add(M2_ListRecTot, [TotRec]);
+                  Add(M2_ListNb_Tot, 1);
+                  Add(M2_ListIent, [eRelCell.iEnt]);
+                else
+                  M2_ListNb_Tot[pos]:=M2_ListNb_Tot[pos]+1;
+                  Add(M2_ListRecTot[pos], TotRec);
+                  Add(M2_ListIent[pos], eRelCell.iEnt);
+                fi;
+              od;
+            od;
+            M2_ListCellSingleIdx:=[];
+            M2_ListGroupSingleIdx:=[];
+            for i in [1..len]
+            do
+              Add(M2_ListGroupSingleIdx, []);
+            od;
+            for iEnt in [1..Length(M2_ListIent)]
+            do
+              ListMult:=List(Collected(M2_ListIent[iEnt]), x->x[2]);
+              if Position(ListMult,1)<>fail then
+                Add(M2_ListCellSingleIdx, iEnt);
+              fi;
+              for i in [1..len]
+              do
+                if Length(Filtered(M2_ListIent[iEnt], x->x=i))=1 then
+                  Add(M2_ListGroupSingleIdx[i], iEnt);
+                fi;
+              od;
+            od;
+            M2_EXTexpand:=[];
+            M2_EXTexpandCellIdx:=[];
+            M2_ListListPos:=[];
+            M2_EXTexpand_nb:=[];
+            M2_ListREC:=[];
+            for iEnt in [1..len]
+            do
+              iFace:=ListIFace[iEnt];
+              eG1:=ListElt[iEnt];
+              BndImg:=TotalListOrbit[iDim-1][iFace].BoundaryImage;
+              lenB:=Length(BndImg.ListIFace);
+              for iEntB in [1..lenB]
+              do
+                iFaceB:=BndImg.ListIFace[iEntB];
+                eG2:=BndImg.ListElt[iEntB];
+                vMat:=eG2*eG1;
+                EXTcellBig:=TotalListOrbit[iDim-2][iFaceB].EXT*vMat;
+                EXTcellBigTot:=TotSet(EXTcellBig);
+                eRecHE:=RecHecke.DoProduct(vMat, eCosMat);
+                eGmodLine:=LL_GmoduleMatrix[iDim-2][eRecHE.iCoset].TheMat[iFaceB];
+                eREC:=rec(iFaceB:=iFaceB, vMat:=vMat, iCoset:=eRecHE.iCoset);
+                ListPos:=[];
+                for iOrbitM2 in [1..nbOrbitM2]
+                do
+                  eGmodEnt:=eGmodLine[iOrbitM2];
+                  for eG3 in eGmodLine[iOrbitM2].ListVal
+                  do
+                    hMat:=eG3*eRecHE.gP;
+                    EXTcell:=TotalListOrbit[iDim-2][iOrbitM2].EXT*hMat;
+                    EXTcellTot:=TotSet(EXTcell);
+                    nPos:=Position(M2_ListEXTtot, EXTcellTot);
+                    Add(ListPos, nPos);
+                  od;
+                od;
+                pos:=Position(M2_EXTexpand, EXTcellBigTot);
+                if pos=fail then
+                  Add(M2_EXTexpand, EXTcellBigTot);
+                  Add(M2_EXTexpand_nb, 1);
+                  Add(M2_ListListPos, [ListPos]);
+                  Add(M2_EXTexpandCellIdx, [iEnt]);
+                  Add(M2_ListREC, [eREC]);
+                else
+                  M2_EXTexpand_nb[pos]:=M2_EXTexpand_nb[pos]+1;
+                  Add(M2_ListListPos[pos], ListPos);
+                  Add(M2_EXTexpandCellIdx[pos], iEnt);
+                  Add(M2_ListREC[pos], eREC);
+                fi;
+              od;
+            od;
+            ListRes:=List(M2_ListNb_Tot, x->x mod 2);
+            TheFirst:=First([1..Length(M2_ListNb_Tot)], x->ListRes[x]=1);
+            if TheFirst<>fail then
+              #
+              for zList in M2_ListREC
+              do
+                if zList[1].iFaceB<>zList[2].iFaceB then
+                  Error("Very bad error. Change your brain");
+                fi;
+                iFaceB:=zList[1].iFaceB;
+                eMat:=zList[1].vMat*Inverse(zList[2].vMat);
+                Print("Before stabilizer test\n");
+                if not(eMat in TotalListOrbit[iDim-2][iFaceB].TheStab) then
+                  Error("Stabilizer error");
+                fi;
+                Print("After stabilizer test\n");
+              od;
+              Error("Inconsistency. Should be always 2 for all\n");
+            fi;
+          fi;
+          #
+          # Compute a first stage covering set
+          # We want it as small as possible, but we have
+          # no systematic method for building it.
+          #
+          nbVert:=Length(ListVertices);
+          CoveringCells:=[];
+          TotalVertexSet:=[];
+          FuncInsertCoveringCell:=function(eCell)
+            local fCell, eVert;
+            for fCell in CoveringCells
+            do
+              if TotSet(fCell.EXTcell)=TotSet(eCell.EXTcell) then
+                return;
+              fi;
+            od;
+            Add(CoveringCells, eCell);
+            for eVert in eCell.EXTcell
+            do
+              if GetPositionAntipodal(TotalVertexSet, eVert)=fail then
+                Add(TotalVertexSet, eVert);
+              fi;
+            od;
+          end;
+          eStartCell:=rec(iTopCell:=1, eMat:=IdentityMat(4));
+          TheSeq:=SP4Z_GetSequenceToRay(ListTopCells, ListVertices[1], eStartCell);
+          eGoodCell:=TheSeq[Length(TheSeq)];
+          FuncInsertCoveringCell(eGoodCell);
+          for iVert in [2..nbVert]
+          do
+            eVert:=ListVertices[iVert];
+            if GetPositionAntipodal(TotalVertexSet, eVert)=fail then
+              TheSeq:=SP4Z_GetSequenceToRay(ListTopCells, eVert, eGoodCell);
+              for eCell in TheSeq
+              do
+                FuncInsertCoveringCell(eCell);
+              od;
+            fi;
+          od;
+          #
+          # Next stage verifying the inclusions
+          # If not then agressively include cells
+          #
+          for eRelCell in ListRelevantCell
+          do
+            EXTcell:=TotalListOrbit[iDim-1][eRelCell.iOrbitM1].EXT*eRelCell.uMat;
+            pos:=First(CoveringCells, x->IsSubset(TotSet(x.EXTcell), TotSet(EXTcell))=true);
+            if pos=fail then
+              eGoodCell:=First(CoveringCells, x->GetPositionAntipodal(x.EXTcell, EXTcell[1])<>fail);
+              TheSeq:=SP4Z_GetSequenceToCell(ListTopCells, EXTcell, eGoodCell);
+              for eCell in TheSeq
+              do
+                FuncInsertCoveringCell(eCell);
+              od;
+            fi;
+          od;
+          #
+          # Flowering operations
+          #
+          DoFlowering:=function(CoveringCells)
+            local NewCoveringCells, nbCov, FuncInsertCoveringCell, iCov, eCellCov, eAdjInfo, fMat, EXTcell, NewCell;
+            NewCoveringCells:=List(CoveringCells, x->x);
+            nbCov:=Length(CoveringCells);
+            FuncInsertCoveringCell:=function(eCell)
+              local fCell, eVert;
+              for fCell in NewCoveringCells
+              do
+                if TotSet(fCell.EXTcell)=TotSet(eCell.EXTcell) then
+                  return;
+                fi;
+              od;
+              Add(NewCoveringCells, eCell);
+            end;
+            for iCov in [1..nbCov]
+            do
+              eCellCov:=CoveringCells[iCov];
+              for eAdjInfo in ListTopCells[eCell.iTopCell].ListAdj
+              do
+                fMat:=eAdjInfo.eEquiv*eCellCov.eMat;
+                EXTcell:=ListTopCells[eAdjInfo.iCell].EXT*fMat;
+                NewCell:=rec(iTopCell:=eAdjInfo.iCell, eMat:=fMat, EXTcell:=EXTcell);
+                FuncInsertCoveringCell(NewCell);
+              od;
+            od;
+            return NewCoveringCells;
+          end;
+          #
+          # Short paths reduction
+          #
+
+
+          #
+          # Procedure for Computing the included cells
+          # and solving if that is possible
+          #
+          AttemptSystemSolution:=function(CoveringCells)
+            local LL_Cell, eIter, ListJDim, ListJDimRev, iIter, jDim, ListCell, eGline, FuncInsertCell, eRecCov, jTopCell, fMat, L_Index, eQuad, iOrbitB, eEquiv, uMat, GRA, ListEdges, pos1, pos2, posPt1, posPt2, eEdge, BndImg, nbCell, nbCellM1, ListMatrixDiff, MatrixDiff, eLine, eVectBig, eCell, idx, ePath, ListICell, eRecAsk, eReply, GetMatrixEntry, iDimSrc, ListJDimSrc, SolInt, posNZ, ListPosCell, iLine, TotVectBig, ListVectBig, ListRecHE, ListListBound, ListBound, eFace, ListListBoundTot, posTot, ListTot, ListTotNb, EXTcellTot, ListBoundTot, ListTotRec, TheRecOrig, EXTcont, ListBadCell, lenC, ListLenC;
+            LL_Cell:=[];
+            if iDim=2 then
+              eIter:=1;
+            else
+              eIter:=0;
+            fi;
+            ListJDim:=[];
+            ListJDimRev:=ListWithIdenticalEntries(iDim,0);
+            idx:=0;
+            for iIter in [eIter..2]
+            do
+              idx:=idx+1;
+              jDim:=iIter-2 + iDim;
+              Add(ListJDim, jDim);
+              ListJDimRev[jDim]:=idx;
+              ListCell:=[];
+              FuncInsertCell:=function(eCell)
+                local fCell;
+                for fCell in ListCell
+                do
+                  if TotSet(fCell.EXTcell)=TotSet(eCell.EXTcell) then
+                    return;
+                  fi;
+                od;
+                Add(ListCell, eCell);
+              end;
+              for eRecCov in CoveringCells
+              do
+                jTopCell:=eRecCov.iTopCell;
+                fMat:=eRecCov.eMat;
+                L_Index:=LLL_Index[jDim][jTopCell];
+                for eQuad in L_Index
+                do
+                  iOrbitB:=eQuad.eInfo.iOrbit;
+                  eEquiv:=eQuad.eInfo.eEquiv;
+                  uMat:=eEquiv*fMat;
+                  EXTcell:=TotalListOrbit[jDim][iOrbitB].EXT*uMat;
+                  if IsSubset(TotSet(eRecCov.EXTcell), TotSet(EXTcell))=false then
+                    Error("Clear error 2");
+                  fi;
+                  uCell:=rec(iOrbit:=iOrbitB, eMat:=uMat, EXTcell:=EXTcell);
+                  FuncInsertCell(uCell);
+                od;
+              od;
+              Print("jDim=", jDim, " |ListCell|=", Length(ListCell), "\n");
+              Add(LL_Cell, ListCell);
+            od;
+            #
+            # For dimension 2 this is a shortest path problem.
+            # and so we can reduce things.
+            #
+            if iDim=2 then
+              GRA:=NullGraph(Group(()), Length(LL_Cell[1]));
+              ListEdges:=[];
+              for iCell in [1..Length(LL_Cell[2])]
+              do
+                eCell:=LL_Cell[2][iCell];
+                pos1:=GetPositionAntipodal(TotalVertexSet, eCell.EXTcell[1]);
+                pos2:=GetPositionAntipodal(TotalVertexSet, eCell.EXTcell[2]);
+                eEdge:=Set([pos1, pos2]);
+                Add(ListEdges, eEdge);
+                AddEdgeOrbit(GRA, [pos1, pos2]);
+                AddEdgeOrbit(GRA, [pos2, pos1]);
+              od;
+              if IsConnectedGraph(GRA)=false then
+                Error("GRA should be connected");
+              fi;
+              posPt1:=GetPositionAntipodal(TotalVertexSet, EXTimgCos[1]);
+              posPt2:=GetPositionAntipodal(TotalVertexSet, EXTimgCos[2]);
+              if posPt1=fail or posPt2=fail then
+                Error("The point do not belong and that is not allowed");
+              fi;
+              ePath:=FindShortestPath(GRA, posPt1, posPt2);
+              ListICell:=[];
+              for iVert in [2..Length(ePath)]
+              do
+                eEdge:=Set([ePath[iVert-1], ePath[iVert]]);
+                iCell:=Position(ListEdges, eEdge);
+                Add(ListICell, iCell);
+              od;
+              LL_Cell[2]:=LL_Cell[2]{ListICell};
+            fi;
+            nbCellM1:=Length(LL_Cell[ListJDimRev[iDim-1]]);
+            nbCell:=Length(LL_Cell[ListJDimRev[iDim]]);
+            #
+            # Function for finding matrix entry
+            #
+            GetMatrixEntry:=function(eDim, eRecAsk)
+              local EXTcell, iCell, fRec, iOrbitLoc, eQuot, EXT, eList, ePerm, eSignOr, BndImg, xPos;
+              EXTcell:=TotalListOrbit[eDim][eRecAsk.iOrbit].EXT*eRecAsk.eMat;
+              iOrbitLoc:=eRecAsk.iOrbit;
+              xPos:=ListJDimRev[eDim];
+              for iCell in [1..nbCellM1]
+              do
+                fRec:=LL_Cell[xPos][iCell];
+                if iOrbitLoc=fRec.iOrbit then
+                  if TotSet(fRec.EXTcell)=TotSet(EXTcell) then
+                    eQuot:=fRec.eMat*Inverse(eRecAsk.eMat);
+                    EXT:=TotalListOrbit[eDim][iOrbitLoc].EXT;
+                    eList:=List(EXT*eQuot, x->GetPositionAntipodal(EXT, x));
+                    ePerm:=PermList(eList);
+                    if ePerm=fail then
+                      Error("Wrong eList");
+                    fi;
+                    BndImg:=TotalListOrbit[eDim][iOrbitLoc].BoundaryImage;
+                    if not(ePerm in BndImg.PermGrp) then
+                      Error("Belonging error to solve");
+                    fi;
+                    if ePerm in BndImg.PermGrpOr then
+                      eSignOr:=1;
+                    else
+                      eSignOr:=-1;
+                    fi;
+                    return rec(pos:=iCell, val:=eSignOr*eRecAsk.eSign);
+                  fi;
+                fi;
+              od;
+              Error("No entry found in GetMatrixEntry");
+            end;
+            #
+            # Now building the differential matrix d
+            # and the preceding one if that make sense.
+            #
+            ListJDimSrc:=ListJDim{[2..Length(ListJDim)]};
+            ListMatrixDiff:=[];
+            for iDimSrc in ListJDimSrc
+            do
+              MatrixDiff:=[];
+              nbCM1:=Length(LL_Cell[ListJDimRev[iDimSrc-1]]);
+              for eCell in LL_Cell[ListJDimRev[iDimSrc]]
+              do
+                eLine:=ListWithIdenticalEntries(nbCM1,0);
+                iOrbitB:=eCell.iOrbit;
+                eMat:=eCell.eMat;
+                BndImg:=TotalListOrbit[iDimSrc][iOrbitB].BoundaryImage;
+                for iEnt in [1..Length(BndImg.ListSign)]
+                do
+                  uMat:=BndImg.ListElt[iEnt]*eMat;
+                  eRecAsk:=rec(iOrbit:=BndImg.ListIFace[iEnt], eMat:=uMat, eSign:=BndImg.ListSign[iEnt]);
+                  eReply:=GetMatrixEntry(iDimSrc-1, eRecAsk);
+                  eLine[eReply.pos]:=eLine[eReply.pos] + eReply.val;
+                od;
+                Add(MatrixDiff, eLine);
+              od;
+              Add(ListMatrixDiff, MatrixDiff);
+            od;
+            #
+            # Build the Vector T_g(dF)
+            #
+            nbEntry:=0;
+            ListVectBig:=[];
+            TotVectBig:=ListWithIdenticalEntries(nbCellM1, 0);
+            ListRecHE:=[];
+            for iEnt in [1..len]
+            do
+              iFace:=ListIFace[iEnt];
+              eMat:=ListElt[iEnt];
+              eSign:=ListSign[iEnt];
+              eRecHE:=RecHecke.DoProduct(eMat, eCosMat);
+              Add(ListRecHE, eRecHE);
+              eGmodLine:=LL_GmoduleMatrix[iDim-1][eRecHE.iCoset].TheMat[iFace];
+              eVectBig:=ListWithIdenticalEntries(nbCellM1, 0);
+              for iOrbitM1 in [1..nbOrbitM1]
+              do
+                eGmodEnt:=eGmodLine[iOrbitM1];
+                lenB:=Length(eGmodEnt.ListVal);
+                for iEntB in [1..lenB]
+                do
+                  nbEntry:=nbEntry + 1;
+                  eVal:=eGmodEnt.ListVal[iEntB];
+                  uMat:=eGmodEnt.ListElt[iEntB]*eRecHE.gP;
+                  eRecAsk:=rec(iOrbit:=iOrbitM1, eMat:=uMat, eSign:=eVal*eSign);
+                  eReply:=GetMatrixEntry(iDim-1, eRecAsk);
+                  eVectBig[eReply.pos]:=eVectBig[eReply.pos] + eReply.val;
+                od;
+              od;
+              Add(ListVectBig, eVectBig);
+              TotVectBig:=TotVectBig + eVectBig;
+            od;
+            #
+            # Checking that d(T_g (du) ) = 0
+            # Also checking that the square of the differential is zero.
+            #
+            if iDim>2 then
+              eProdMat:=ListMatrixDiff[2]*ListMatrixDiff[1];
+              for eLine in eProdMat
+              do
+                if First(eLine, x->x<>0)<>fail then
+                  Error("The matrix product should be zero");
+                fi;
+              od;
+              eImg:=TotVectBig*ListMatrixDiff[1];
+              if First(eImg, x->x<>0)<>fail then
+                posNZ:=First([1..Length(eImg)], x->eImg[x]<>0);
+                ListPosCell:=[];
+                for iLine in [1..Length(LL_Cell[2])]
+                do
+                  if TotVectBig[iLine]<>0 then
+                    if ListMatrixDiff[1][iLine][posNZ]<>0 then
+                      Add(ListPosCell, iLine);
+                    fi;
+                  fi;
+                od;
+                #
+                ListBadCell:=[];
+                for iCell in [1..Length(LL_Cell[1])]
+                do
+                  if eImg[iCell]<>0 then
+                    Add(ListBadCell, LL_Cell[1][iCell].EXTcell);
+                  fi;
+                od;
+                #
+                ListListBound:=[];
+                ListListBoundTot:=[];
+                ListTot:=[];
+                ListTotRec:=[];
+                ListTotNb:=[];
+                ListLenC:=[];
+                for iEnt in [1..len]
+                do
+                  iFace:=ListIFace[iEnt];
+                  eElt:=ListElt[iEnt];
+                  eRecHE:=ListRecHE[iEnt];
+                  ListBound:=[];
+                  ListBoundTot:=[];
+                  lenC:=Length(LL_ListBoundaries[iDim-1][eRecHE.iCoset][iFace].ListRelevantCell);
+                  Add(ListLenC, lenC);
+                  for eFace in LL_ListBoundaries[iDim-1][eRecHE.iCoset][iFace].ListRelevantCell
+                  do
+                    EXTcell:=eFace.EXTcell*eRecHE.gP;
+                    EXTcellTot:=TotSet(EXTcell);
+                    posTot:=Position(ListTot, EXTcellTot);
+                    EXTcont:=eFace.EXTface;
+                    TheRecOrig:=rec(EXTcont:=EXTcont, eFace:=eFace, iFace:=iFace, sizBound:=lenC);
+                    if posTot=fail then
+                      Add(ListTot, EXTcellTot);
+                      Add(ListTotNb, 1);
+                      Add(ListTotRec, [TheRecOrig]);
+                    else
+                      ListTotNb[posTot]:=ListTotNb[posTot]+1;
+                      Add(ListTotRec[posTot], TheRecOrig);
+                    fi;
+                    Add(ListBound, EXTcell);
+                    Add(ListBoundTot, EXTcellTot);
+                  od;
+                  Add(ListListBound, ListBound);
+                  Add(ListListBoundTot, ListBoundTot);
+                od;
+                Error("The product should be zero");
+              fi;
+            fi;
+            #
+            # Now solving the system and storing the image
+            #
+#            SolInt:=SolutionIntMat(ListMatrixDiff[2-eIter], TotVectBig);
+            SolInt:=SolutionIntMatShort(ListMatrixDiff[2-eIter], TotVectBig);
+            if SolInt=fail then
+              return fail;
+            fi;
+            nbNonZero:=0;
+            eGline:=GMOD_GetZeroVector(nbOrbit);
+            for iCell in [1..nbCell]
+            do
+              if SolInt[iCell]<>0 then
+                eCell:=LL_Cell[ListJDimRev[iDim]][iCell];
+                iOrbitB:=eCell.iOrbit;
+                nbNonZero:=nbNonZero + 1;
+                eElt:=eCell.eMat;
+                Add(eGline[iOrbitB].ListVal, SolInt[iCell]);
+                Add(eGline[iOrbitB].ListElt, eElt);
+              fi;
+            od;
+            Print("nbNonZero=", nbNonZero, "\n");
+            return eGline;
+          end;
+          while(true)
+          do
+            eGline:=AttemptSystemSolution(CoveringCells);
+            if eGline<>fail then
+              break;
+            fi;
+            Print("Do Flowering operation\n");
+            CoveringCells:=DoFlowering(CoveringCells);
+          od;
+          #
+          # Now iterating over the stabilizer to build the mappings coherently.
+          #
+          ListRecordCoset:=[];
+          BndImg:=TotalListOrbit[iDim][iOrbit].BoundaryImage;
+          FuncInsertRecordCoset:=function(zMat)
+            local eList, ePerm, eRecHE, eSignOr, NewLine, NewListVal, NewListElt, NewEnt, NewListRelevantCell, TheInv, ListPair, jOrbit, eG, EXTedge, ListVertices, ListVerticesNb, ePair;
+            eList:=List(eOrbit.EXT*zMat, x->GetPositionAntipodal(eOrbit.EXT,x));
+            ePerm:=PermList(eList);
+            if ePerm=fail then
+              Error("Wrong eList");
+            fi;
+            if not(ePerm in BndImg.PermGrp) then
+              Error("Belonging error to solve");
+            fi;
+            if ePerm in BndImg.PermGrpOr then
+              eSignOr:=1;
+            else
+              eSignOr:=-1;
+            fi;
+            eRecHE:=RecHecke.DoProduct(zMat, eCosMat);
+            if MatrixHistoryOperation[iOrbit][eRecHE.iCoset].status="done" then
+              return;
+            fi;
+            MatrixHistoryOperation[iOrbit][eRecHE.iCoset]:=rec(status:="done", iCosMat:=iCosMat, zMat:=zMat);
+            NewLine:=[];
+            TheInv:=Inverse(eRecHE.gP);
+            for eEnt in eGline
+            do
+              NewListVal:=eEnt.ListVal*eSignOr;
+              NewListElt:=List(eEnt.ListElt, x->x*TheInv);
+              NewEnt:=rec(ListVal:=NewListVal, ListElt:=NewListElt);
+              Add(NewLine, NewEnt);
+            od;
+            NewListRelevantCell:=[];
+            for eEnt in ListRelevantCell
+            do
+              NewEnt:=rec(EXTcell:=eEnt.EXTcell*TheInv, uMat:=eEnt.uMat*TheInv, iOrbitM1:=eEnt.iOrbitM1, iEnt:=eEnt.iEnt, iFace:=eEnt.iFace, EXTface:=eEnt.EXTface*zMat, lenTot:=eEnt.lenTot, iCosMat:=iCosMat, zMat:=zMat, iCoset:=eEnt.eRecHE.iCoset, EXTfaceImg:=eEnt.EXTfaceImg, eMat:=eMat, iOrbitM1:=eEnt.iOrbitM1, gP:=eEnt.eRecHE.gP, TheInv:=TheInv, iEntB:=eEnt.iEntB, lenB:=eEnt.lenB);
+              Add(NewListRelevantCell, NewEnt);
+            od;
+            L_GmoduleMatrix[eRecHE.iCoset].TheMat[iOrbit]:=NewLine;
+            L_ListBoundaries[eRecHE.iCoset][iOrbit]:=rec(stat:="relevant", ListRelevantCell:=NewListRelevantCell);
+            if iDim=2 then
+              ListPair:=[];
+              for jOrbit in [1..Length(TotalListOrbit[2])]
+              do
+                for eG in NewLine[jOrbit].ListElt
+                do
+                  EXTedge:=TotalListOrbit[2][jOrbit].EXT*eG;
+                  Add(ListPair, EXTedge);
+                od;
+              od;
+              EXTedge:=List(TotalListOrbit[2][iOrbit].EXT*eRecHE.hP, RemoveFraction);
+              Add(ListPair, EXTedge);
+              #
+              ListVertices:=[];
+              ListVerticesNb:=[];
+              for ePair in ListPair
+              do
+                for eVert in ePair
+                do
+                  pos:=GetPositionAntipodal(ListVertices, eVert);
+                  if pos=fail then
+                    Add(ListVertices, eVert);
+                    Add(ListVerticesNb, 1);
+                  else
+                    ListVerticesNb[pos]:=ListVerticesNb[pos]+1;
+                  fi;
+                od;
+              od;
+              if Set(ListVerticesNb)<>[2] then
+                Error("Only 2 is allowed in ListVerticesNb");
+              fi;
+            fi;
+            Add(ListRecordCoset, rec(zMat:=zMat, Status:=0));
+          end;
+          FuncInsertRecordCoset(IdentityMat(4));
+          while(true)
+          do
+            IsFinished:=true;
+            nbRecordCoset:=Length(ListRecordCoset);
+            for iRecordCoset in [1..nbRecordCoset]
+            do
+              if ListRecordCoset[iRecordCoset].Status=0 then
+                ListRecordCoset[iRecordCoset].Status:=1;
+                IsFinished:=false;
+                for eGen in GeneratorsOfGroup(TotalListOrbit[iDim][iOrbit].TheStab)
+                do
+                  zMat:=eGen*ListRecordCoset[iRecordCoset].zMat;
+                  FuncInsertRecordCoset(zMat);
+                od;
+              fi;
+            od;
+            if IsFinished then
+              break;
+            fi;
+          od;
+        fi;
+      od;
+    od;
+    Add(LL_GmoduleMatrix, L_GmoduleMatrix);
+    Add(LL_ListBoundaries, L_ListBoundaries);
+    Add(L_MatrixHistoryOperation, MatrixHistoryOperation);
+  od;
+  return rec(LL_GmoduleMatrix:=LL_GmoduleMatrix, 
+             LL_ListBoundaries:=LL_ListBoundaries);
+end;
+
+
+SP4Z_GetFuncTestBelong:=function(RecReturn, optGroup)
+  local eInvMat, FuncTestBelong1, FuncTestBelong2;
+  eInvMat:=RecReturn.eInvMat;
+  # Sp4Z
+  FuncTestBelong1:=function(eMat)
+    if eMat*eInvMat*TransposedMat(eMat)=eInvMat and IsIntegralMat(eMat)=true then
+      return true;
+    fi;
+    return false;
+  end;
+  # GSp4Z
+  FuncTestBelong2:=function(eMat)
+    if Position([eInvMat, -eInvMat], eMat*eInvMat*TransposedMat(eMat))<>fail and IsIntegralMat(eMat)=true then
+      return true;
+    fi;
+    return false;
+  end;
+  if optGroup=1 then
+    return FuncTestBelong1;
+  else
+    return FuncTestBelong2;
+  fi;
+end;
+
+SP4Z_GetInfoForSubgroup:=function(FuncGroupMembership, optGroup)
+  local RecReturn, RecBoundary, ListArray, ListTopCells, CellComplex, eRecTop, TotalListGenerators, FuncTestBelong, HomologySpaces;
+  RecReturn:=SP4Z_GetList_Faces_Coho();
+  FuncTestBelong:=SP4Z_GetFuncTestBelong(RecReturn, optGroup);
+  ListArray:=SP4Z_GetFlippingInfo(RecReturn, FuncTestBelong);
+  eRecTop:=SP4Z_GetTopCells(RecReturn, FuncTestBelong, ListArray, FuncGroupMembership);
+  ListTopCells:=eRecTop.ListTopCells;
+  Print("|ListTopCells|=", Length(ListTopCells), "\n");
+  TotalListGenerators:=eRecTop.TotalListGenerators;
+  Print("|TotalListGenerators|=", Length(TotalListGenerators), "\n");
+  CellComplex:=SP4Z_GetCellComplex(RecReturn, FuncTestBelong, ListArray, ListTopCells, FuncGroupMembership);
+  HomologySpaces:=SP4Z_ComputeHomologySpaces(CellComplex.TotalListOrbit);
+  return rec(RecReturn:=RecReturn,
+             optGroup:=optGroup,
+             ListArray:=ListArray,
+             ListTopCells:=ListTopCells,
+             TotalListGenerators:=TotalListGenerators,
+             CellComplex:=CellComplex, 
+             HomologySpaces:=HomologySpaces);
+end;
+
+
