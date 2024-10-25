@@ -1,0 +1,22 @@
+#DeclareAutoPackage("plangraph", "1.0", true);
+#DeclarePackageAutoDocumentation("plangraph", "doc");
+
+ReadPkg("plangraph", "lib/GapCommon_fundamental.g");
+ReadPkg("plangraph", "lib/GapCommon_printingfacility.g");
+ReadPkg("plangraph", "lib/GapCommon_fractions.g");
+ReadPkg("plangraph", "lib/GapCommon_file_functions.g");
+ReadPkg("plangraph", "lib/common.g");
+ReadPkg("plangraph", "lib/planar.g");
+ReadPkg("plangraph", "lib/svg.g");
+ReadPkg("plangraph", "lib/OperationNonOriented.g");
+ReadPkg("plangraph", "lib/OperationOriented.g");
+ReadPkg("plangraph", "lib/SpecialFamilies.g");
+ReadPkg("plangraph", "lib/ImportExport.g");
+ReadPkg("plangraph", "lib/PentHex.g");
+ReadPkg("plangraph", "lib/RubikCube.g");
+ReadPkg("plangraph", "lib/PerfectMatching.g");
+ReadPkg("plangraph", "lib/FctParameter.g");
+ReadPkg("plangraph", "lib/23sphereFunctions.g");
+ReadPkg("plangraph", "lib/TruncConst.g");
+ReadPkg("plangraph", "lib/GraphDatabases.g");
+ReadPkg("plangraph", "lib/LegoFunctionality.g");

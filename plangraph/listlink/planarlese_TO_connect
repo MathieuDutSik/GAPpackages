@@ -1,0 +1,39 @@
+#!/usr/bin/perl -w
+
+$nbGraph=0;
+while(<>)
+{
+    if ($_ ne "\n")
+    {
+	s/\n//;
+	@U=split(": ", $_);
+	$nbV=$U[1];
+	if ($nbGraph eq 0)
+	{
+	    print $nbV."\n";
+	    print "3\n";
+	}
+	$iVert=1;
+	print "1\n";
+	while(<>)
+	{
+	    s/\n//;
+	    @V=split(":", $_);
+	    @W=split(" ", $V[1]);
+	    print "3";
+	    for ($jVert=1; $jVert<=scalar(@W); $jVert++)
+	    {
+		print " ";
+		print $W[$jVert-1];
+	    }
+	    print "\n";
+	    if ($iVert eq $nbV)
+	    {
+		last;
+	    }
+	    $iVert++;
+	}
+	$nbGraph++;
+    }
+}
+print "-1\n";

@@ -1,0 +1,38 @@
+#!/usr/bin/perl -w
+
+$uu=scalar(@ARGV);
+if ($uu ne 1)
+{
+    print "ScriptReadNr is used as\n";
+    print "ScriptReadNr [File]\n\n";
+    print "with [File] the output of CPF\n";
+    die;
+}
+
+$File=$ARGV[0];
+open(INFILE, $File) or die "impossible to open ".$File;
+@A=<INFILE>;
+close(INFILE);
+$nb=scalar(@A);
+
+$eLineLast=$A[$nb-1];
+@Vlast=split(" ", $eLineLast);
+
+if ($Vlast[0] eq "No" && $Vlast[1] eq "graphs")
+{
+    print "return rec(nb:=0);\n";
+}
+else
+{
+    if ($Vlast[0] eq "Result" && $Vlast[1] eq "given")
+    {
+	print "return rec(nb:=0);\n";
+    }
+    else
+    {
+	$eLine=$A[$nb-1-1];
+	@V=split(" ", $eLine);
+	$nb=$V[2];
+	print "return rec(nb:=".$nb.");\n";
+    }
+}

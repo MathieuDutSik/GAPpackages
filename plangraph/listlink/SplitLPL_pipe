@@ -1,0 +1,120 @@
+#!/usr/bin/perl -w
+
+$uu=scalar(@ARGV);
+if ($uu ne 2)
+{
+    print "SplitLPL_pipe is used as\n";
+    print "SplitLPL_pipe [prefix] [nbFile] < [File]\n";
+    print "\n";
+    print "It splits large lists of planar graphs\n";
+    print "into many parallel pipes\n";
+    print "for treatment by further program that have to be run\n";
+    print "on the first place.\n";
+    die;
+}
+
+$Prefix=$ARGV[0];
+$Size=$ARGV[1];
+
+@ListFile=();
+
+sub OpenAllFiles()
+{
+    for ($iFile=1; $iFile<=$Size; $iFile++)
+    {
+	$eFile="Prefix".$iFile;
+	open($ListFile[$iFile-1], $eFile) or die "impossible to open ".$eFile;
+    }
+}
+sub CloseAllFiles()
+{
+    for ($iFile=1; $iFile<=$Size; $iFile++)
+    {
+	print $ListFile[$iFile-1] "0\n";
+	close($ListFile[$iFile-1]);
+    }
+}
+sub PrintOneGraph($$)
+{
+    my ($str, $iFile) = @_;
+    print $ListFile[$iFile-1] "1\n";
+    @S=split("", $str);
+    $str2="";
+    for ($iS=2; $iS<=scalar(@S)-1; $iS++)
+    {
+	$str2=$str2.$S[$iS-1];
+    }
+    @S2=split("[", $str2);
+    $nbEnt=scalar(@S2);
+    print $ListFile[$iFile-1] $nbEnt."\n";
+    for ($iEnt=1; $iEnt<=$nbEnt; $iEnt++)
+    {
+	@S3=split("]", $S2[$iEnt-1]);
+	@S4=split(",", $S3[0]);
+	print $ListFile[$iFile-1] $S4[0]." ".$S4[1]." ".$S4[2]."\n";
+    }
+}
+
+
+sub ReadOneGraph()
+{
+    $level=0;
+    $ChainGraph="";
+    while(1)
+    {
+	$let=getc();
+	if ($let eq "[")
+	{
+	    $level++;
+	}
+	if ($let eq "]")
+	{
+	    $level--
+	}
+	if ($level eq -1)
+	{
+	    return "unfound";
+	}
+	$ChainGraph=$ChainGraph.$let;
+	if ($level eq 0)
+	{
+	    last;
+	}
+    }
+    return $ChainGraph;
+}
+while(1)
+{
+    $let=getc();
+    if ($let eq "[")
+    {
+	last;
+    }
+}
+OpenAllFiles();
+$iFilePrint=1;
+while(1)
+{
+    $Chain=ReadOneGraph();
+    if ($Chain eq "unfound")
+    {
+	last;
+    }
+    die;
+    PrintOneGraph($Chain, $iFilePrint);
+    if ($iFilePrint eq $nbFile)
+    {
+	$iFilePrint=1;
+    }
+    else
+    {
+	$iFilePrint=$iFilePrint+1;
+    }
+    $let=getc();
+    if ($let ne ",")
+    {
+	last;
+    }
+}
+close();
+CloseAllFiles();

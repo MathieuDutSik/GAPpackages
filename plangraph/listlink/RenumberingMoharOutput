@@ -1,0 +1,49 @@
+#!/usr/bin/perl -w
+
+$uu=scalar(@ARGV);
+
+if ($uu eq 0)
+{
+    print "This program is used as\n";
+    print "RenumeringMoharOutput [File1]\n";
+    die;
+}
+
+$FileName=$ARGV[0];
+open(INFILE, $FileName);
+@B=<INFILE>;
+close(INFILE);
+
+@ListIdx=();
+@ListRevIdx=();
+
+for ($iLine=1; $iLine<=scalar(@B); $iLine++)
+{
+    @S=split(" : ", $B[$iLine-1]);
+    if (scalar(@S) eq 2)
+    {
+	$eVert=$S[0];
+	$ListIdx[$iLine-1]=$eVert;
+	$ListRevIdx[$eVert-1]=$iLine;
+    }
+}
+
+$nbV=scalar(@ListIdx);
+for ($iVert=1; $iVert<=$nbV; $iVert++)
+{
+    @S=split(" : ", $B[$iVert-1]);
+    print $iVert." : ".$S[1];
+}
+
+for ($iLine=$nbV+1; $iLine<=scalar(@B); $iLine++)
+{
+    $_=$B[$iLine-1];
+    s/\n//;
+    $eStr=$_;
+    @S=split(" ", $eStr);
+    $eVert1=$S[0];
+    $eVert2=$S[1];
+    $iVert1=$ListRevIdx[$eVert1-1];
+    $iVert2=$ListRevIdx[$eVert2-1];
+    print $iVert1." ".$iVert2."\n";
+}

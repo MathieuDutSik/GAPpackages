@@ -1,0 +1,38 @@
+#!/usr/bin/perl -w
+
+$uu=scalar(@ARGV);
+if ($uu ne 1)
+{
+    print "RemoveSpace is used as\n";
+    print "RemoveSpace [File]\n";
+    die;
+}
+
+$File=$ARGV[0];
+open(INFILE, $File) or die "impossible to open ".$File;
+$posSpace=0;
+while(1)
+{
+    $let=getc(INFILE);
+    if ($let eq " ")
+    {
+	if ($posSpace eq 0)
+	{
+	    print " ";
+	}
+	$posSpace++;
+    }
+    else
+    {
+	if ($let ne "\n")
+	{
+	    print $let;
+	}
+    }
+    if ($let eq ";")
+    {
+	print "\n";
+	last;
+    }
+}
+close(INFILE);

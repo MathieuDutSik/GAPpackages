@@ -1,0 +1,45 @@
+#!/usr/bin/perl -w
+
+$uu=scalar(@ARGV);
+
+if ($uu eq 0)
+{
+    print "This program is used as\n";
+    print "OrderInFowlerFormat [File]\n";
+    die;
+}
+
+$FileName=$ARGV[0];
+open(INFILE, $FileName);
+@B=<INFILE>;
+close(INFILE);
+
+@ListAdj=();
+
+$nbV=0;
+for ($iLine=1; $iLine<=scalar(@B); $iLine++)
+{
+    @S=split(" : ", $B[$iLine-1]);
+    if (scalar(@S) eq 2)
+    {
+	print $B[$iLine-1];
+	$nbV=$nbV+1;
+	$ListAdj[$nbV-1]="";
+    }
+}
+
+$nbEdge=scalar(@B)-$nbV;
+
+for ($iEdge=1; $iEdge<=$nbEdge; $iEdge++)
+{
+    $chn=$B[$nbV+$iEdge-1];
+    @S=split(" ", $chn);
+    $eVert1=$S[0];
+    $eVert2=$S[1];
+    $ListAdj[$eVert1-1]=$ListAdj[$eVert1-1]." ".$eVert2;
+    $ListAdj[$eVert2-1]=$ListAdj[$eVert2-1]." ".$eVert1;
+}
+for ($iVert=1; $iVert<=$nbV; $iVert++)
+{
+    print $iVert.$ListAdj[$iVert-1]."\n";
+}

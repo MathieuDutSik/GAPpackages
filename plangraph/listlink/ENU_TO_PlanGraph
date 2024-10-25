@@ -1,0 +1,77 @@
+#!/usr/bin/perl
+
+$uu=scalar(@ARGV);
+
+if ($uu ne 1)
+{
+    print "this program is used as\n";
+    print "ENU_TO_PlanGraph [file]\n";
+    print "where [file] is a ENU output\n";
+    die;
+}
+$file=$ARGV[0];
+
+$order="./planarlese2 < ".$file." > TEST";
+print $order."\n";
+system $order;
+
+$file2="TEST";
+
+
+open(INFILE, $file2) or die "impossible to open ".$file2."\n";
+@B=<INFILE>;
+close(INFILE);
+
+@U=split(" ", $B[1]);
+$nbvert=$U[scalar(@U)-1];
+$divisor=2+$nbvert;
+$nbline=scalar(@B);
+$nbGraph=$nbline/$divisor;
+
+print "nbVert=".$nbvert."\n";
+print "nbGraph=".$nbGraph."\n";
+
+$file3="8-Hedrite".$nbvert;
+
+open(OUT, "> ".$file3);
+print OUT "return [";
+for ($iGraph=1; $iGraph<=$nbGraph; $iGraph++)
+{
+    $pos=($iGraph-1)*$divisor;
+    print OUT "[";
+    for ($iVert=1; $iVert<=$nbvert; $iVert++)
+    {
+	print OUT "[";
+	$fg=$B[$pos+$iVert+1];
+#	print "fg=".$fg."\n";
+	chomp($fg);
+	@V=split(":", $fg);
+#	print "V[1]=".$V[1]."\n";
+	@W=split(" ", $V[1]);
+	for ($jVert=1; $jVert <=scalar(@W); $jVert++)
+	{
+	    print OUT $W[$jVert-1];
+#	    print "jVert=".$jVert."\n";
+	    if ($jVert < scalar(@W))
+	    {
+		print OUT ",";
+	    }
+	}
+	print OUT "]";
+	if ($iVert < $nbvert)
+	{
+	    print OUT ",";
+	}
+    }
+    print OUT "]";
+    if ($iGraph < $nbGraph)
+    {
+	print OUT ",";
+    }
+}
+print OUT "];";
+close(OUT);
+
+$order="/bin/rm -f ".$file2;
+print $order."\n";
+system $order;

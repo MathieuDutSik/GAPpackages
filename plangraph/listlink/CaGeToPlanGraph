@@ -1,0 +1,95 @@
+#!/usr/bin/perl -w
+
+$uu=scalar(@ARGV);
+
+if ($uu ne 1)
+{
+    print "CaGeToPlanGraph is used as\n";
+    print "CaGeToPlanGraph [File]\n\n";
+    print "with [File] a CaGe file\n";
+    die;
+}
+
+$File=$ARGV[0];
+
+open(INFILE, $File) or die "impossible to open ".$File;
+@LisA=<INFILE>;
+close(INFILE);
+
+if (($LisA[0] ne ">>writegraph2d planar<<\n") && ($LisA[0] ne ">>writegraph3d planar <<\n"))
+{
+    print "not a CaGe file\n";
+    die;
+}
+
+print "return [";
+$posBegin=2;
+while(1)
+{
+    while(1)
+    {
+	if ($LisA[$posBegin-1] ne "\n")
+	{
+	    last;
+	}
+	$posBegin++;
+    }
+    $posEnd=$posBegin;
+    while(1)
+    {
+	if ($LisA[$posEnd-1] eq "0\n")
+	{
+	    $posEnd--;
+	    last;
+	}
+	$posEnd++;
+    }
+    $len=1+$posEnd-$posBegin;
+    # do file treatment
+#    print "Begin=".$posBegin."  End=".$posEnd."\n";
+#    print "nbVert=".$len."\n";
+#    print "\n";
+    print "[";
+    for ($iVert=1; $iVert<=$len; $iVert++)
+    {
+	$_=$LisA[$posBegin+($iVert-1)-1];
+	s/\n//;
+	@V=split(" ", $_);
+	print "[";
+	for ($jVert=2; $jVert<=scalar(@V)-1; $jVert++)
+	{
+	    if ($V[$jVert] ne 0)
+	    {
+		print $V[$jVert];
+		if ($jVert< scalar(@V)-1)
+		{
+		    print ",";
+		}
+	    }
+	}
+	print "]";
+	if ($iVert< $len)
+	{
+	    print ",";
+	}
+    }
+    print "]";
+    $testEnd=1;
+    for ($iLin=$posEnd+2; $iLin<=scalar(@LisA); $iLin++)
+    {
+	if ($LisA[$iLin-1] ne "\n")
+	{
+	    $testEnd=0;
+	}
+    }
+    $posBegin=$posEnd+2;
+    if ($testEnd eq 0)
+    {
+	print ",";
+    }
+    else
+    {
+	last;
+    }
+}
+print "];\n";

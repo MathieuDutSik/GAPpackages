@@ -1,0 +1,112 @@
+#!/usr/bin/perl -w
+
+$uu=scalar(@ARGV);
+if ($uu ne 2)
+{
+    print "SplitLPL is used as\n";
+    print "SplitLPL [prefix] [Size] < [File]\n";
+    print "\n";
+    print "It splits large lists of planar graphs\n";
+    print "into small file\n";
+    print "The splitting is done so that the first block is done\n";
+    print "then the second and so forth\n";
+    die;
+}
+
+$Prefix=$ARGV[0];
+$Size=$ARGV[1];
+
+
+$idxFile=1;
+sub FlushLPL()
+{
+    $FileName=$Prefix.$idxFile;
+    open(OUT, "> ".$FileName);
+    print OUT "return [";
+    print OUT $ChainSaw;
+    print OUT "];\n";
+    close(OUT);
+    $ChainSaw="";
+    $idxFile++;
+}
+
+
+sub ReadOneGraph()
+{
+    $level=0;
+    $ChainGraph="";
+    while(1)
+    {
+	$let=getc();
+	if ($let eq "[")
+	{
+	    $level++;
+	}
+	if ($let eq "]")
+	{
+	    $level--
+	}
+	if ($level eq -1)
+	{
+	    return "unfound";
+	}
+	$ChainGraph=$ChainGraph.$let;
+	if ($level eq 0)
+	{
+	    last;
+	}
+    }
+    return $ChainGraph;
+}
+
+
+
+while(1)
+{
+    $let=getc();
+    if ($let eq "[")
+    {
+	last;
+    }
+}
+
+
+$nbGraph=0;
+$ChainSaw="";
+$nbTotal=0;
+while(1)
+{
+    $Chain=ReadOneGraph();
+    if ($Chain eq "unfound")
+    {
+	last;
+    }
+    $ChainSaw=$ChainSaw.$Chain;
+    $nbGraph++;
+    $nbTotal++;
+    $let=getc();
+    if ($let eq ",")
+    {
+	if ($nbGraph eq $Size)
+	{
+	    FlushLPL();
+	    $nbGraph=0;
+	}
+	else
+	{
+	    $ChainSaw=$ChainSaw.",";
+	}
+    }
+    else
+    {
+	FlushLPL();
+	last;
+    }
+}
+close();
+
+$FileName=$Prefix."0";
+open(OUT, "> ".$FileName);
+$DIF=$idxFile-1;
+print OUT "return [".$DIF.",".$Size.",".$nbTotal."];\n";
+close(OUT);

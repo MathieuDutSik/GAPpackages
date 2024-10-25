@@ -1,0 +1,60 @@
+#!/usr/bin/perl -w
+
+$uu=scalar(@ARGV);
+if ($uu ne 3)
+{
+    print "MergeLPL is used as\n";
+    print "ReadCharByChar [File] [nbFile] [prefix]\n";
+    print "\n";
+    print "It splits large lists of planar graphs\n";
+    print "into small file\n";
+    die;
+}
+
+$File=$ARGV[0];
+$nbFile=$ARGV[1];
+$Prefix=$ARGV[2];
+
+open(OUT, "> ".$File);
+print OUT "return [";
+for ($iFile=1; $iFile<=$nbFile; $iFile++)
+{
+    $File2=$Prefix.$iFile;
+    open(INFILE, $File2) or die "impossible to open ".$File2;
+    while(1)
+    {
+	$let=getc(INFILE);
+	if ($let eq "[")
+	{
+	    $level=1;
+	    last;
+	}
+    }
+    while(1)
+    {
+	$let=getc(INFILE);
+	if ($let eq "[")
+	{
+	    $level++;
+	}
+	if ($let eq "]")
+	{
+	    $level--
+	}
+	if ($level eq 0)
+	{
+	    last;
+	}
+	else
+	{
+	    print OUT $let;
+	}
+    }
+    close(INFILE);
+    if ($iFile<$nbFile)
+    {
+	print OUT ",";
+    }
+}
+print OUT "];\n";
+close(OUT);

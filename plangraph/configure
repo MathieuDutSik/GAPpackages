@@ -1,0 +1,78 @@
+#!/usr/bin/perl -w
+use strict;
+use warnings;
+
+my $SysFile="sysinfo.gap";
+open(INFILE, $SysFile) or die "cannot found ".$SysFile;
+my @BU=<INFILE>;
+close(INFILE);
+
+
+my $iLineSearch=0;
+while(1)
+{
+    my @ST=split("AParch", $BU[$iLineSearch]);
+    if (scalar(@ST) eq 2)
+    {
+        last;
+    }
+    $iLineSearch=$iLineSearch+1;
+}
+chomp($BU[$iLineSearch]);
+
+my @HS=split("=", $BU[$iLineSearch]);
+
+my $arch=$HS[1];
+if ($HS[0] ne "GAParch")
+{
+    my $siz=scalar(@HS);
+    print "siz=".$siz."\n";
+    print "Inconsistency in the code\n";
+    print "Failed to find the path\n";
+    die "Please correct\n";
+}
+
+#########################
+
+my $order1="rm -rf bin/*";
+print $order1."\n";
+system $order1;
+
+my $order2="mkdir bin/".$arch;
+print $order2."\n";
+system $order2;
+
+my @U=();
+@U[0]="x86_64-unknown-linux-gnu-gcc";
+@U[1]="x86_64-unknown-linux-gnu-gcc-default64";
+@U[2]="i386-unknown-freebsd5.1-gcc";
+@U[3]="i686-pc-linux-gnu-gcc";
+my $nbU=scalar(@U);
+for (my $iU=1; $iU<=$nbU; $iU++)
+{
+    my $ArchB=$U[$iU-1];
+    if ($arch ne $ArchB)
+    {
+	my $order3="ln -sf ./".$arch." bin/".$ArchB;
+	print $order3."\n";
+	system $order3;
+    }
+}
+
+my $order4="ls listlink/ > ListProg";
+print $order4."\n";
+system $order4;
+
+open(INF, "ListProg") or die "impossible to open ListProg";
+while(<INF>)
+{
+    chomp($_);
+    my $order5="(cd bin/".$arch." && ln -s ../../listlink/".$_." .)";
+    print $order5."\n";
+    system $order5;
+}
+close(INF);
+
+my $order6="rm -f ListProg";
+print $order6."\n";
+system $order6;
