@@ -1,0 +1,18 @@
+#!/usr/bin/perl -w
+
+use Cwd;
+$TheDirPWD = getcwd;
+
+$eProg1="ExternalProg/gmp_install/lib/libgsl.so";
+if (!(-e $eProg1))
+{
+    $PrefixGSL=$TheDirPWD."/ExternalProg/gsl_install";
+    $order="(cd ExternalProg/gsl-1.16 && ./configure --prefix=".$PrefixGSL." && make && make install)";
+    print $order."\n";
+    if (system($order) != 0) {
+	die "Error on compilation of GSL\n";
+    }
+}
+print "\nCOMPILED gsl-1.16\n\n";
+
+exit 0;

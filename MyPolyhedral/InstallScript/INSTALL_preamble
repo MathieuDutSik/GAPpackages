@@ -1,0 +1,50 @@
+#!/usr/bin/perl -w
+
+use Cwd;
+
+$TheDirPWD = getcwd;
+print "TheDirPWD=".$TheDirPWD."\n";
+
+open(INFILE, "../../sysinfo.gap") or die "cannot found ../../sysinfo.gap";
+@BU=<INFILE>;
+close(INFILE);
+
+my $nbSYS=scalar(@BU);
+my $arch = "unset";
+for (my $i_line=0; $i_line<$nbSYS; $i_line++)
+{
+    $_ = $BU[$i_line];
+    chomp($_);
+    $e_line = $_;
+    #
+    my @HS=split("=", $_);
+    if (scalar(@HS) eq 2)
+    {
+        if ($HS[0] eq "GAParch")
+        {
+            $arch = $HS[1];
+        }
+    }
+}
+
+if ($arch eq "unset")
+{
+    die "Failed to find arch";
+}
+print "arch=".$arch."\n";
+
+$order="mkdir -p bin/".$arch;
+print "order=".$order."\n";
+if (system($order) != 0) {
+    die "impossible to create the bin directory\n";
+}
+
+$order="mkdir -p ExternalProg/Binaries";
+print "order=".$order."\n";
+if (system($order) != 0) {
+    die "impossible to run the mkdir operation\n";
+}
+
+#
+# Now the package specific compilations
+#

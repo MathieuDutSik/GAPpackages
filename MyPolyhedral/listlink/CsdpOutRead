@@ -1,0 +1,29 @@
+#!/usr/bin/perl -w
+
+$uu=scalar(@ARGV);
+if ($uu ne 1)
+{
+    print "CsdpOutRead [eFileIn]\n";
+    print "With eFileIn the input\n";
+    die;
+}
+
+$eFileIn=$ARGV[0];
+
+open(INFILE, $eFileIn);
+@B=<INFILE>;
+close(INFILE);
+
+$nbLine=scalar(@B);
+$eAnswer="not found";
+for ($iLine=1; $iLine<=$nbLine; $iLine++)
+{
+    $_=$B[$iLine-1];
+    s/\n//;
+    @U=split(": ", $_);
+    if (scalar(@U) >= 2 && $U[0] eq "Success")
+    {
+	$eAnswer=$U[1];
+    }
+}
+print "return rec(eAnswer:=\"".$eAnswer."\");\n";

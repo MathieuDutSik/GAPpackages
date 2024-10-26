@@ -1,0 +1,114 @@
+#!/usr/bin/perl -w
+use strict;
+use warnings;
+
+my $uu=scalar(@ARGV);
+if ($uu ne 1)
+{
+    print "This script is used as\n";
+    print "SUB_CreationSourceFunctionManual [projectname]\n";
+    die;
+}
+my $ProjectName=$ARGV[0];
+
+#
+# Copying the relevant manual
+#
+
+my $order1="mkdir -p ../".$ProjectName."/manual";
+print $order1."\n";
+if (system($order1) != 0) {
+    die "Error while creating manual directory\n";
+}
+
+my $eFile1_A="manual_".$ProjectName. "/makefile"; 
+my $eFile2_A="../".$ProjectName."/manual/makefile";
+my $order2="cp ".$eFile1_A." ".$eFile2_A;
+print $order2."\n";
+if (system($order2) != 0) {
+    die "Error while doing copy\n";
+}
+
+my $eFile1_B="manual_".$ProjectName. "/manual.tex"; 
+my $eFile2_B="../".$ProjectName."/manual/manual.tex";
+my $order3="LATEX_RemovePercentLine < ".$eFile1_B." > ".$eFile2_B;
+print $order3."\n";
+if (system($order3) != 0) {
+    die "Error while running LATEX_RemovePercentLine\n";
+}
+
+#
+# Compiling the manual
+#
+
+my $order4="(cd ../".$ProjectName."/manual && make clean && make)";
+print $order4."\n";
+if (system($order4) != 0) {
+    die "Error while compiling the manual\n";
+}
+
+#
+# Extracting relevant functions
+#
+
+print "Creating Symbol database\n";
+my $TmpFile1="/tmp/ListMfiles_Manual";
+my $order5="(cd ../".$ProjectName."/manual && find . -name \"*.tex\" > ".$TmpFile1.")";
+print $order5."\n";
+if (system($order5) != 0) {
+    die "Error while compiling the latex references\n";
+}
+#
+open(IN1, $TmpFile1) or die "impossible to open ".$TmpFile1;
+my @UL1=<IN1>;
+close(IN1);
+#
+my $order6="rm -f ".$TmpFile1;
+print $order6."\n";
+if (system($order6) != 0) {
+    die "Error while removing TmpFile1\n";
+}
+#
+my $SymbolFile="Generation/ListSearch_Manual_".$ProjectName;
+open(OUT, "> ".$SymbolFile) or die "impossible to open ".$SymbolFile;
+for (my $iFile=1; $iFile<=scalar(@UL1); $iFile++)
+{
+    my $eFile="../".$ProjectName."/manual/".$UL1[$iFile-1];
+    open(INF, $eFile) or die "impossible to open : ".$eFile;
+    my @B=<INF>;
+    close(INF);
+    my $nbLine=scalar(@B);
+    my $WeAreIn=0;
+    my $IsWrite;
+    my $eStr1="\\begin{verbatim}";
+    my $eStr2="\\end{verbatim}";
+    for (my $iLine=1; $iLine<=$nbLine; $iLine++)
+    {
+	$_=$B[$iLine-1];
+	s/\n//;
+	my $eLine=$_;
+	if ($eLine eq $eStr1)
+	{
+	    $WeAreIn=1;
+	    $IsWrite=0;
+	}
+	else
+	{
+	    if ($eLine eq $eStr2)
+	    {
+		$WeAreIn=0;
+		$IsWrite=0;
+	    }
+	    else
+	    {
+		$IsWrite=1;
+	    }
+	}
+	if ($WeAreIn eq 1 && $IsWrite eq 1)
+	{
+	    print OUT $eLine."\n";
+	}
+    }
+    print OUT "############################\n";
+}
+close(OUT);

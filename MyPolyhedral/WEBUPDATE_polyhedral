@@ -1,0 +1,33 @@
+#!/usr/bin/perl -w
+use strict;
+use warnings;
+
+#
+# First run the exportation
+#
+
+my $order1="./ExportSingle polyhedral";
+print $order1."\n";
+if (system($order1) != 0) {
+    die "impossible to create the repository\n";
+}
+
+#
+# Copying it to the home page
+#
+
+my $order2="cp ../polyhedral.tar.bz2 ../../public_html/Polyhedral/.";
+print "order=".$order2."\n";
+if (system($order2) != 0) {
+    die "Error in polyhedral copy\n";
+}
+
+#
+# Now the raw export to atervista
+#
+
+my $order3="curl -T ../polyhedral.tar.bz2 -u mathieudutour:vobvafurgi42 \"ftp://ftp.mathieudutour.altervista.org/Polyhedral/polyhedral.tar.bz2\"";
+print "order=".$order3."\n";
+if (system($order3) != 0) {
+    die "impossible to create directory\n";
+}

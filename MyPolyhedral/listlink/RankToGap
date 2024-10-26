@@ -1,0 +1,16 @@
+#!/usr/bin/perl -w
+
+$uu=scalar(@ARGV);
+if ($uu ne 1)
+{
+    print "The program is run as\n";
+    print "RankToGap [FileIn] > [FileOut]\n";
+    die;
+}
+$eFile=$ARGV[0];
+open(INFILE, $eFile) or die "impossible to open ".$eFile;
+@B=<INFILE>;
+close(INFILE);
+
+@C=split(" ", $B[1]);
+print "return ".$C[2].";\n";

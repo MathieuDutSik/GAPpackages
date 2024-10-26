@@ -1,0 +1,21 @@
+#!/usr/bin/perl -w
+
+$File=$ARGV[0];
+open(INFILE, $File) or die "Impossible to open ".$File;
+@U=<INFILE>;
+close(INFILE);
+
+$nbEnt=scalar(@U);
+
+print "return [";
+for ($iEnt=0; $iEnt<$nbEnt; $iEnt++)
+{
+    if ($iEnt>0)
+    {
+	print ",\n";
+    }
+    $_=$U[$iEnt];
+    s/\n//;
+    print "\"".$_."\"";
+}
+print "];\n";

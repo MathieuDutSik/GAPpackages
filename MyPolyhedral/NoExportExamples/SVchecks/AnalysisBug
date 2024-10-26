@@ -1,0 +1,6 @@
+U:=ReadAsFunction("BUG")();
+
+GramMat:=U.GramMat;
+eV:=U.eV;
+
+TheSol:=CVPVallentinProgram(GramMat, eV);

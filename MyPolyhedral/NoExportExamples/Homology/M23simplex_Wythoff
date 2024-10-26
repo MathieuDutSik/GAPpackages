@@ -1,0 +1,12 @@
+Read("OrbitPolytope.g");
+
+#It runs with gap.sh -o 2048M M23simplex_Wythoff
+
+GroupEXT:=MathieuGroup(23);
+EXT:=IdentityMat(23);
+eSet:=[1,2,3,4,5];
+TheLevel:=4;
+
+TheBound:=Wythoff_BoundaryOperatorCellularDecomposition(GroupEXT, EXT, [], eSet, TheLevel);
+TheResolution:=GroupHomologyByCellDecomposition(TheBound);
+TheHomologies:=GettingHomologies(TheResolution);

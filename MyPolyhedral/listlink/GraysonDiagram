@@ -1,0 +1,84 @@
+#!/usr/bin/perl -w
+
+$uu=scalar(@ARGV);
+if ($uu ne 1)
+{
+    print "GraysonDiagram [eFileIN] is used as\n";
+    print "With eFileIN the input\n";
+    die;
+}
+
+$eFileIN=$ARGV[0];
+
+open(INFILE, $eFileIN);
+@B=<INFILE>;
+close(INFILE);
+
+$dim=$B[0];
+$eDetTotal=$B[$dim];
+
+
+$ListQuant=();
+$IsStable=1;
+for ($i=0; $i<=$dim; $i++)
+{
+    if ($i eq 0)
+    {
+	$eQuant=0;
+    }
+    else
+    {
+	$eDetI=$B[$i];
+	$eQuant=log($eDetI)/$i - log($eDetTotal)/$dim;
+    }
+    if ($eQuant < 0)
+    {
+	$IsStable=0;
+    }
+    $ListQuant[$i]=$eQuant;
+}
+for ($i=0; $i<=$dim; $i++)
+{
+    if ($i > 0 && $i < $dim)
+    {
+	$eVis=1;
+	for ($j=1; $j<$i; $j++)
+	{
+	    $eVal=$ListQuant[$i]*($j/$i);
+	    if ($ListQuant[$j] < $eVal)
+	    {
+		$eVis=0;
+	    }
+	}
+	for ($j=$i+1; $j<$dim; $j++)
+	{
+	    $eVal=$ListQuant[$i]*($dim - $j)/($dim - $i);
+	    if ($ListQuant[$j] < $eVal)
+	    {
+		$eVis=0;
+	    }
+	}
+	if ($eVis == 0)
+	{
+	    $strVis="";
+	}
+	else
+	{
+	    $strVis="visible";
+	}
+    }
+    else
+    {
+	$strVis=" irr";
+    }
+    $eQuant=$ListQuant[$i];
+    print "i=".$i." eQuant=".$eQuant." ".$strVis."\n";
+}
+if ($IsStable == 1)
+{
+    print "Lattice is stable\n";
+}
+else
+{
+    print "Lattice is not stable\n";
+}

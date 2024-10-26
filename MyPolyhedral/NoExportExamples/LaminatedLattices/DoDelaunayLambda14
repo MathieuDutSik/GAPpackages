@@ -1,0 +1,29 @@
+TheGramMat:=ReadAsFunction("Lambda14")();;
+SVR:=ShortestVectorDutourVersion(TheGramMat);
+
+ThePrefix:="./DelaunayLambda14/";
+IsSaving:=true;
+
+KillingDelaunay:=function(EXT)
+  return false;
+end;
+KillingAdjacency:=function(EXT1, EXT2)
+  return false;
+end;
+
+# that is where we can gain something.
+MyOption:="";
+FuncLatticeAutomorphism:=function(ListMat, SVR, AffBas)
+  return ArithmeticAutomorphismMatrixFamily_HackSouvignier(MyOption, ListMat, SVR, AffBas);
+end;
+FuncLatticeIsomorphism:=function(ListMat1, SVR1, AffBas1, ListMat2, SVR2, AffBas2)
+  return ArithmeticEquivalenceMatrixFamily_HackSouvignier(MyOption, ListMat1, SVR1, AffBas1, ListMat2, SVR2, AffBas2);
+end;
+
+
+
+FileInformation:="DirectInformations";
+
+DelCO:=DelaunayDescription_M6_StandardKernel(
+  TheGramMat, SVR, FuncLatticeAutomorphism, FuncLatticeIsomorphism, 
+  ThePrefix, IsSaving, KillingDelaunay, KillingAdjacency, FileInformation);

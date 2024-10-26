@@ -1,0 +1,97 @@
+#!/usr/bin/perl -w
+
+
+
+$File=$ARGV[0];
+
+open(INFILE, $File);
+@RESUL=<INFILE>;
+close(INFILE);
+
+$line1=$RESUL[1];
+@SSP=split("", $line1);
+
+
+if ($SSP[0] ne "(")
+{
+    print "return Group(());\n";
+}
+else
+{
+    $idx=2;
+    $line=$RESUL[scalar(@RESUL)-2];
+    @SP1=split(";", $line);
+    @SP2=split(" ", $SP1[2]);
+    $nbGen=$SP2[0];
+#    print "nbGens=".$nbGen."\n";
+    $idx=1;
+    print "return Group([";
+    for ($iGen=1; $iGen<=$nbGen; $iGen++)
+    {
+	$Beginning=1;
+	$level=0;
+	$PrintSomething=0;
+	while(1)
+	{
+	    $line=$RESUL[$idx];
+	    @SSP=split("", $line);
+	    if ($SSP[0] eq "l")
+	    {
+		last;
+	    }
+	    if ($SSP[0] eq "(")
+	    {
+		if ($Beginning eq 1)
+		{
+		    $Beginning=0;
+		}
+		else
+		{
+		    $idx--;
+		    last;
+		}
+	    }
+	    for ($ipos=1; $ipos<scalar(@SSP); $ipos++)
+	    {
+		$ChR=$SSP[$ipos-1];
+		if ($ChR eq "(")
+		{
+		    $ChainR="";
+		    $level++;
+		}
+		else
+		{
+		    if ($ChR eq ")")
+		    {
+			$level--;
+			@FLE=split(" ", $ChainR);
+			print "(";
+			for ($iV=1; $iV<=scalar(@FLE); $iV++)
+			{
+			    $val=$FLE[$iV-1];
+			    $val++;
+			    print $val;
+			    if ($iV<scalar(@FLE))
+			    {
+				print ",";
+			    }
+			}
+			print ")";
+			$PrintSomething=1;
+		    }
+		    else
+		    {
+			$ChainR=$ChainR.$ChR;
+		    }
+		}
+	    }
+	    $idx++;
+	}
+	$idx++;
+	if ($iGen<$nbGen)
+	{
+	    print ",\n";
+	}
+    }
+    print "]);\n";
+}

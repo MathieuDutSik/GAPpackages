@@ -1,0 +1,27 @@
+#!/usr/bin/perl -w
+$eProg="ExternalProg/lp_solve_5.5.2.5/lp_solve/bin/ux64/lp_solve";
+$test=0;
+if (-e $eProg)
+{$test=1;}
+if ($test eq 0)
+{
+    $order="(cd ExternalProg/lp_solve_5.5.2.5/lp_solve && ./ccc)";
+    print $order."\n";
+    if (system($order) != 0) {
+	die "Error when compiling\n";
+    }
+}
+if (!(-e $eProg))
+{
+    print "Compilation of ".$eProg." failed\n";
+    exit -1;
+}
+print "\nCOMPILED lp_solve\n\n";
+
+$order="(cd ExternalProg/Binaries && ln -sf ../lp_solve_5.5.2.5/lp_solve/bin/ux64/lp_solve)";
+print $order."\n";
+if (system($order) != 0) {
+    die "Error when linking\n";
+}
+
+exit 0;

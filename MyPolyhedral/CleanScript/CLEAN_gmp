@@ -1,0 +1,3 @@
+DoClean("ExternalProg/gmp-6.0.0a");
+print "\nCLEANED gmp-6.0.0a\n\n";
+

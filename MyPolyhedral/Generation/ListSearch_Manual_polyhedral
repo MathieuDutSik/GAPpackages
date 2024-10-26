@@ -1,0 +1,119 @@
+SetUserPreference( "InfoPackageLoadingLevel", 4 ); # for additional debugging informations
+SetUserPreference( "PackagesToLoad", [ "polyhedral"]);
+CanonicalRepresentativeVertexColoredGraphAdjList:=function(ListAdjacency, ThePartition)
+CanonicalRepresentativeVertexColoredGraph:=function(TheGraph, ThePartition)
+EquivalenceVertexColoredGraphAdjList:=function(ListAdjacency1, ListAdjacency2, ThePartition)
+EquivalenceVertexColoredGraph:=function(TheGraph1, TheGraph2, ThePartition)
+ThePartition:=[[1,2,3,4], [5,6]];
+AutomorphismGroupEdgeColoredGraph:=function(DistMat)
+CanonicalStringEdgeColoredGraph:=function(DistMat)
+IsIsomorphicEdgeColoredGraph:=function(DistMat1, DistMat2)
+AutomorphismGroupColoredGraph:=function(ScalarMat)
+IsIsomorphicColoredGraph:=function(ScalarMat1, ScalarMat2)
+__GetMD5sum:=function(FileName)
+__GetGraph6Expression:=function(ListAdj)
+SymmetryGroupVertexColoredGraphAdjList:=function(ListAdjacency, ThePartition)
+SymmetryGroupVertexColoredGraph:=function(TheGraph, ThePartition)
+GetBipartition:=function(GR)
+GRAPH_EnumerateCycles:=function(TheGRA, GRP, TheLen)
+PermutedStabilizer:=function(TheGRP, eVect)
+PermutedRepresentativeAction:=function(TheGRP, eVect1, eVect2)
+Stabilizer:=function(TheGRP, eVect, Permuted)
+RepresentativeAction:=function(TheGRP, eVect1, eVect2, Permuted)
+OnSetsSetsStabilizer:=function(GRP, eSetSet)
+OnSetsSetsRepresentativeAction:=function(GRP, eSetSet1, eSetSet2)
+OnTuplesStabilizer:=function(GRP, eTuple)
+OnTuplesRepresentativeAction:=function(SymGrp, Tuple1, Tuple2)
+OnTuplesCanonicalization:=function(GroupEXT, ListPts)
+OnTuplesSetsStabilizer:=function(GRP, eTuple)
+OnTuplesSetsRepresentativeAction:=function(GroupEXT, FlagEXT1, FlagEXT2)
+OnTuplesSetsCanonicalization:=function(GroupEXT, ListSet)
+ColumnReduction:=function(EXT)
+RowReduction:=function(EXT)
+rec(EXT:=EXTred, Select:=eSet)
+TheVector:=[x1, ..., xN]
+GcdVector:=function(TheVector)
+RemoveFraction:=function(TheList)
+RemoveFractionMatrix:=function(OneMat)
+RemoveFractionPlusCoef:=function(TheList)
+RemoveFractionMatrixPlusCoef:=function(OneMat)
+SubspaceCompletion:=function(eBasis, n)
+[x_1, x_2, ..., x_n]
+[y_1, y_2, ..., y_n]
+[1 , x_1 , x_2 , ... , x_n]
+[-b_i , y_1 , y_2 , ... , y_n]
+LinearProgramming:=function(InequalitySet, ToBeMinimized)
+PolytopizationGeneralCone:=function(FAC)
+SearchPositiveRelation:=function(ListVect, TheConstraint)
+ListVect:=[v1, v2, ..., vN]
+TheConstraint:=rec(ListPositive:=[...], 
+                   ListStrictlyPositive:=[...],
+                   ListSetStrictPositive:=[...]);
+SearchPositiveRelationSimple:=function(ListVect)
+GetViolatedFacet:=function(EXT, eVect)
+EliminationByRedundancyEquivariant:=function(EXT, BoundingSet, GRPperm)
+SkeletonGraph:=function(GroupExt, EXT, BoundingSet)
+GetInitialRays_LinProg:=function(EXT, nb)
+LinearDeterminedByInequalities:=function(FAC)
+gap> LinearDeterminedByInequalities([[1,1,1],[-1,-1,-1],[1,0,0]]);
+[ [ -1, 1, 0 ], [ -1, 0, 1 ] ]
+GetContainingPrism:=function(EXT, eVect)
+GetContainingSimplex:=function(EXT, eVect)
+__FindFacetInequality:=function(EXT, ListIncidence)
+DualDescription:=function(EXT)
+DualDescriptionAdjacencies:=function(EXT)
+DualDescriptionLRS:=function(EXT, GroupExt)
+DualDescriptionCDD:=function(EXT, GroupExt)
+DualDescriptionPD:=function(EXT, GroupExt)
+DualDescriptionStandard:=function(EXT, PermGRP)
+PolytopeVolumeRecursive:=function(EXT, GroupEXT)
+FindGeometricallyUniqueSolutionToLinearProgramming:=function(ListInequalities, ToBeMinimized)
+RepresentationMatrixAndFacetStandard:=function(EXT, PermGRP)
+LinPolytope_Automorphism:=function(EXT)
+ProjPolytope_Automorphism:=function(EXT)
+CombPolytope_Automorphism:=function(EXT)
+LinPolytope_Isomorphism:=function(EXT1, EXT2)
+ProjPolytope_Isomorphism:=function(EXT1, EXT2)
+CombPolytope_Isomorphism:=function(EXT1, EXT2)
+LinPolytope_Invariant:=function(EXT)
+LinPolytopeIntegral_Automorphism:=function(EXT)
+LinPolytopeIntegral_Isomorphism:=function(EXT1, EXT2)
+IncompleteSkeletonSearch:=function(GroupFac, FAC, BoundingSet, LevSearch)
+CreateK_skeletton:=function(GroupFac, FAC, EXT)
+FlagDisplacement:=function(FlagEXT, EXT, FAC, iMov)
+BoundaryOperatorsCellularDecompositionPolytope:=function(GroupEXT, EXT, BoundingSet, kSought)
+GetSuperlattices:=function(GramMat, GRP, TheMod)
+GetSublattices:=function(GramMat, GRP, TheMod)
+ShortVectorDutourVersion:=function(GramMat, eNorm)
+ShortestVectorDutourVersion:=function(GramMat)
+SphericalDesignLevel:=function(EXT, GramMat)
+SphericalDesignLevelGroup:=function(EXT, GroupEXT, GramMat)
+ClassicalSporadicLattices("E6");
+ClassicalSporadicLattices(["ListNames"]);
+ProcEnum:=ProcEnum_SublatticeEnumeration();
+ArithmeticAutomorphismGroup:=function(ListGram)
+ArithmeticIsomorphism:=function(ListGram1, ListGram2)
+ListFunc:=DelaunayComputationStandardFunctions(TheGramMat);
+DelCO:=ListFunc.GetDelaunayDescription();
+rec(iDelaunay:=..., eBigMat:=..., eInc:=....)
+ListFunc.GetFreeVectors();
+ListFunc.GetVoronoiVertices();
+ListFunc.GetRigidityDegree();
+ListFunc.GetLspace();
+ListFunc.GetQuantization();
+ListFunc.GetCoveringDensity();
+ListFunc.FlagFunctions();
+ListFunc.GetOrbitDefiningVoronoiFacetInequalities();
+LFC:=ListFunc.GetNeighborhood(EXT);
+ListFunc:=Periodic_DelaunayComputationStandardFunctions(U);
+MossContraction:=function(GramMat)
+SHORT_GetLLLreduction:=function(eSHV)
+SHORT_GetLLLreduction_Kernel:=function(eSHV)
+SHORT_GetStabilizer:=function(eSHV)
+SHORT_GetStabilizerCone:=function(eSHV)
+SHORT_Invariant:=function(eMat)
+SHORT_TestRealizabilityShortestFamily:=function(ListVect)
+SHORT_IsInMatroidalLocus:=function(eSHV)
+SHORT_IsIrreducibleVectorConfiguration:=function(SHV)
+SHORT_TestRealizabilityCentralCone:=function(ListVect)
+############################

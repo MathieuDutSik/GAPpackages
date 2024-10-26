@@ -1,0 +1,3 @@
+DoClean("ExternalProg/glpk-4.61");
+print "\nCLEANED glpk\n\n";
+

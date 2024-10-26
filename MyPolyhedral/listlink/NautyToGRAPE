@@ -1,0 +1,56 @@
+#!/usr/bin/perl -w
+
+@B=<>;
+
+$nbelt=scalar(@B);
+$order=scalar(@B)-4;
+
+$nbEdge=0;
+for ($iLine=3; $iLine<=$nbelt-2; $iLine++)
+{
+    $iVert=$iLine-2;
+    $line=$B[$iLine-1];
+    @U=split(" : ", $line);
+    @V=split(";", $U[1]);
+    @W=split(" ", $V[0]);
+    for ($iC=1; $iC<=scalar(@W); $iC++)
+    {
+	if ($W[$iC-1]>$iVert)
+	{
+	    $nbEdge++;
+	}
+    }
+}
+
+
+$iMatch=0;
+print "local EdgeSet, GraphExt, eEdge;\n";
+print "EdgeSet:=[";
+for ($iLine=3; $iLine<=$nbelt-2; $iLine++)
+{
+    $iVert=$iLine-2;
+    $line=$B[$iLine-1];
+    @U=split(" : ", $line);
+    @V=split(";", $U[1]);
+    @W=split(" ", $V[0]);
+    for ($iC=1; $iC<=scalar(@W); $iC++)
+    {
+	if ($W[$iC-1]>$iVert)
+	{
+	    print "[".$iVert.",".$W[$iC-1]."]";
+	    $iMatch++;
+	    if ($iMatch<$nbEdge)
+	    {
+		print ",";
+	    }
+	}
+    }
+}
+print "];\n";
+print "GraphExt:=NullGraph(Group(()),".$order.");\n";
+print "for eEdge in EdgeSet\n";
+print "do\n";
+print "  AddEdgeOrbit(GraphExt, [eEdge[1], eEdge[2]]);\n";
+print "  AddEdgeOrbit(GraphExt, [eEdge[2], eEdge[1]]);\n";
+print "od;\n";
+print "return GraphExt;\n";

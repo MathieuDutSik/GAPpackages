@@ -1,0 +1,18 @@
+#!/usr/bin/perl -w
+
+use Cwd;
+$TheDirPWD = getcwd;
+
+$eProg1="ExternalProg/gmp_install/lib/libgmp.so";
+if (!(-e $eProg1)) 
+{
+    $PrefixGMP=$TheDirPWD."/ExternalProg/gmp_install";
+    $order="(cd ExternalProg/gmp-6.0.0 && ./configure --prefix=".$PrefixGMP." && make && make install)";
+    print $order."\n";
+    if (system($order) != 0) {
+	die "Error in compilation of GMP\n";
+    }
+}
+print "\nCOMPILED gmp-6.0.0a\n\n";
+
+exit 0;

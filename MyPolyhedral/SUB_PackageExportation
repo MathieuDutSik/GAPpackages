@@ -1,0 +1,575 @@
+#!/usr/bin/perl -w
+use strict;
+use warnings;
+
+my $uu=scalar(@ARGV);
+if ($uu ne 1)
+{
+    print "This script is used as\n";
+    print "SUB_PackageExportation [projectname]\n";
+    die;
+}
+my $ProjectName=$ARGV[0];
+
+#
+# The description of the packages in question
+#
+
+my $nbPack=0;
+my @PACK_ShortName=();
+my @PACK_Directory=();
+my @PACK_ListBinaries=();
+my @PACK_Dependencies=();
+
+#
+# the library packages
+#
+
+$nbPack=$nbPack+1;
+$PACK_ShortName[$nbPack-1]="gmp";
+$PACK_Directory[$nbPack-1]="gmp-6.0.0a";
+$PACK_ListBinaries[$nbPack-1]="";
+$PACK_Dependencies[$nbPack-1]="";
+
+$nbPack=$nbPack+1;
+$PACK_ShortName[$nbPack-1]="gsl";
+$PACK_Directory[$nbPack-1]="gsl-1.16";
+$PACK_ListBinaries[$nbPack-1]="";
+$PACK_Dependencies[$nbPack-1]="";
+
+#
+# the external programs
+#
+
+$nbPack=$nbPack+1;
+$PACK_ShortName[$nbPack-1]="AUTOISOM";
+$PACK_Directory[$nbPack-1]="export.V2.5";
+$PACK_ListBinaries[$nbPack-1]="AUTO ISOM";
+$PACK_Dependencies[$nbPack-1]="";
+
+$nbPack=$nbPack+1;
+$PACK_ShortName[$nbPack-1]="cdd";
+$PACK_Directory[$nbPack-1]="cddlib-094g_mod";
+$PACK_ListBinaries[$nbPack-1]="scdd_gmp lcdd_gmp testlp2_gmp redcheck_gmp adjacency_gmp";
+#$PACK_Dependencies[$nbPack-1]="gmp";
+$PACK_Dependencies[$nbPack-1]="";
+
+$nbPack=$nbPack+1;
+$PACK_ShortName[$nbPack-1]="cdd_QN";
+$PACK_Directory[$nbPack-1]="cddlib-093b_QN";
+$PACK_ListBinaries[$nbPack-1]="scdd_QN lcdd_QN testlp2_QN redcheck_QN adjacency_QN";
+#$PACK_Dependencies[$nbPack-1]="gmp";
+$PACK_Dependencies[$nbPack-1]="";
+
+$nbPack=$nbPack+1;
+$PACK_ShortName[$nbPack-1]="IndependentSet";
+$PACK_Directory[$nbPack-1]="EnumerationIndependentSet";
+$PACK_ListBinaries[$nbPack-1]="CanonicIndependentFamily";
+$PACK_Dependencies[$nbPack-1]="";
+
+$nbPack=$nbPack+1;
+$PACK_ShortName[$nbPack-1]="IsomorphismReduction";
+$PACK_Directory[$nbPack-1]="IsomorphismReduction";
+$PACK_ListBinaries[$nbPack-1]="IsomorphismReduction.prog";
+#$PACK_Dependencies[$nbPack-1]="gmp";
+$PACK_Dependencies[$nbPack-1]="";
+
+$nbPack=$nbPack+1;
+$PACK_ShortName[$nbPack-1]="lrs";
+$PACK_Directory[$nbPack-1]="lrslib-042cmod";
+$PACK_ListBinaries[$nbPack-1]="glrs";
+#$PACK_Dependencies[$nbPack-1]="gmp";
+$PACK_Dependencies[$nbPack-1]="";
+
+$nbPack=$nbPack+1;
+$PACK_ShortName[$nbPack-1]="nauty";
+$PACK_Directory[$nbPack-1]="nauty24r2";
+$PACK_ListBinaries[$nbPack-1]="dreadnaut amtog";
+$PACK_Dependencies[$nbPack-1]="";
+
+$nbPack=$nbPack+1;
+$PACK_ShortName[$nbPack-1]="NegativeVect";
+$PACK_Directory[$nbPack-1]="FindNegativeVect";
+$PACK_ListBinaries[$nbPack-1]="FindNegativeVect";
+#$PACK_Dependencies[$nbPack-1]="gsl";
+$PACK_Dependencies[$nbPack-1]="";
+
+$nbPack=$nbPack+1;
+$PACK_ShortName[$nbPack-1]="nullspacemat";
+$PACK_Directory[$nbPack-1]="NullspaceMat";
+$PACK_ListBinaries[$nbPack-1]="NullspaceMat.prog";
+#$PACK_Dependencies[$nbPack-1]="gmp";
+$PACK_Dependencies[$nbPack-1]="";
+
+$nbPack=$nbPack+1;
+$PACK_ShortName[$nbPack-1]="sv";
+$PACK_Directory[$nbPack-1]="SV";
+$PACK_ListBinaries[$nbPack-1]="sv sv_gmp_read";
+#$PACK_Dependencies[$nbPack-1]="gmp";
+$PACK_Dependencies[$nbPack-1]="";
+
+$nbPack=$nbPack+1;
+$PACK_ShortName[$nbPack-1]="VectorSplitting";
+$PACK_Directory[$nbPack-1]="VectorSplitting";
+$PACK_ListBinaries[$nbPack-1]="VectorSplitting.prog";
+$PACK_Dependencies[$nbPack-1]="";
+
+$nbPack=$nbPack+1;
+$PACK_ShortName[$nbPack-1]="WythoffEnum";
+$PACK_Directory[$nbPack-1]="WythoffEnum";
+$PACK_ListBinaries[$nbPack-1]="WythoffEnum.prog";
+$PACK_Dependencies[$nbPack-1]="";
+
+$nbPack=$nbPack+1;
+$PACK_ShortName[$nbPack-1]="zsolve";
+$PACK_Directory[$nbPack-1]="4ti2-1.6.9";
+$PACK_ListBinaries[$nbPack-1]="zsolve";
+$PACK_Dependencies[$nbPack-1]="";
+
+$nbPack=$nbPack+1;
+$PACK_ShortName[$nbPack-1]="ppl";
+#$PACK_Directory[$nbPack-1]="ppl-1.1_mod";
+$PACK_Directory[$nbPack-1]="ppl-1.2";
+$PACK_ListBinaries[$nbPack-1]="ppl_lcdd";
+$PACK_Dependencies[$nbPack-1]="";
+
+$nbPack=$nbPack+1;
+$PACK_ShortName[$nbPack-1]="polyhedral_common";
+$PACK_Directory[$nbPack-1]="polyhedral_common";
+$PACK_ListBinaries[$nbPack-1]="sv_exact POLY_ComputeEngelSymbol POLY_FaceLatticeDirect GRP_VectorSplitting SHORT_GetShortVector IndefiniteReduction GRP_ListMat_Subset_EXT_Automorphism GRP_ListMat_Subset_EXT_Isomorphism GRP_ListMat_Subset_EXT_Invariant POLY_IsomorphismReduction";
+#$PACK_Dependencies[$nbPack-1]="gmp";
+$PACK_Dependencies[$nbPack-1]="";
+
+$nbPack=$nbPack+1;
+$PACK_ShortName[$nbPack-1]="lp_solve";
+$PACK_Directory[$nbPack-1]="lp_solve_5.5.2.5";
+$PACK_ListBinaries[$nbPack-1]="lp_solve";
+$PACK_Dependencies[$nbPack-1]="";
+
+$nbPack=$nbPack+1;
+$PACK_ShortName[$nbPack-1]="topcom";
+$PACK_Directory[$nbPack-1]="TOPCOM-0.17.8";
+$PACK_ListBinaries[$nbPack-1]="points2triangs";
+$PACK_Dependencies[$nbPack-1]="";
+
+$nbPack=$nbPack+1;
+$PACK_ShortName[$nbPack-1]="glpk";
+$PACK_Directory[$nbPack-1]="glpk-4.61";
+$PACK_ListBinaries[$nbPack-1]="glpsol";
+$PACK_Dependencies[$nbPack-1]="";
+
+$nbPack=$nbPack+1;
+$PACK_ShortName[$nbPack-1]="libexact";
+$PACK_Directory[$nbPack-1]="libexact-1.0_mod";
+$PACK_ListBinaries[$nbPack-1]="libexact_solve";
+$PACK_Dependencies[$nbPack-1]="";
+
+$nbPack=$nbPack+1;
+$PACK_ShortName[$nbPack-1]="linbox";
+$PACK_Directory[$nbPack-1]="LINBOX";
+$PACK_ListBinaries[$nbPack-1]="smith smithvalence rank";
+$PACK_Dependencies[$nbPack-1]="";
+
+
+
+#$nbPack=$nbPack+1;
+#$PACK_ShortName[$nbPack-1]="boost";
+#$PACK_Directory[$nbPack-1]="boost-1.59";
+#$PACK_ListBinaries[$nbPack-1]="";
+#$PACK_Dependencies[$nbPack-1]="";
+
+
+#
+# Reading the list of needed binaries (this also covers the perl scripts)
+#
+
+my $eFileBinary="Generation/NeededBinaries_".$ProjectName;
+open(INFILE, $eFileBinary) or die "impossible to open : ".$eFileBinary;
+my @BC=<INFILE>;
+close(INFILE);
+
+my @ListBinaryName=();
+my $lenBC=scalar(@BC);
+my @BinaryStatus=();
+for (my $iBC=0; $iBC<$lenBC; $iBC++)
+{
+    $_=$BC[$iBC];
+    s/\n//;
+    $ListBinaryName[$iBC]=$_;
+    $BinaryStatus[$iBC]=0;
+}
+my $nbBin=$lenBC;
+
+#
+# Finding which packages are needed.
+#
+
+#
+# By default no packages are needed
+#
+
+my @PACK_NeededStatus=();
+for (my $iPack=0; $iPack<$nbPack; $iPack++)
+{
+    $PACK_NeededStatus[$iPack]=0;
+}
+
+#
+# From the binaries we set up dependencies
+#
+
+for (my $iBin=0; $iBin<$nbBin; $iBin++)
+{
+    my $eBin=$ListBinaryName[$iBin];
+    for (my $iPack=0; $iPack<$nbPack; $iPack++)
+    {
+	my $strListBin=$PACK_ListBinaries[$iPack];
+	my @U=split(" ", $strListBin);
+	for (my $iU=0; $iU<scalar(@U); $iU++)
+	{
+	    if ($U[$iU] eq $eBin)
+	    {
+		$PACK_NeededStatus[$iPack]=1;
+		$BinaryStatus[$iBin]=1;
+	    }
+	}
+    }
+}
+
+#
+# Now the recursive dependencies
+#
+
+while(1)
+{
+    my $DoOperation=0;
+    for (my $iPack=1; $iPack<=$nbPack; $iPack++)
+    {
+	if ($PACK_NeededStatus[$iPack-1] eq 1)
+	{
+	    my $eDepend=$PACK_Dependencies[$iPack-1];
+	    my @USL=split(" ", $eDepend);
+	    for (my $iU=1; $iU<=scalar(@USL); $iU++)
+	    {
+		my $ePack=$USL[$iU-1];
+		for (my $jPack=1; $jPack<=$nbPack; $jPack++)
+		{
+		    my $eShortName=$PACK_ShortName[$jPack-1];
+		    if ($ePack eq $eShortName)
+		    {
+			if ($PACK_NeededStatus[$jPack-1] eq 0)
+			{
+			    $PACK_NeededStatus[$jPack-1]=1;
+			    print "Now select eShortName=".$eShortName."\n";
+			    $DoOperation=1;
+			}
+		    }
+		}
+	    }
+	}
+    }
+    if ($DoOperation eq 0)
+    {
+	last;
+    }
+}
+
+#
+# Now computing number of packs
+#
+
+my $nbNeededPack=0;
+for (my $iPack=0; $iPack<$nbPack; $iPack++)
+{
+    if ($PACK_NeededStatus[$iPack] eq 1)
+    {
+	$nbNeededPack++;
+    }
+}
+print "nbNeededPack=".$nbNeededPack."\n";
+
+#
+# Printing the binary status.
+#
+
+$eFileBinary="Generation/Binaries_BinaryStatus_".$ProjectName;
+open(OUT, "> ".$eFileBinary) or die "impossible to open ".$eFileBinary;
+for (my $iBin=0; $iBin<$lenBC; $iBin++)
+{
+    print OUT $BinaryStatus[$iBin]."\n";
+}
+close(OUT);
+
+#
+# Now creating the "clean" script.
+#
+
+my $CleanFile="../".$ProjectName."/clean";
+
+my $order1="touch ".$CleanFile;
+print "order1=".$order1."\n";
+if (system($order1) != 0) {
+    die "Impossible to run touch operation\n";
+}
+
+my $eFile_clean="CleanScript/CLEAN_main";
+my $order2="cat ".$eFile_clean." >> ".$CleanFile;
+print "order2=".$order2."\n";
+if (system($order2) != 0) {
+    die "Impossible to append the CLEAN_main\n";
+}
+
+for (my $iPack=1; $iPack<=$nbPack; $iPack++)
+{
+    if ($PACK_NeededStatus[$iPack-1] eq 1)
+    {
+	my $ePackName=$PACK_ShortName[$iPack-1];
+	my $eFile="CleanScript/CLEAN_".$ePackName;
+	if (-e $eFile)
+	{
+	    #
+	    my $order3="cat ".$eFile." >> ".$CleanFile;
+	    print "order3=".$order3."\n";
+	    if (system($order3) != 0) {
+		die "Impossible to do the cat operation\n";
+	    }
+	}
+	else
+	{
+	    print "File ".$eFile."\n";
+	    print "is missing\n";
+	    die;
+	}
+    }
+}
+my $order4="chmod +x ".$CleanFile;
+print "order4=".$order4."\n";
+if (system($order4) != 0) {
+    die "Impossible to do the chmod operation\n";
+}
+
+
+#
+# Now creating the configure script
+#
+
+my $ConfigureFile="../".$ProjectName."/configure";
+
+my $order5="touch ".$ConfigureFile;
+print "order5=".$order5."\n";
+if (system($order5) != 0) {
+    die "impossible to do the mkdir operation\n";
+}
+
+my $eFilePreamble="InstallScript/INSTALL_preamble";
+my $order6="cat ".$eFilePreamble." >> ".$ConfigureFile;
+print "order6=".$order6."\n";
+if (system($order6) != 0) {
+    die "Impossible to do the cat operation\n";
+}
+
+# Now program specific functions.
+
+
+my $order7="mkdir -p ../".$ProjectName."/InstallScript";
+print "order7=".$order7."\n";
+if (system($order7) != 0) {
+    die "impossible to do the mkdir operation\n";
+}
+
+
+
+
+open(OUT, ">> ".$ConfigureFile) or die "impossible to open ".$ConfigureFile;
+for (my $iPack=1; $iPack<=$nbPack; $iPack++)
+{
+    if ($PACK_NeededStatus[$iPack-1] eq 1)
+    {
+	my $ePackName=$PACK_ShortName[$iPack-1];
+	my $eFile="InstallScript/INSTALL_".$ePackName;
+	#
+	if (-e $eFile)
+	{
+	    print OUT "\n";
+	    print OUT "\$order=\"./".$eFile."\";\n";
+	    print OUT "print \"order=\".\$order.\"\\n\";\n";
+	    print OUT "if (system(\$order) != 0) {\n";
+	    print OUT "    die \"Impossible to run the installscript ".$eFile."\";\n";
+	    print OUT "}\n";
+	    print OUT "\n";
+	    #
+	    my $order8="cp ./".$eFile." ../".$ProjectName."/".$eFile;
+	    print "order8=".$order8."\n";
+	    if (system($order8) != 0) {
+		die "impossible to copy the install script\n";
+	    }
+	}
+	else
+	{
+	    print "File ".$eFile."\n";
+	    print "is missing\n";
+	    die;
+	}
+    }
+}
+close(OUT);
+
+my $eFilePostfix="InstallScript/INSTALL_postfix";
+
+my $order9="cat ".$eFilePostfix." >> ".$ConfigureFile;
+print "order9=".$order9."\n";
+if (system($order9) != 0) {
+    die "Impossible to do the cat operation\n";
+}
+
+my $order10="chmod +x ".$ConfigureFile;
+print "order10=".$order10."\n";
+if (system($order10) != 0) {
+    die "Impossible to run the chmod operation\n";
+}
+
+#
+# Now copying the directories themselves
+#
+
+my $order11="mkdir -p ../".$ProjectName."/ExternalProg";
+print "order11=".$order11."\n";
+if (system($order11) != 0) {
+    die "impossible to create the new directory\n";
+}
+
+for (my $iPack=1; $iPack<=$nbPack; $iPack++)
+{
+    if ($PACK_NeededStatus[$iPack-1] eq 1)
+    {
+	my $ePackDir=$PACK_Directory[$iPack-1];
+        my $eArchName="ExternalProg/".$PACK_Directory[$iPack-1].".tar.gz";
+	my $eArchNameRed=$PACK_Directory[$iPack-1].".tar.gz";
+	if (-e $eArchName)
+	{
+	    my $order12="cp ".$eArchName." ../".$ProjectName."/ExternalProg/.";
+	    print "order12=".$order12."\n";
+	    if (system($order12) != 0) {
+		die "impossible to run the cp operation\n";
+	    }
+	    #
+	    my $order13="(cd ../".$ProjectName."/ExternalProg && tar -vxzf ".$eArchNameRed." && rm -f ".$eArchNameRed.")";
+	    print "order13=".$order13."\n";
+	    if (system($order13) != 0) {
+		die "Impossible to do the package extraction\n";
+	    }
+	}
+	else
+	{
+	    #
+	    my $order14="cp -r ExternalProg/".$ePackDir." ../".$ProjectName."/ExternalProg/".$ePackDir;
+	    print "order14=".$order14."\n";
+	    if (system($order14) != 0) {
+		die "Impossible to do the copy operation\n";
+	    }
+	}
+	#
+	# Now cleaning superfuous Makefile
+	#
+	my $eMakefile="../".$ProjectName."/ExternalProg/".$ePackDir."/Makefile";
+        my $nautyname="nauty";
+        my $index=rindex $ePackDir, $nautyname, 0;
+        my $IsNauty="false";
+        if ($index eq 0)
+        {
+            $IsNauty = "true";
+        }
+        print "ePackDir=".$ePackDir."\n";
+        print "index=".$index."\n";
+        print "Isnauty=".$IsNauty."\n";
+	if (-e $eMakefile && $IsNauty eq "false")
+	{
+	    my $order15="(cd ../".$ProjectName."/ExternalProg/".$ePackDir." && make distclean)";
+	    print "order15=".$order15."\n";
+	    if (system($order15) != 0) {
+		die "Impossible to do the copy operation\n";
+	    }
+	}
+    }
+}
+
+#
+# The File PackageInfo
+#
+
+my $eFileDepend="DEPEND_".$ProjectName;
+open(INFILE, $eFileDepend) or die "Impossible to open ".$eFileDepend;
+my @U=<INFILE>;
+close(INFILE);
+my $strNeededGapPackage="  NeededOtherPackages := [";
+my $IsFirst=1;
+for (my $iU=1; $iU<=scalar(@U); $iU++)
+{
+    $_=$U[$iU-1];
+    s/\n//;
+    my $eLine=$_;
+    my @VSLplit=split("", $eLine);
+    if (scalar(@VSLplit) > 0)
+    {
+	if ($IsFirst eq 0)
+	{
+	    $strNeededGapPackage=$strNeededGapPackage.", ";
+	}
+	$strNeededGapPackage=$strNeededGapPackage.$eLine;
+	$IsFirst=0;
+    }
+}
+$strNeededGapPackage=$strNeededGapPackage."],";
+
+my $eFile="Package_Infos/PackageInfo_".$ProjectName.".g";
+open(IN, $eFile) or die "impossible to open ".$eFile;
+my @BL=<IN>;
+close(IN);
+my $nbLine=scalar(@BL);
+
+my $eFileOUT="../".$ProjectName."/PackageInfo.g";
+open(OUT, "> ".$eFileOUT) or die "impossible to open ".$eFileOUT;
+for (my $iLine=1; $iLine<=$nbLine; $iLine++)
+{
+    my $eLine=$BL[$iLine-1];
+    my @U=split("generic", $eLine);
+    my $strRet=$U[0];
+    for (my $iU=2; $iU<=scalar(@U); $iU++)
+    {
+	$strRet=$strRet.$ProjectName.$U[$iU-1];
+    }
+    #
+    my @V=split("ListProg:=", $eLine);
+    if (scalar(@V) eq 2)
+    {
+	$strRet="ListProg:=[";
+	my $IsFirstB=1;
+	for (my $iPack=1; $iPack<=$nbPack; $iPack++)
+	{
+	    if ($PACK_NeededStatus[$iPack-1] eq 1)
+	    {
+		my $eListBin=$PACK_ListBinaries[$iPack-1];
+		my @Ubin=split(" ", $eListBin);
+		for (my $iU=1; $iU<=scalar(@Ubin); $iU++)
+		{
+		    if ($IsFirstB eq 0)
+		    {
+			$strRet=$strRet.", ";
+		    }
+		    $IsFirstB=0;
+		    my $eStrBIN="\"".$Ubin[$iU-1]."\"";
+		    $strRet=$strRet.$eStrBIN;
+		}
+	    }
+	}
+	$strRet=$strRet."];\n";
+    }
+    my @Voth=split("NeededOtherPackages", $eLine);
+    if (scalar(@Voth) eq 2)
+    {
+	$strRet=$strNeededGapPackage."\n";
+    }
+    print OUT $strRet;
+}
+
+close(OUT);

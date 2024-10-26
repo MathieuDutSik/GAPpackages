@@ -1,0 +1,64 @@
+#!/usr/bin/perl -w
+
+use strict;
+use warnings;
+
+# This script takes the output of LCDD
+# and creates some files t
+
+my $uu=scalar(@ARGV);
+if ($uu ne 1)
+{
+    print "NudifyCDD.standard is used as\n";
+    print "NudifyCDD.standard FileData < [File]\n";
+    print "\n";
+    print "It splits large lists of lines\n";
+    print "into small file\n";
+    die;
+}
+my $random = rand(10000);
+my $FileData = "nudifylrs_reduction_ng_part2_".$random;
+my $FileMetaData = "nudifylrs_reduction_ng_part1_".$random;
+open(OUT1, "> ".$FileData);
+
+my $print=0;
+
+my $nbR=0;
+my $PrevLine="unset";
+my $MetaInfo="unset";
+while(<STDIN>)
+{
+    my $Chain=$_;
+    if ($MetaInfo ne "unset")
+    {
+	$print=1;
+    }
+    if ($PrevLine eq "begin\n")
+    {
+	$MetaInfo=$Chain;
+    }
+    if ($Chain eq "end\n")
+    {
+	$print=0;
+    }
+    if ($print eq 1)
+    {
+	print OUT1 $Chain;
+    }
+    $nbR=$nbR+1;
+    $PrevLine=$Chain;
+}
+close(OUT1);
+
+
+open(OUT2, "> ".$FileMetaData);
+my @L=split(" ", $MetaInfo);
+my $nbEXT=$L[0];
+my $nbCol=$L[1];
+print OUT2 $nbEXT." ".$nbCol."\n";
+close(OUT2);
+
+
+my $FileFinal=$ARGV[0];
+my $order="cat ".$FileMetaData." ".$FileData." > ".$FileFinal." && rm -f ".$FileData." ".$FileMetaData;
+system $order;

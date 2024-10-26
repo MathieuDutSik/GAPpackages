@@ -1,0 +1,94 @@
+#! /usr/bin/python3
+
+import os
+import sys
+
+
+nb_arg = len(sys.argv)
+if not nb_arg in [2, 3]:
+    print("nullspacebasisToGap [InFile] [OutFile]\n")
+    print("  or\n")
+    print("nullspacebasisToGap [InFile] > OutFile\n")
+    sys.exit(0)
+
+FileI = sys.argv[1];
+f1 = open(FileI, "r")
+lines = f1.readlines()
+
+nb_line=len(lines)
+#
+# Determining the dimension of the space
+#
+dimspace=nb_line-2
+print("dimspace=", dimspace)
+ColStatus = [0] * dimspace
+for iline in range(dimspace):
+#    print("iline=", iline)
+    e_line = lines[iline+1]
+    e_line = e_line.replace("[", "")
+    e_line = e_line.replace("]", "")
+    e_line = e_line.replace(")", "")
+    e_line = e_line.replace(";", "")
+    e_line = e_line.replace(",", "")
+    e_line = e_line.replace("\n", "")
+    LStrA = e_line.split(" ")
+    LStr = [a for a in LStrA if len(a) > 0]
+#    print("iline=", iline, " LStr=", LStr)
+    for i in range(dimspace):
+        eVal = LStr[i]
+#        print("i=", i, " eVal=", eVal)
+        if eVal != "0":
+            ColStatus[i] = 1
+#            print("Assign ColStatus to 1\n")
+
+print("ColStatus=", ColStatus)
+dimkernel=0
+LIdx = []
+for i in range(dimspace):
+    dimkernel += ColStatus[i]
+    if ColStatus[i]==1:
+        LIdx.append(i)
+print("dimkernel=", dimkernel, " LIdx=", LIdx)
+
+
+#
+# Determining the kernel
+#
+RetLStr = ["["] * dimkernel
+for iline in range(dimspace):
+    e_line = lines[iline+1]
+    e_line = e_line.replace("[", "")
+    e_line = e_line.replace("]", "")
+    e_line = e_line.replace(")", "")
+    e_line = e_line.replace(";", "")
+    e_line = e_line.replace(",", "")
+    e_line = e_line.replace("\n", "")
+    LStrA = e_line.split(" ")
+    LStr = [a for a in LStrA if len(a) > 0]
+    if iline>0:
+        for iVect in range(dimkernel):
+            RetLStr[iVect] += ","
+    for iVect in range(dimkernel):
+        eIdx = LIdx[iVect]
+        eVal_s = LStr[eIdx]
+        RetLStr[iVect] += eVal_s
+
+for iVect in range(dimkernel):
+    RetLStr[iVect] += "]"
+
+
+eStrO = "return ["
+for iVect in range(dimkernel):
+    if iVect>0:
+        eStrO += ",\n"
+    eStrO += RetLStr[iVect]
+eStrO += "];"
+
+
+if nb_arg==3:
+    FileO = sys.argv[2];
+    fo = open(FileO, "w")
+    fo.write(eStrO + "\n")
+    fo.close()
+else:
+    print(eStrO)

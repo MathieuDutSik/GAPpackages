@@ -1,0 +1,1085 @@
+\documentclass[12pt]{amsart}
+\usepackage{amsfonts, amsmath, latexsym, epsfig}
+\usepackage{amssymb}
+\usepackage{epsf}
+\usepackage{url}
+%\usepackage{tikz}
+
+
+\newcommand{\sfA}{\ensuremath{\mathsf{A}}}
+\newcommand{\RR}{\ensuremath{\mathbb{R}}}
+\newcommand{\NN}{\ensuremath{\mathbb{N}}}
+\newcommand{\QQ}{\ensuremath{\mathbb{Q}}}
+\newcommand{\CC}{\ensuremath{\mathbb{C}}}
+\newcommand{\ZZ}{\ensuremath{\mathbb{Z}}}
+\newcommand{\TT}{\ensuremath{\mathbb{T}}}
+\newcommand{\R}{\ensuremath{\mathbb{R}}}
+\newcommand{\N}{\ensuremath{\mathbb{N}}}
+\newcommand{\Q}{\ensuremath{\mathbb{Q}}}
+\newcommand{\C}{\ensuremath{\mathbb{C}}}
+\newcommand{\Z}{\ensuremath{\mathbb{Z}}}
+\newcommand{\T}{\ensuremath{\mathbb{T}}}
+\newtheorem{proposition}{Proposition}
+\newtheorem{theorem}{Theorem}
+\newtheorem{corollary}{Corollary}
+\newtheorem{algorithm}{Algorithm}
+\newtheorem{lemma}{Lemma}
+\newtheorem{problem}{Problem}
+\newtheorem{conjecture}{Conjecture}
+\newtheorem{claim}{Claim}
+\newtheorem{remark}{Remark}
+\newtheorem{definition}{Definition}
+\def\QuotS#1#2{\leavevmode\kern-.0em\raise.2ex\hbox{$#1$}\kern-.1em/\kern-.1em\lower.25ex\hbox{$#2$}}
+
+
+\urlstyle{sf}
+
+\DeclareMathOperator{\Aut}{Aut}
+\DeclareMathOperator{\Sym}{Sym}
+\DeclareMathOperator{\Isom}{Isom}
+\DeclareMathOperator{\vertt}{vert}
+\DeclareMathOperator{\conv}{conv}
+\DeclareMathOperator{\SC}{SC}
+\DeclareMathOperator{\SL}{SL}
+\DeclareMathOperator{\GL}{GL}
+\DeclareMathOperator{\PSL}{PSL}
+\DeclareMathOperator{\Out}{Out}
+\DeclareMathOperator{\Min}{Min}
+\DeclareMathOperator{\Dom}{Dom}
+\DeclareMathOperator{\cone}{cone}
+\DeclareMathOperator{\Stab}{Stab}
+
+
+\begin{document}
+
+\author{Mathieu Dutour Sikiri\'c}
+\address{Mathieu Dutour Sikiri\'c, Rudjer Boskovi\'c Institute, Bijenicka 54, 10000 Zagreb, Croatia}
+\email{mdsikir@irb.hr}
+
+
+\title{Manual of the GAP package {\tt polyhedral}}
+\date{}
+
+\maketitle
+\tableofcontents
+
+\section{Installation}
+
+A priori the system works only on unix/linux systems.
+You need to follow the following steps:
+\begin{enumerate}
+\item The archive {\bf polyhedral.tar.gz} can be downloaded from
+\url{http://mathieudutour.altervista.org/Polyhedral/index.html}
+
+\item Previous to using polyhedral you need to install the GAP computer package (from \url{http://www.gap-system.org/}).
+
+\item The archive {\bf polyhedral.tar.gz} should be untarred in the {\bf pkg} directory of GAP.
+
+\item Your File {\bf .gap/gap.ini} must contain the following line:
+\begin{verbatim}
+SetUserPreference( "InfoPackageLoadingLevel", 4 ); # for additional debugging informations
+SetUserPreference( "PackagesToLoad", [ "polyhedral"]);
+\end{verbatim}
+if you have no other needed packages. If the file is not existent then you need to create it.
+
+\item Then one needs to run the {\bf configure} perl script in the {\bf polyhedral} directory in order to compile the external programs.
+\end{enumerate}
+
+
+\section{Introduction}
+The package {\tt polyhedral} is designed to be used for doing all kinds
+of computations related to polytopes and use their symmetry groups in
+the course of the computation.
+There are very many different functions but I will try here to explain
+them as good as I can.
+
+In order to install it, you should
+\begin{enumerate}
+\item Install {\tt GAP}.
+\item Download {\tt polyhedral.tar.gz} from 
+{\url{http://www.liga.ens.fr/~dutour/Polyhedral}}
+\item Unpack it in the directory {\tt pkg/} of the gap distribution.
+\item Do {\tt ./configure} in order to compile the external programs.
+\end{enumerate}
+
+
+
+
+
+\section{Combinatorial functions}
+
+\subsection{Graph functions}
+The package contains a reimplementation of the {\tt nauty} \cite{nauty} functionalities
+into GAP.
+The preceding GRAPE has the defect of being rather slow due to its additional
+features and does not contained the feature of vertex colored graph.
+Thus a graph is either described as
+\begin{itemize}
+\item A graph in the GRAPE format
+\item A graph in the ListAdj Format, so that {\tt ListAdj[iVert]} is the list of vertices adjacent to {\tt iVert}.
+\end{itemize}
+
+
+
+\begin{enumerate}
+\item The functions
+\begin{verbatim}
+CanonicalRepresentativeVertexColoredGraphAdjList:=function(ListAdjacency, ThePartition)
+CanonicalRepresentativeVertexColoredGraph:=function(TheGraph, ThePartition)
+\end{verbatim}
+returns the canonical representative of a vertex colored graph by using the
+nauty program.
+\item The functions
+\begin{verbatim}
+EquivalenceVertexColoredGraphAdjList:=function(ListAdjacency1, ListAdjacency2, ThePartition)
+EquivalenceVertexColoredGraph:=function(TheGraph1, TheGraph2, ThePartition)
+\end{verbatim}
+tests the equivalence of vertex colored graphs. ThePartition is for example
+\begin{verbatim}
+ThePartition:=[[1,2,3,4], [5,6]];
+\end{verbatim}
+and has to be common for both graphs.
+\item The function
+\begin{verbatim}
+AutomorphismGroupEdgeColoredGraph:=function(DistMat)
+\end{verbatim}
+returns the automorphism group of a graph with edge weigths. DistMat is the matrix of weight (diagonal weights are not used).
+\item The function
+\begin{verbatim}
+CanonicalStringEdgeColoredGraph:=function(DistMat)
+\end{verbatim}
+returns the canonical string of an edge colored graph.
+\item The function
+\begin{verbatim}
+IsIsomorphicEdgeColoredGraph:=function(DistMat1, DistMat2)
+\end{verbatim}
+tests if two edge colored graphs are equivalent.
+\item The functions
+\begin{verbatim}
+AutomorphismGroupColoredGraph:=function(ScalarMat)
+IsIsomorphicColoredGraph:=function(ScalarMat1, ScalarMat2)
+\end{verbatim}
+are the equivalent of the above for vertex colored and edge weighted graphs.
+
+\end{enumerate}
+For a graph the returned group is a group expressed as a permutation group
+on the vertices. For equivalence tests, the program return {\tt false} if
+the two objects are not isomorphic and a list expressing the isomorphism
+otherwise.
+
+
+\subsection{Invariant functions}
+
+\begin{enumerate}
+\item The function
+\begin{verbatim}
+__GetMD5sum:=function(FileName)
+\end{verbatim}
+returns the {\tt md5sum} of a file.
+This is especially useful when one has complex
+invariants of a mathematical object and wants a smaller one to keep in memory.
+\item The function
+\begin{verbatim}
+__GetGraph6Expression:=function(ListAdj)
+\end{verbatim}
+returns the {\tt nauty} Graph6 expression of a graph.
+It is a compact form useful for memory expression.
+\item The functions
+\begin{verbatim}
+SymmetryGroupVertexColoredGraphAdjList:=function(ListAdjacency, ThePartition)
+SymmetryGroupVertexColoredGraph:=function(TheGraph, ThePartition)
+\end{verbatim}
+return the symmetry group of a vertex colored graph.
+
+\end{enumerate}
+
+
+
+
+
+
+
+\subsection{Combinatorial functions}
+
+Sometimes, we need to enumerate objects and special graph
+
+\begin{enumerate}
+\item The function
+\begin{verbatim}
+GetBipartition:=function(GR)
+\end{verbatim}
+returns the bipartition of a graph {\tt GR} if it is bipartite and 
+\item The function
+\begin{verbatim}
+GRAPH_EnumerateCycles:=function(TheGRA, GRP, TheLen)
+\end{verbatim}
+enumerates the orbits for the group {\tt GRP} of cycles of {\tt TheGRA}
+of length {\tt TheLen}.
+\end{enumerate}
+
+
+\subsection{Group functions}
+
+A key point of all the work being done there is to compute stabilizer
+and equivalence for some various action.
+We have written some algorithm that realize this for some specific
+actions.
+
+The functions
+\begin{verbatim}
+PermutedStabilizer:=function(TheGRP, eVect)
+PermutedRepresentativeAction:=function(TheGRP, eVect1, eVect2)
+\end{verbatim}
+are supposed to behave like
+\begin{verbatim}
+Stabilizer:=function(TheGRP, eVect, Permuted)
+RepresentativeAction:=function(TheGRP, eVect1, eVect2, Permuted)
+\end{verbatim}
+and hopefully be faster.
+
+
+Similarly we have for the action {\tt OnSetsSets}
+\begin{verbatim}
+OnSetsSetsStabilizer:=function(GRP, eSetSet)
+OnSetsSetsRepresentativeAction:=function(GRP, eSetSet1, eSetSet2)
+\end{verbatim}
+for the action {\tt OnTuples}:
+\begin{verbatim}
+OnTuplesStabilizer:=function(GRP, eTuple)
+OnTuplesRepresentativeAction:=function(SymGrp, Tuple1, Tuple2)
+OnTuplesCanonicalization:=function(GroupEXT, ListPts)
+\end{verbatim}
+for the action {\tt OnTuplesSets}:
+\begin{verbatim}
+OnTuplesSetsStabilizer:=function(GRP, eTuple)
+OnTuplesSetsRepresentativeAction:=function(GroupEXT, FlagEXT1, FlagEXT2)
+OnTuplesSetsCanonicalization:=function(GroupEXT, ListSet)
+\end{verbatim}
+
+
+
+\section{Linear algebra functionalities}
+
+
+\subsection{Basic functions}
+
+\begin{enumerate}
+\item For a $n\times m$ matrix of rank $p$ we need to remove
+some rows or columns so that the resulting matrix has rank $p$.
+The functions are
+\begin{verbatim}
+ColumnReduction:=function(EXT)
+RowReduction:=function(EXT)
+\end{verbatim}
+They return a record 
+\begin{verbatim}
+rec(EXT:=EXTred, Select:=eSet)
+\end{verbatim}
+with {\tt EXTred} the reduced matrix and {\tt eSet} the set of rows/columns
+that has to be chosen.
+
+\item For an integral vector {\tt TheVector} with
+\begin{verbatim}
+TheVector:=[x1, ..., xN]
+\end{verbatim}
+the function
+\begin{verbatim}
+GcdVector:=function(TheVector)
+\end{verbatim}
+returns a record {\tt rec(TheGcd:=TheGcd , ListCoef:=[a1, ..., aN])}
+such that {\tt TheGcd} is the greatest common divisor and
+\begin{equation*}
+TheGcd = \sum_{i=1}^{N} a_i x_i
+\end{equation*}
+
+\item The functions
+\begin{verbatim}
+RemoveFraction:=function(TheList)
+RemoveFractionMatrix:=function(OneMat)
+\end{verbatim}
+multiply a vector or a matrix by the smallest integer such that they are integral. If one needs further the coefficient, then use
+\begin{verbatim}
+RemoveFractionPlusCoef:=function(TheList)
+RemoveFractionMatrixPlusCoef:=function(OneMat)
+\end{verbatim}
+
+\item Given an matrix {\tt eBasis} in a space of dimension $n$, the function
+\begin{verbatim}
+SubspaceCompletion:=function(eBasis, n)
+\end{verbatim}
+returns a completion basis {\tt B} such that {\tt Concatenation(eBasis, B)} is an integral $\ZZ$-basis of $\ZZ^n$.
+
+
+\end{enumerate}
+
+\subsection{Smith Normal Form}
+The Smith normal form is the right tool for computing homology groups. What is needed is to compute the smith normal form of the differential. Since those differentials are in most cases sparse matrix and that there exist specific algorithms using sparse matrices, we find it useful to have sparse matrix functionalities.
+
+The format used for sparse matrix is {\tt rec(nbLine:=...., nbCol:=...., ListEntries:=[....])}.
+The list {\tt ListEntries} is of length {\tt nbLine} and each entry is of the form {\tt rec(ListCol:=....., ListVal:=....)}.
+
+%We use the LINBOX library for those computations, which is one of the most advanced in the world.
+
+%The following functionalities are provided via LINBOX:
+%\begin{enumerate}
+%\item The function
+%\begin{verbatim}
+%GetRankLinboxSparse:=function(RecSparseMat, pVal)
+%\end{verbatim}
+%returns the rank of the sparse matrix in input. if {\tt pVal} is $0$ then this is the $\ZZ$ rank and if it is non-zero, then it is the rank over $\ZZ/p\ZZ$.
+
+%\item The function
+%\begin{verbatim}
+%GetFactorLinboxSparse:=function(RecSparseMat)
+%\end{verbatim}
+%returns the Smith normal form of the sparse matrix in input.
+%\end{enumerate}
+
+
+
+
+\section{Polytopes}
+
+\subsection{Description of polytopes and polyhedral cones}
+
+A polyhedral cone spanned by $(v^1, \dots, v^m)$ in $\RR^n$ can be expressed as
+\begin{equation*}
+P=\{x=\lambda_1 v^1 + \dots + \lambda_m v^m\mbox{~with~}\lambda_i\geq 0\}
+\end{equation*}
+To any vector $v^i=(x_1, \dots, x_n)$ we associate the list
+\begin{verbatim}
+[x_1, x_2, ..., x_n]
+\end{verbatim}
+If the polyhedral cone is defined by inequalities of vector $w^1$, \dots, $w^p$:
+\begin{equation*}
+P=\{x\mbox{~such~that~} \langle x, w^i\rangle \geq 0\}
+\end{equation*}
+with
+\begin{equation*}
+\langle x, y\rangle = x_1 y_1 + \dots + x_n y_n
+\end{equation*}
+then to $w^i=(y_1, \dots, y_n)$ we associate the list
+\begin{verbatim}
+[y_1, y_2, ..., y_n]
+\end{verbatim}
+So a polyhedral cone $P$ can be either described by a list of list generator coordinates or by a list of list of inequalities coordinate.
+It is important to note nowhere it is said or mentioned that a list of list express a polytope in terms of its generators or in terms of its inequalities.
+This meaning is something that the user is responsible for.
+
+For polytopes, the situation is slightly more complex.
+A polytope $P$ can be defined as the convex hull of points
+$(v^1, \dots, v^m)$ in $\RR^n$, i.e.
+\begin{equation*}
+P=\left\{\begin{array}{c}
+x=\lambda_1 v^1 + \dots + \lambda_m v^m\mbox{~with~}\lambda_i\geq 0\\
+\sum_{i} \lambda_i = 1 
+\end{array}\right\}
+\end{equation*}
+To any convex generator $v^i=(x_1, \dots, x_n)$ we associate the list
+\begin{verbatim}
+[1 , x_1 , x_2 , ... , x_n]
+\end{verbatim}
+If the polytope $P$ is defined by inequalities of vector $w^1$, \dots, $w^p$:
+\begin{equation*}
+P=\{x\mbox{~such~that~} \langle x, w^i\rangle \geq b_i\}
+\end{equation*}
+with
+\begin{equation*}
+\langle x, y\rangle = x_1 y_1 + \dots + x_n y_n
+\end{equation*}
+then to $w^i=(y_1, \dots, y_n)$ and $b_i$ we associate the list
+\begin{verbatim}
+[-b_i , y_1 , y_2 , ... , y_n]
+\end{verbatim}
+This is the convention that we recommend and are used by {\tt lrs}, {\tt cdd}, etc. Their use gives consistent result.
+So, the polyhedral software does not make any distinction between
+polyhedral cone and polytope, all this is in the eye of the user.
+
+In general, we do not require the polyhedral cone and polytope to be full
+dimensional, any embedding is ok.
+But as a consequence, the faces of cone are defined not by defining inequality
+but by the vertices or facets in which they are contained.
+Thus, everything about polyhedral cone is expressed in term of sets, and
+permutation groups and not matrix groups.
+
+A note on the arihmetic. The coordinates of the objects can be integer, 
+rational or belong to $\QQ(\sqrt(N))$.
+The reader should read a book on polytope theory (first chapter suffices)
+in order to get acquainted with the formalism explained here.
+
+
+\subsection{Linear programming functions}
+
+Linear programming is the problem of mimnizing a linear function over a set $P$ defined by linear inequalities.
+
+The function that realize that is
+\begin{verbatim}
+LinearProgramming:=function(InequalitySet, ToBeMinimized)
+\end{verbatim}
+The {\tt cdd} program is directly called.
+The output of cdd is directly translated and read.
+For interpretation of the result, we recommend that the reader looks at a
+book on linear programming.
+Linear programming is known to be solvable in polynomial time, which
+explain its attractivity for many algorithms.
+The program {\tt cdd} that we use uses the simplex algorithm, which is
+known to be exponential in worst cases. But in practice this is ok
+for the cases that we consider and the advantage of it is that the solutions
+that it returns are rational for rational input.
+
+
+Based on linear programming we can build many useful functions that generally run very fast.
+\begin{enumerate}
+\item The function
+\begin{verbatim}
+PolytopizationGeneralCone:=function(FAC)
+\end{verbatim}
+does the following operation successively:
+\begin{enumerate}
+\item It does a reduction to a space so that FAC is full dimensional
+\item It applies a linear transformation so that the first coordinate is always $>1$.
+\item It multiplies each vector by the inverse of the first coefficient so that
+the first coefficient is $=1$ (so the object is now a polytope).
+\item It translate the coordinate so that origin belongs to the interior of the polytope.
+\end{enumerate}
+
+\item The function
+\begin{verbatim}
+SearchPositiveRelation:=function(ListVect, TheConstraint)
+\end{verbatim}
+is for searching positive relations among vector elements. I.e. we have
+\begin{verbatim}
+ListVect:=[v1, v2, ..., vN]
+\end{verbatim}
+and we search for relations
+\begin{equation*}
+\sum_i \alpha_i v_i = 0
+\end{equation*}
+with the signs of $\alpha_i$ being specified in the following way:
+\begin{verbatim}
+TheConstraint:=rec(ListPositive:=[...], 
+                   ListStrictlyPositive:=[...],
+                   ListSetStrictPositive:=[...]);
+\end{verbatim}
+ListPositive is the list of indices of vectors that are $\geq 0$,
+ListStrictlyPositive the list of indices that are $>0$,
+ListSetStrictPositive the list of sets $S$ for which $\sum_{i\in S} \alpha_i >0$ with $S$ expressed as set of indices.
+
+\item The function
+\begin{verbatim}
+SearchPositiveRelationSimple:=function(ListVect)
+\end{verbatim}
+is a simpler version of the above where all indices are non-negative and only the sum should be non-negative
+
+
+\item The function
+\begin{verbatim}
+GetViolatedFacet:=function(EXT, eVect)
+\end{verbatim}
+takes a polytope {\tt EXT} and a vector {\tt eVect} that is not in the convex hull of {\tt EXT} and returns a facet $F$ of {\tt EXT} that separates {\tt eVect}.
+
+
+\item The function
+\begin{verbatim}
+EliminationByRedundancyEquivariant:=function(EXT, BoundingSet, GRPperm)
+\end{verbatim}
+gives the list of indices that corresponds to vertices.
+That is if {\tt EXT} is the list of generators,
+{\tt GRPperm} a group of permutation on the generators,
+{\tt BoundingSet} a list of valid inequalities on {\tt EXT}
+(usually set to be empty {\tt []}).
+
+Linear programming is used to detect which generators correspond to
+vertices and symmetry is used to reduce the number of linear programming
+tests.
+
+\item The function
+\begin{verbatim}
+SkeletonGraph:=function(GroupExt, EXT, BoundingSet)
+\end{verbatim}
+takes a list of vertices {\tt EXT}, a permutation group {\tt GroupExt}
+on {\tt EXT}, a set {\tt BoundingSet} of valid inequalities
+(usually set to be empty {\tt []}).
+The result is the skeleton of the polytope.
+
+\item The function
+\begin{verbatim}
+GetInitialRays_LinProg:=function(EXT, nb)
+\end{verbatim}
+takes a polytope or polyhedral cone {\tt EXT} and returns $nb$ subsets of
+{\tt EXT} corresponding to facets of {\tt EXT}
+
+
+\item The function
+\begin{verbatim}
+LinearDeterminedByInequalities:=function(FAC)
+\end{verbatim}
+returns a basis of the space spanned by the vectors realizing the inequalities.
+For example
+\begin{verbatim}
+gap> LinearDeterminedByInequalities([[1,1,1],[-1,-1,-1],[1,0,0]]);
+[ [ -1, 1, 0 ], [ -1, 0, 1 ] ]
+\end{verbatim}
+It is useful in dealing with polytopes that are not full dimensional.
+
+\item The function
+\begin{verbatim}
+GetContainingPrism:=function(EXT, eVect)
+\end{verbatim}
+returns a set $S$ defining a facet $F$ of the polytope $P$ such that {\tt eVect} is inside the prism $\conv(F, iso(P))$.
+
+\item The function
+\begin{verbatim}
+GetContainingSimplex:=function(EXT, eVect)
+\end{verbatim}
+returns a flag $(F_1, \dots, F_n)$ such that {\tt eVect} is inside the simplex defined by $(Iso(F_1), \dots, Iso(F_n))$.
+
+
+
+
+\end{enumerate}
+
+
+
+
+
+\subsection{Dual description functions}
+
+We now consider functionalities related to computing dual description
+of polyhedral cone, polytopes, etc. That is we have a description by
+facets or vertices and we want a description by facets or vertices.
+
+Those functions generally return a list of subsets corresponding to
+orbit representatives of facets. The method generally uses the
+Recursive Adjacency Decomposition Method for computing.
+The exact method is fully described in papers and examples.
+We give mostly here readily usable functions.
+
+\begin{enumerate}
+\item The function
+\begin{verbatim}
+__FindFacetInequality:=function(EXT, ListIncidence)
+\end{verbatim}
+for a set of vertices {\tt EXT} and a list of incidence {\tt ListIncidence}
+returns the inequality corresponding to this set.
+
+\item The function
+\begin{verbatim}
+DualDescription:=function(EXT)
+\end{verbatim}
+gives the dual description of {\tt EXT} without using any group theoretical
+features.
+\item The function
+\begin{verbatim}
+DualDescriptionAdjacencies:=function(EXT)
+\end{verbatim}
+gives the list of facets, the ridge graph and the skeleton graph (again without using any group)
+
+\item The functions
+\begin{verbatim}
+DualDescriptionLRS:=function(EXT, GroupExt)
+DualDescriptionCDD:=function(EXT, GroupExt)
+DualDescriptionPD:=function(EXT, GroupExt)
+\end{verbatim}
+computes some orbit representative (with respect to the group {\tt GroupExt})
+of the facets of the cone defined by {\tt EXT}.
+The program used are {\tt lrs}, {\tt cdd} or {\tt pd}.
+It is difficult to recommend a specific algorithm in general.
+This is a matter of research.
+
+\item The function
+\begin{verbatim}
+DualDescriptionStandard:=function(EXT, PermGRP)
+\end{verbatim}
+computes representatives of the orbits of facets of the cone defined by
+{\tt EXT} with respect to the group {\tt PermGRP}.
+Some standard heuristics are applied with the {\tt lrs} programs.
+If the user wants to use different heuristics, programs then he should look
+at the examples.
+
+\item The function
+\begin{verbatim}
+PolytopeVolumeRecursive:=function(EXT, GroupEXT)
+\end{verbatim}
+computes the volume of a polytope by using the above recursive
+adjacency method iteratively.
+
+
+\end{enumerate}
+See \cite{symsurvey} for a discussion of the various methods for
+computing dual descriptions of polytopes using symmetries.
+
+
+\subsection{Direct applications of dual description computations}
+
+Remind that a linear programming is the problem of minimizing a 
+linear function over a set defined by some linear inequalities.
+One weakness of the algorithm previous explained is that the point
+that they give that realize the minimum may not be unique in some
+cases.
+This is not a problem in 99\% of cases but sometimes, one needs
+it to find a point that is canonically defined.
+The solution is to use
+\begin{verbatim}
+FindGeometricallyUniqueSolutionToLinearProgramming:=function(ListInequalities, ToBeMinimized)
+\end{verbatim}
+and it is usually much more expensive that simple linear programming
+because more calls to linear programming are needed and also dual
+description.
+
+In many of the papers of \cite{mining} it is somehow important to get
+the representation matrix of the cone, that is the adjacencies
+between facets
+\begin{verbatim}
+RepresentationMatrixAndFacetStandard:=function(EXT, PermGRP)
+\end{verbatim}
+
+
+
+\subsection{Groups and equivalence of polytopes}
+
+For a polyhedral cone $P$ spanned by $N$ vectors $(v_i)_{1\leq i\leq N}$
+in $\RR^n$ we denote by
+\begin{enumerate}
+\item {\it (Linear)} $Lin(P)$ the group of permutations $\sigma\in Sym(N)$
+such that there exist $A\in \GL_n(\RR)$ with $Av_i = v_{\sigma(i)}$.
+\item {\it (Projective)} $Proj(P)$ the group of permutations $\sigma\in Sym(N)$
+such that there exist $A\in \GL_n(\RR)$ and $\alpha_i>0$
+with $Av_i = \alpha_i v_{\sigma(i)}$.
+\item {\it (Combinatorial)} $Comb(P)$ the group of permutations
+$\sigma\in Sym(N)$ such that $\sigma$ permutes the faces of $P$
+(expressed as subsets of $\{1,\dots, N\}$).
+\end{enumerate}
+Of course, one can define the corresponding notions of equivalences.
+See in \cite{CombProjLin} for more details on those questions.
+
+This gives us the following functions for automorphism groups:
+\begin{verbatim}
+LinPolytope_Automorphism:=function(EXT)
+ProjPolytope_Automorphism:=function(EXT)
+CombPolytope_Automorphism:=function(EXT)
+\end{verbatim}
+and for equivalences
+\begin{verbatim}
+LinPolytope_Isomorphism:=function(EXT1, EXT2)
+ProjPolytope_Isomorphism:=function(EXT1, EXT2)
+CombPolytope_Isomorphism:=function(EXT1, EXT2)
+\end{verbatim}
+In general the method of choice is the linear group and linear equivalence
+because it is much faster than other methods. If one wants to use projective
+or combinatorial equivalence then the computational expenses are much higher.
+
+A function related to linear equivalence is
+\begin{verbatim}
+LinPolytope_Invariant:=function(EXT)
+\end{verbatim}
+which returns a powerful linear invariant for a given polyhedral cone.
+
+For obtaining integral stabilizers and equivalence, the commands are:
+\begin{verbatim}
+LinPolytopeIntegral_Automorphism:=function(EXT)
+LinPolytopeIntegral_Isomorphism:=function(EXT1, EXT2)
+\end{verbatim}
+
+
+
+\subsection{Face lattice and flag computation}
+
+Face lattices computations are fundamental to many computations.
+
+For a $n$-dimensional polytope $P$, there are two kinds of face
+lattice computations:
+\begin{enumerate}
+\item Enumeration of all orbits of $k$-dimensional faces for $0\leq k\leq n$
+assuming that we know the list of facets of $P$ (This typically
+applies to polytope of dimension say, $8$ at most).
+\item Enumeration of all orbits of $k$-dimensional faces for
+$0\leq k\leq k_0$ with $k_0$ small without knowing the set of facets
+and instead using linear programming (typically, $k_0=3$, $4$ and
+the polytope is of dimension about $20$)
+\end{enumerate}
+
+
+The functions are thus
+\begin{verbatim}
+IncompleteSkeletonSearch:=function(GroupFac, FAC, BoundingSet, LevSearch)
+\end{verbatim}
+{\tt FAC} is the set of facets, {\tt GroupFac} the permutation group acting
+on the faces,
+{\tt BoundingSet} a set of extreme rays (usually taken to be {\tt []}),
+{\tt LevSearch} the level at which we go in the enumeration.
+
+\begin{verbatim}
+CreateK_skeletton:=function(GroupFac, FAC, EXT)
+\end{verbatim}
+{\tt FAC} is the set of facets, {\tt GroupFac} the permutation group acting
+on the faces and {\tt EXT} the set of extreme rays.
+
+
+Let us now see the related computations.
+If $P$ is a $n$-dimensional polyhedral cone with faces of dimension between 
+$1$ and $n$ then a flag is a set of faces $f_i$:
+\begin{equation*}
+f=(f_1, f_2,\dots, f_n) \mbox{~with~} f_1 \subset f_2 \subset \dots \subset f_n
+\end{equation*}
+Such flags are encoded by the set of extreme rays in which they are contained.
+For $j$ in $\{1,\dots, n\}$ there exist a unique flag $f'$ which differs from
+$f$ only in position $j$.
+This flag is obtained by the function
+\begin{verbatim}
+FlagDisplacement:=function(FlagEXT, EXT, FAC, iMov)
+\end{verbatim}
+with {\tt EXT} the set of extreme rays, {\tt FAC} the set of facets, {\tt iMov} the movement index $j$, and {\tt FlagEXT} the flag $f$ with each face $f_i$ encoded by the list of extreme rays contained in it.
+
+
+Another use of face lattice computation is in topology for computing
+boundary operator. The command is then
+\begin{verbatim}
+BoundaryOperatorsCellularDecompositionPolytope:=function(GroupEXT, EXT, BoundingSet, kSought)
+\end{verbatim}
+with {\tt EXT} the list of vertices, {\tt GroupEXT} the group acting on the vertices, {\tt BoundingSet} a list of valid inequality (usually set to {\tt []}) and {\tt kSought} the level at which one wants to compute the skeleton.
+
+
+
+
+
+
+\section{Lattices functions}
+
+
+\subsection{Basic lattices functions}
+
+By a lattice, we mean a set $\ZZ v_1 + \dots + \ZZ v_n \subset \RR^n$.
+The {\tt polyhedral} package allows to make all sort of computations
+with it, but the main computation tool is named Gram matrix. It is
+the positive definite matrix $G=(\langle v_i, v_j\rangle)_{1\leq i,j\leq n}$
+formed by all pairwise scalar products.
+For more on this point look for example at \cite{perfectdim8,CS,martinet}.
+
+\begin{enumerate}
+\item The functions
+\begin{verbatim}
+GetSuperlattices:=function(GramMat, GRP, TheMod)
+GetSublattices:=function(GramMat, GRP, TheMod)
+\end{verbatim}
+enumerates super and sub-lattices of a given lattice
+with quotient $\ZZ/TheMod \ZZ$.
+
+\item The functions
+\begin{verbatim}
+ShortVectorDutourVersion:=function(GramMat, eNorm)
+ShortestVectorDutourVersion:=function(GramMat)
+\end{verbatim}
+enumerate the short vector or shortest vectors of a given lattice.
+
+\item The functions
+\begin{verbatim}
+SphericalDesignLevel:=function(EXT, GramMat)
+SphericalDesignLevelGroup:=function(EXT, GroupEXT, GramMat)
+\end{verbatim}
+Determine the $t$-design level of a set of points on a sphere
+(program originally written by F. Vallentin)
+
+\item The first function call 
+\begin{verbatim}
+ClassicalSporadicLattices("E6");
+ClassicalSporadicLattices(["ListNames"]);
+\end{verbatim}
+return a Gram matrix of the lattice $\mathsf{E}_6$ while the second
+call gives all available names.
+
+\item The function
+\begin{verbatim}
+ProcEnum:=ProcEnum_SublatticeEnumeration();
+\end{verbatim}
+gives functionalities for enumerating sublattice of specific dimension and rank
+of a given lattice (see the examples for practice).
+
+\item The function
+\begin{verbatim}
+ArithmeticAutomorphismGroup:=function(ListGram)
+\end{verbatim}
+determine the group of automorphism group of a list {\tt ListGram} of positive definite matrices.
+That is if {\tt ListGram=[A1, \dots, Ap]} then it return the generators of the group
+\begin{equation*}
+\{P \in \GL_n(\ZZ) \mbox{~s.t.~} PA_1 P^T = A_1, \dots, PA_p P^T = A_p\}
+\end{equation*}
+The corresponding function for arithmetic isomorphism is 
+\begin{verbatim}
+ArithmeticIsomorphism:=function(ListGram1, ListGram2)
+\end{verbatim}
+That is if {\tt ListGram=[A1, \dots, Ap]} and {\tt ListGram=[A'1, \dots, A'p]} then it return one matrix $P\in \GL_n(\ZZ)$ such that
+\begin{equation*}
+P A_1 P^T = A'_1, \dots, P A_p P^T = A'_p
+\end{equation*}
+The command uses {\tt AUTOM/ISOM} by B. Souvignier and W. Plesken to make those computations.
+\end{enumerate}
+
+
+
+
+
+
+\subsection{Delaunay polytopes in lattices}
+
+A Delaunay polytope $P$ in a lattice $L$ is the convex hull
+of $L\cap S(c,r)$ with $S(c,r)$ the sphere of center $c$
+and radius $r$ having no interior point.
+
+Delaunay polytopes form a face-to-face tiling of $\RR^n$
+and are useful for many applications.
+The main function call is
+\begin{verbatim}
+ListFunc:=DelaunayComputationStandardFunctions(TheGramMat);
+\end{verbatim}
+it computed the Delaunay tesselation and returns a record
+that contains several functions for mutiple usage:
+\begin{enumerate}
+\item The function
+\begin{verbatim}
+DelCO:=ListFunc.GetDelaunayDescription();
+\end{verbatim}
+It gives a list of record, each one of them corresponding to an orbit
+of Delaunay polytopes.
+Each such record contains the list of vertices({\tt EXT}),
+the stabilizer ({\tt TheStab}) of the Delaunay presented
+as a permutation group with a group homomorphism to
+the corresponding matrix group and the list of orbit of adjacent
+Delaunay polytopes ({\tt Adjacencies}).
+That is the dual description of the Delaunay polytope is computed and
+for each facet, the adjacent Delaunay polytope is given.
+This information is encoded by a record
+\begin{verbatim}
+rec(iDelaunay:=..., eBigMat:=..., eInc:=....)
+\end{verbatim}
+where {\tt iDelaunay} is the orbit number of the adjacent Delaunay,
+{\tt eBigMat} is the matrix that maps the canonical representative to
+the Delaunay polytope actually adjacent and {\tt eInc} is the list of
+vertices incident to the facet defining the adjacency.
+
+\item The function
+\begin{verbatim}
+ListFunc.GetFreeVectors();
+\end{verbatim}
+returns the list of free vectors of the lattice (see \cite{free} for details).
+
+\item The function
+\begin{verbatim}
+ListFunc.GetVoronoiVertices();
+\end{verbatim}
+return the vertices of the Delaunay polytope around $0$.
+
+\item The functions
+\begin{verbatim}
+ListFunc.GetRigidityDegree();
+ListFunc.GetLspace();
+\end{verbatim}
+return the rigidity degree and the Lspace of the Delaunay tesselation (see \cite{rigidity} for details).
+
+\item The function
+\begin{verbatim}
+ListFunc.GetQuantization();
+\end{verbatim}
+returns the quantization integral of the lattice
+(see \cite{voronoiDSV} for details).
+
+\item The function
+\begin{verbatim}
+ListFunc.GetCoveringDensity();
+\end{verbatim}
+returns the covering density of the lattice.
+
+\item The function
+\begin{verbatim}
+ListFunc.FlagFunctions();
+\end{verbatim}
+computes the flag system of the Delaunay tesselation and in particular the
+Delaney symbol (see \cite{DressHusonDelgado} for details).
+
+\item The function
+\begin{verbatim}
+ListFunc.GetOrbitDefiningVoronoiFacetInequalities();
+\end{verbatim}
+returns the Voronoi vectors of the lattice.
+
+\item The function
+\begin{verbatim}
+LFC:=ListFunc.GetNeighborhood(EXT);
+\end{verbatim}
+returns the functionalities for finding the neighborhood of a Delaunay polytope.
+(see Example)
+
+
+\end{enumerate}
+For periodic point sets, there are similar functions.
+\begin{verbatim}
+ListFunc:=Periodic_DelaunayComputationStandardFunctions(U);
+\end{verbatim}
+where {\tt U} is a record that must contain {\tt GramMat} and
+{\tt ListCosets}.
+
+
+\subsection{Perfect form}
+
+A form is called perfect if it is uniquely defined by its shortest vectors.
+There is a large litterature on perfect forms since they have multiple uses in Mathematics.
+
+\begin{enumerate}
+\item The function
+\begin{verbatim}
+MossContraction:=function(GramMat)
+\end{verbatim}
+returns the Moss Contracted form from the positive definite matrix {\tt GramMat}. See Proposition 1.2 in \cite{moss} for details.
+
+
+\end{enumerate}
+
+
+
+%\subsection{Voronoi polytope for polyhedral norms}
+%In Examples/VoronoiL1 an example of a polytope with 
+
+
+
+\subsection{Configurations of shortest vectors}
+
+There are a lot of functionality for working with configurations of shortest vectors.
+
+
+\begin{enumerate}
+\item The function
+\begin{verbatim}
+SHORT_GetLLLreduction:=function(eSHV)
+\end{verbatim}
+returns a LLL simplified expression of the configuration {\tt eSHV} which does not have to be realizable in order to be implified.
+
+\item The function
+\begin{verbatim}
+SHORT_GetLLLreduction_Kernel:=function(eSHV)
+\end{verbatim}
+does the above but also returns the matrix realizing this simplification.
+
+\item The function
+\begin{verbatim}
+SHORT_GetStabilizer:=function(eSHV)
+\end{verbatim}
+returns the stabilizer of the configuration {\tt eSHV} which does not have to be realizable for the stabilizer to be computed.
+
+\item The function
+\begin{verbatim}
+SHORT_GetStabilizerCone:=function(eSHV)
+\end{verbatim}
+returns the stabilizer of the configuration {\tt eSHV} does the above but also computes the corresponding information on the cone in $Sym^2(\ZZ^n)$.
+
+\item The function
+\begin{verbatim}
+SHORT_Invariant:=function(eMat)
+\end{verbatim}
+returns an invariant of the configuration of vectors (which does not have to be realizable).
+
+\item The function
+\begin{verbatim}
+SHORT_TestRealizabilityShortestFamily:=function(ListVect)
+\end{verbatim}
+test whether the {\tt ListVect} is realizable or not. It returns a record that contains following entries
+\begin{enumerate}
+\item {\bf reply}: if {\bf true} the configuration is realizable. If {\bf false} it is not
+\item {\bf replyCone}: if {\bf true} there exist a vector configuration {\bf ListVectB} of the same rank as {\bf ListVect} which is realizable. Of course if reply=true then replyCone=true.
+\item {\bf eMat}: the matrix representing the realizability.
+\end{enumerate}
+
+\item The function
+\begin{verbatim}
+SHORT_IsInMatroidalLocus:=function(eSHV)
+\end{verbatim}
+test whether the configuration is in the matroidal locus or not.
+
+\item The function
+\begin{verbatim}
+SHORT_IsIrreducibleVectorConfiguration:=function(SHV)
+\end{verbatim}
+test whether the configuration is irreducible or not.
+  
+
+\item The function
+\begin{verbatim}
+SHORT_TestRealizabilityCentralCone:=function(ListVect)
+\end{verbatim}
+test whether the {\tt ListVect} is realizable or not by an integer valued quadratic form. It returns a record that contains following entries
+\begin{enumerate}
+\item {\bf reply}: if {\bf true} the configuration is realizable. If {\bf false} it is not
+\item {\bf replyCone}: if {\bf true} there exist a vector configuration {\bf ListVectB} of the same rank as {\bf ListVect} which is realizable. Of course if reply=true then replyCone=true.
+\item {\bf eMat}: the matrix representing the realizability.
+\end{enumerate}
+  
+  
+  
+\end{enumerate}
+
+
+
+
+
+\begin{thebibliography}{99}
+
+
+\bibitem{symsurvey}
+D. Bremner, M. Dutour Sikiri\'c and A. Sch\"urmann, \textit{Polyhedral representation conversion up to symmetries}, CRM proceedings \& Lecture Notes {\bf 48} (2009) 45--72.
+
+
+\bibitem{CS}
+J.H. Conway and N.J.A. Sloane, \textit{Sphere Packings, Lattices and Groups} third edition, volume 290 of \textit{Grundlehren der mathematischen Wissenschaften}, Springer--Verlag, 1998.
+
+\bibitem{DressHusonDelgado}
+O. Delgado Friedrichs, A. Dress and D. Huson,
+{\em Tilings and symbols: a report on the uses of symbolic calculation in tiling
+theory}, S\'em. Lothar. Combin. 34 (1995), Art. B34a, approx. 16 pp.
+
+
+\bibitem{rigidity}
+M. Deza and V.P. Grishukhin, {\em Nonrigidity degree of root lattices and their duals}, Geom. Dedicata 104 (2004), 15–24.
+
+\bibitem{mining}
+M. Deza and M. Dutour, {\em Cones of metrics, hemi-metrics and super-metrics}, Annals of the European Academy of Sciences (2003) 141--162.
+
+\bibitem{CombProjLin}
+M. Dutour Sikiri\'c, D. Bremner and D. Pasechnik,
+{\em The symmetry groups of polytopes}, in preparation
+
+
+\bibitem{perfectdim8}
+M. Dutour Sikiri\'c, F. Vallentin and A. Sch\"urmann, {\em Classification of eight-dimensional perfect forms}, Electronic Research Annoucements of the AMS {\bf 13} (2007) 21--32.
+
+
+\bibitem{voronoiDSV}
+M. Dutour Sikiri\'c, A. Sch\"urmann and F. Vallentin, {\em Complexity and algorithms for computing Voronoi cells of lattices}, Mathematics of computation {\bf 78} (2009) 1713--1731.
+
+
+\bibitem{free}
+V.P. Grishukhin, {\em Free and nonfree Voronoĭ polyhedra}.
+(Russian. Russian summary) Mat. Zametki {\bf 80} (2006) 367--378;
+translation in Math. Notes {\bf 80} (2006) 355–365
+
+\bibitem{martinet}
+J. Martinet, \textit{Perfect lattices in Euclidean spaces}, Springer, 2003.
+
+
+\bibitem{nauty}
+B.D. McKay, \textit{The nauty program}, \url{http://cs.anu.edu.au/people/bdm/nauty/}.
+
+
+\bibitem{moss}
+K.N., Moss, {\em Homology of $SL(n,Z[1/p])$}, Duke Math. J. 47 (1980), no. 4, 803–818
+
+
+
+\bibitem{plesken}
+W. Plesken and B. Souvignier,
+\textit{Computing isometries of lattices},
+J. Symbolic Comput. {\bf 24} (1997) 327--334.
+
+
+
+
+\end{thebibliography}
+\end{document}

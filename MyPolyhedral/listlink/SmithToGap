@@ -1,0 +1,41 @@
+#!/usr/bin/perl -w
+
+$uu=scalar(@ARGV);
+if ($uu ne 1)
+{
+    print "The program is run as\n";
+    print "SmithToGap [FileIn] > [FileOut]\n";
+    die;
+}
+
+
+$eFile=$ARGV[0];
+
+open(INFILE, $eFile) or die "impossible to open ".$eFile;
+@B=<INFILE>;
+close(INFILE);
+
+@C=split("", $B[0]);
+$strRes="";
+for ($i=3; $i<=scalar(@C)-3; $i++)
+{
+    $strRes=$strRes.$C[$i-1];
+}
+#print "strRes=".$strRes."\n";
+@BC=split(",", $strRes);
+$strRet="return [";
+#print "|BC=".scalar(@BC)."\n";
+for ($iBC=0; $iBC<scalar(@BC); $iBC++)
+{
+    $eEnt=$BC[$iBC];
+    @BCK=split(" ", $eEnt);
+    if ($iBC > 0)
+    {
+	$strRet=$strRet.",\n";
+    }
+#    print "BCK0=".$BCK[0]."\n";
+#    print "BCK1=".$BCK[1]."\n";
+    $strRet=$strRet."[".$BCK[0].",".$BCK[1]."]";
+}
+$strRet=$strRet."];\n";
+print $strRet;

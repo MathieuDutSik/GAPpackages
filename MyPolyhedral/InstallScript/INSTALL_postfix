@@ -1,0 +1,60 @@
+
+#
+# First the binaries
+#
+
+my $eListProg="/tmp/ListProg_Binaries";
+
+$order="ls ExternalProg/Binaries/ > ".$eListProg;
+print $order."\n";
+if (system($order) != 0) {
+   die "Impossible to do ls\n";
+}
+
+open(INF, $eListProg) or die "impossible to open ".$eListProg;
+while(<INF>)
+{
+    chomp($_);
+    $order="(cd bin/".$arch." && ln -s ../../ExternalProg/Binaries/".$_." .)";
+    print $order."\n";
+    if (system($order) != 0) {
+        die "Impossible to make the link for the binaries\n";
+    }
+}
+close(INF);
+
+$order="rm -f ".$eListProg;
+print $order."\n";
+if (system($order) != 0) {
+   die "Impossible to remove ListProg file\n";
+}
+
+#
+# Now the perlscripts links
+#
+
+my $eListPerl="/tmp/ListProg_PerlScript";
+
+$order="ls PerlScript/ > ".$eListPerl;
+print $order."\n";
+if (system($order) != 0) {
+    die "Impossible to do ls\n";
+}
+
+open(INF, $eListPerl) or die "impossible to open ".$eListPerl;
+while(<INF>)
+{
+    chomp($_);
+    $order="(cd bin/".$arch." && ln -s ../../PerlScript/".$_." .)";
+    print $order."\n";
+    if (system($order) != 0) {
+        die "Impossible to make the link for the perl scripts\n";
+    }
+}
+close(INF);
+
+$order="rm -f ".$eListPerl;
+print $order."\n";
+if (system($order) != 0) {
+   die "Impossible to remove ListProg file\n";
+}

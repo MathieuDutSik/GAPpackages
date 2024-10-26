@@ -1,0 +1,6 @@
+return rec(
+  MaxRad := 7/4,
+  det := 64,
+  min := 3,
+  n := 7,
+  name := "Dual_E7" );

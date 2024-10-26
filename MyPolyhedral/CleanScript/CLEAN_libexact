@@ -1,0 +1,3 @@
+DoClean_clean("ExternalProg/libexact-1.0");
+print "\nCLEANED Libexact\n\n";
+

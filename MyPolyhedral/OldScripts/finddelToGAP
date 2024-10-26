@@ -1,0 +1,36 @@
+#!/usr/bin/perl -w
+
+if (scalar(@ARGV) ne 1)
+{
+    print "please provide file as input\n";
+    die;
+}
+
+$File=$ARGV[0];
+
+open(INFILE, $File) or die "impossible to open ".$File;
+@RESULT=<INFILE>;
+close(INFILE);
+
+
+print "return [";
+for ($iLine=2; $iLine<=scalar(@RESULT); $iLine++)
+{
+    @UU=split(" ", $RESULT[$iLine-1]);
+    print "[";
+    for ($iCol=1; $iCol<=scalar(@UU); $iCol++)
+    {
+	if ($iCol > 1)
+	{
+	    print ",";
+	}
+	print $UU[$iCol-1];
+    }
+    print "]";
+    if ($iLine< scalar(@RESULT))
+    {
+	print ",";
+    }
+}
+print "];\n";
+

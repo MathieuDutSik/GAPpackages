@@ -1,0 +1,147 @@
+#!/usr/bin/perl -w
+use strict;
+use warnings;
+
+my $uu=scalar(@ARGV);
+if ($uu ne 1)
+{
+    print "SUB_DetermineFileStatus is used as:\n";
+    print "SUB_DetermineFileStatus [projectname]\n";
+    die;
+}
+my $ProjectName=$ARGV[0];
+
+my $order1="mkdir -p ../".$ProjectName."/PerlScript";
+print $order1."\n";
+if (system($order1) != 0) {
+    die "Error while creating PerlScript directory\n";
+}
+
+my $order2="rm -f ../".$ProjectName."/PerlScript/*";
+print $order2."\n";
+if (system($order2) != 0) {
+    die "Error while cleaning the PerlScript directory\n";
+}
+
+
+my $eFileBinary="Generation/NeededBinaries_".$ProjectName;
+open(INFILE, $eFileBinary) or die "impossible to open ".$eFileBinary;
+my @BC=<INFILE>;
+close(INFILE);
+
+my $lenBC=scalar(@BC);
+my @PerlStatus=();
+my @ListBinaryName=();
+for (my $iBC=0; $iBC<$lenBC; $iBC++)
+{
+    $_=$BC[$iBC];
+    s/\n//;
+    $ListBinaryName[$iBC]=$_;
+    $PerlStatus[$iBC]=0;
+}
+
+
+my $eListProg="/tmp/ListProg";
+
+my $order3="ls listlink/ > ".$eListProg;
+print $order3."\n";
+if (system($order3) != 0) {
+    die "Error while determining the list of files\n";
+}
+
+
+
+
+open(INF, $eListProg) or die "impossible to open ".$eListProg;
+my $nbPerlScript=0;
+while(<INF>)
+{
+    my $eFileStatus="/tmp/status";
+    chomp($_);
+    my $eScriptName=$_;
+    my $IsMatch=0;
+    my $BinPosition=-1;
+    for (my $iBin=1; $iBin<=$lenBC; $iBin++)
+    {
+	if ($ListBinaryName[$iBin-1] eq $eScriptName)
+	{
+	    $IsMatch=1;
+	    $BinPosition=$iBin;
+	}
+    }
+    if ($IsMatch eq 1)
+    {
+	my $order4="file listlink/".$eScriptName." > ".$eFileStatus;
+	#    print $order."\n";
+	if (system($order4) != 0) {
+	    die "Error while determining the file nature\n";
+	}
+	#
+	open(INF2, $eFileStatus) or die "impossible to open ".$eFileStatus;
+	my @B=<INF2>;
+	close(INF2);
+	#
+	$_=$B[0];
+	s/\n//;
+	my $eLine=$_;
+	my @C=split(": ", $eLine);
+	my $CritStr1=$C[1];
+	my @ListMatch=("script text executabl", "Perl script, ASCII text executabl", "perl");
+	print "eLine=".$eLine."\n";
+	#    print "CritStr1=".$CritStr1."\n";
+	#    print "CritStr2=".$CritStr2."\n";
+	my $IsPerlScript=0;
+	for (my $iMatch=0; $iMatch<scalar(@ListMatch); $iMatch++)
+	{
+	    my @VRSTL=split($ListMatch[$iMatch], $CritStr1);
+	    if (scalar(@VRSTL) ne 1)
+	    {
+		$IsPerlScript=1;
+	    }
+	}
+	print "eScriptName=".$eScriptName. " IsPerlScript=".$IsPerlScript."\n";
+	print "\n";
+	if ($IsPerlScript == 1)
+	{
+	    $nbPerlScript=$nbPerlScript+1;
+	}
+	#    print "eLine=".$eLine."\n";
+	#    print "C4=".$C[$len-4]."\n";
+	#    print "C3=".$C[$len-3]."\n";
+	#    print "C2=".$C[$len-2]."\n";
+	#    print "C1=".$C[$len-1]."\n";
+	#    print "\n";
+	if ($IsPerlScript eq 1)
+	{
+	    my $order5="cp listlink/".$eScriptName." ../".$ProjectName."/PerlScript/".$eScriptName;
+	    print "order5=".$order5."\n";
+	    if (system($order5) != 0) {
+		die "Error while copying the perl script\n";
+	    }
+	    #
+	    $PerlStatus[$BinPosition-1]=1;
+	}
+	my $order6="rm -f ".$eFileStatus;
+	if (system($order6) != 0) {
+	    die "Error while removing the status file\n";
+	}
+    }
+}
+close(INF);
+
+my $eFilePerl="Generation/Binaries_PerlStatus_".$ProjectName;
+open(OUT, "> ".$eFilePerl) or die "impossible to open ".$eFilePerl;
+for (my $iBin=0; $iBin<$lenBC; $iBin++)
+{
+    print OUT $PerlStatus[$iBin]."\n";
+}
+close(OUT);
+
+
+
+my $order7="rm -f ".$eListProg;
+print $order7."\n";
+if (system($order7) != 0) {
+    die "Error while removing eListProg\n";
+}
+print "nbPerlScript=".$nbPerlScript."\n";

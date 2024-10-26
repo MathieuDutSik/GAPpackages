@@ -1,0 +1,3 @@
+DoClean("ExternalProg/LINBOX/linbox");
+print "\nCLEANED linbox\n\n";
+

@@ -1,0 +1,3 @@
+DoClean("ExternalProg/TOPCOM-0.17.8");
+print "\nCLEANED topcom\n\n";
+

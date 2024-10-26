@@ -1,0 +1,88 @@
+#!/usr/bin/perl -w
+
+$nbU=scalar(@ARGV);
+if ($nbU ne 2)
+{
+    print "MinisatToGAP is used as\n";
+    print "MinisatToGAP [in] [out]\n";
+    print "with [in] the input\n";
+    print "with [out] the output\n";
+    exit(1);
+}
+
+$FileIN=$ARGV[0];
+open(IN, $FileIN);
+@RESULT=<IN>;
+close(IN);
+
+$FileOUT=$ARGV[1];
+open(OUT, "> ".$FileOUT);
+
+$_=$RESULT[0];
+s/\n//;
+$eLine=$_;
+if ($eLine eq "SAT")
+{
+    $_=$RESULT[1];
+    s/\n//;
+    $eLine2=$_;
+    @U=split(" ", $eLine2);
+    $MaxSize=0;
+    for ($i=0; $i<scalar(@U); $i++)
+    {
+	$eVal=$U[$i];
+	if ($eVal < 0)
+	{
+	    $fVal=-$eVal;
+	}
+	else
+	{
+	    $fVal=$eVal;
+	}
+	if ($fVal > $MaxSize)
+	{
+	    $MaxSize=$fVal;
+	}
+    }
+    @STAT=();
+    for ($i=1; $i<$MaxSize; $i++)
+    {
+	$STAT[$i-1]=0;
+    }
+    for ($i=0; $i<scalar(@U); $i++)
+    {
+	$eVal=$U[$i];
+	if ($eVal < 0)
+	{
+	    $fVal=-$eVal;
+	    $sign=-1;
+	}
+	else
+	{
+	    $fVal=$eVal;
+	    $sign=1;
+	}
+	if ($fVal > 0)
+	{
+	    $STAT[$fVal-1]=$sign;
+	}
+    }
+    $eStrOut="[";
+    for ($i=0; $i<$MaxSize; $i++)
+    {
+	if ($i>0)
+	{
+	    $eStrOut=$eStrOut.",";
+	}
+	$eStrOut=$eStrOut.$STAT[$i]
+    }
+    $eStrOut=$eStrOut."]";
+    print OUT "return rec(result:=true, sat:=", $eStrOut, ");\n";
+}
+else
+{
+    print OUT "return rec(result:=false);\n";
+}
+close(OUT);
+
+

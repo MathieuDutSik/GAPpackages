@@ -1,0 +1,64 @@
+#!/usr/bin/perl -w
+use strict;
+use warnings;
+
+my $uu=scalar(@ARGV);
+if ($uu ne 1)
+{
+    print "This script is used as\n";
+    print "SUB_CopyDataSets [projectname]\n";
+    die;
+}
+my $ProjectName=$ARGV[0];
+
+#
+# Standard copies
+#
+
+my $order1="cp COPYING ../".$ProjectName."/";
+print $order1."\n";
+if (system($order1) != 0) {
+    die "Error while copying COPYING file\n";
+}
+
+my $order2="cp INSTALL_".$ProjectName." ../".$ProjectName."/INSTALL";
+print $order2."\n";
+if (system($order2) != 0) {
+    die "Error while copying INSTALL file\n";
+}
+
+#
+# Copying the files
+#
+
+my $eFileDATA="Generation/NeededDATA_".$ProjectName;
+open(IN, $eFileDATA) or die "imposible to open ".$eFileDATA;
+my @BSL=<IN>;
+close(IN);
+
+$_=$BSL[0];
+s/\n//;
+my $eLine=$_;
+my @U=split(" ", $eLine);
+
+my $nbEnt=scalar(@U);
+
+if ($nbEnt > 0)
+{
+    my $order3="mkdir -p ../".$ProjectName."/DATA";
+    print $order3."\n";
+    if (system($order3) != 0) {
+	die "Error while creating DATA directory\n";
+    }
+    #
+    for (my $iEnt=0; $iEnt<$nbEnt; $iEnt++)
+    {
+	my $eEnt=$U[$iEnt];
+	#
+	my $order4="cp -r DATA/".$eEnt." ../".$ProjectName."/DATA";
+	print $order4."\n";
+	if (system($order4) != 0) {
+	    die "Error while copying DATA entry into project directory\n";
+	}
+    }
+}

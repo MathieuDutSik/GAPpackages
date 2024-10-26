@@ -1,0 +1,150 @@
+A decomposition into simplices is in fact given in the output.For the 3 cube
+V-representation
+begin
+8 4 integer
+1 -1 -1 -1
+1 1 -1 -1
+1 -1 1 -1
+1 1 1 -1
+1 -1 -1 1
+1 1 -1 1
+1 -1 1 1
+1 1 1 1
+end
+printcobasis
+allbases
+
+The output (below) has 6 bases B#1 to B#6, each of which corresponds to
+a simplex in the triangulation of the whole cube.
+Ie. the first simplex has vertices in rows 4,6,7,8 the second in rows
+4,5,6,7 etc.
+The determinant is just the determinant of the 4 by 4 matrix given by
+these rows, so it is well defined
+The volume of each simplex is the determinant divided by d!. Here d=3 so
+we divide by 6.
+So we have 6 simplices each with volume 8/6 and so the total volume is 8.
+
+Hope this helps,
+-david
+H-representation
+begin
+***** 4 rational
+F#1 B#1 h=0 vertices/rays  4 6 7* 8 I#4 det= 8
+1 -1  0  0
+F#2 B#1 h=0 vertices/rays  4 6* 7 8 I#4 det= 8
+1  0 -1  0
+F#3 B#1 h=0 vertices/rays  4* 6 7 8 I#4 det= 8
+1  0  0 -1
+F#4 B#2 h=1 vertices/rays  4* 5 6 7 I#4 det= 8
+1  0  0 -1
+F#5 B#3 h=2 vertices/rays  3 4 5* 7 I#4 det= 8
+1  0 -1  0
+F#6 B#3 h=2 vertices/rays  3 4* 5 7 I#4 det= 8
+1  1  0  0
+F#7 B#4 h=3 vertices/rays  2 3 4 5* I#4 det= 8
+1  0  0  1
+F#8 B#5 h=4 vertices/rays  1 2 3 5* I#4 det= 8
+1  0  0  1
+F#9 B#5 h=4 vertices/rays  1 2* 3 5 I#4 det= 8
+1  1  0  0
+F#10 B#5 h=4 vertices/rays  1 2 3* 5 I#4 det= 8
+1  0  1  0
+F#11 B#6 h=2 vertices/rays  2 4 5* 6 I#4 det= 8
+1 -1  0  0
+F#12 B#6 h=2 vertices/rays  2 4* 5 6 I#4 det= 8
+1  0  1  0
+end
+*Volume= 8
+*Totals: facets=12 bases=6
+-------------------------------------------------------------------------------
+Dear Mathieu,
+Sorry to be so slow in replying.
+For the first moment, do you need to compute the barycenter of each
+facet, or of each simplex in a triangulation of the polytope?
+To get the barycentre of a facet, use the "incidence" option. This lists
+the row number (in the input) for each vertex on a given
+facet. So for the 4-d cube:
+
+cube
+V-representation
+begin
+16 5 rational
+ 1  0  0  0  0
+ 1  0  0  1  0
+ 1  1  0  1  0
+ 1  0  1  1  0
+ 1  1  1  1  0
+ 1  0  0  0  1
+ 1  0  0  1  1
+ 1  1  0  1  1
+ 1  0  1  1  1
+ 1  1  1  1  1
+ 1  1  0  0  1
+ 1  0  1  0  1
+ 1  1  1  0  1
+ 1  1  0  0  0
+ 1  0  1  0  0
+ 1  1  1  0  0
+end
+incidence
+
+the output is
+
+cube
+*incidence
+H-representation
+begin
+***** 5 rational
+F#1 B#1 h=0 vertices/rays  10 13 14 15* 16 : 3 5 8 11 I#8 det= 1
+ 1 -1  0  0  0
+F#2 B#1 h=0 vertices/rays  10 13 14* 15 16 : 4 5 9 12 I#8 det= 1
+ 1  0 -1  0  0
+F#3 B#1 h=0 vertices/rays  10* 13 14 15 16 : 1 6 11 12 I#8 det= 1
+ 0  0  0  1  0
+F#4 B#2 h=1 vertices/rays  5 10* 14 15 16 : 1 2 3 4 I#8 det= 1
+ 0  0  0  0  1
+F#5 B#6 h=3 vertices/rays  7 9 12 14* 15 : 1 2 4 6 I#8 det= 1
+ 0  1  0  0  0
+F#6 B#16 h=2 vertices/rays  10 11 12 13 14* : 6 7 8 9 I#8 det= 1
+ 1  0  0  0 -1
+F#7 B#19 h=5 vertices/rays  5 8 9 10 14* : 2 3 4 7 I#8 det= 1
+ 1  0  0 -1  0
+F#8 B#20 h=5 vertices/rays  7 8 9* 11 14 : 1 2 3 6 I#8 det= 1
+ 0  0  1  0  0
+end
+*Volume= 1
+
+
+So for facet #1 the vertices incident to it are in rows 10, 13, 14, 16,
+3, 5, 8, 11   (ignore 15, it comes from the lifting).
+So now you just have to compute the average of the 8 points.
+To get a barycentre(centroid) for each simplex in the triangulation, you
+need to use the 'allbases' and 'printcobasis' options.
+The output for cube4.ext is
+
+cube
+*allbases
+*printcobasis
+H-representation
+begin
+***** 5 rational
+F#1 B#1 h=0 vertices/rays  10 13 14 15* 16 I#8 det= 1
+ 1 -1  0  0  0
+F#2 B#1 h=0 vertices/rays  10 13 14* 15 16 I#8 det= 1
+ 1  0 -1  0  0
+F#3 B#1 h=0 vertices/rays  10* 13 14 15 16 I#8 det= 1
+ 0  0  0  1  0
+F#4 B#2 h=1 vertices/rays  5 10 14 15* 16 I#8 det= 1
+ 1 -1  0  0  0
+................etc
+
+The simplices of the triangulation of the facets are given by
+10,13,14,16;  10,13,15,16 etc....
+For the simplices of a triangulation of the polytope, include the
+starred vertices also, removing duplicates.
+The first two simplices are 10,13,14,15,16;  5,10,14,15,16 etc.
+
+I am not sure of the definition of second moment, but hope this is of
+some use for the first moment at least.
+Best,
+-david

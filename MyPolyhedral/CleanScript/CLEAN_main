@@ -1,0 +1,63 @@
+#!/usr/bin/perl -w
+
+
+
+open(INFILE, "../../sysinfo.gap") or die "cannot found ../../sysinfo.gap";
+close(INFILE);
+
+sub DoClean($)
+{
+    my ($ThePre) = @_;
+    $eMakefile=$ThePre."/Makefile";
+    $fMakefile=$ThePre."/makefile";
+    print "eMakefile=".$eMakefile."\n";
+    print "fMakefile=".$fMakefile."\n";
+    if (-e $eMakefile || -e $fMakefile)
+    {
+	$order="(cd ".$ThePre." && make clean)";
+	print $order."\n";
+	if (system($order) != 0) {
+	    die "Error when doing clean\n";
+	}
+	#
+	$eConfigure=$ThePre."/configure";
+	$eMakefile=$ThePre."/makefile";
+	if (-e $eConfigure && -e $eMakefile)
+	{
+	    $order="(cd ".$ThePre." && make distclean)";
+	    print $order."\n";
+	    if (system($order) != 0) {
+		die "Error when doing make distclean\n";
+	    }
+	}
+    }
+}
+
+
+sub DoClean_clean($)
+{
+    my ($ThePre) = @_;
+    $eMakefile=$ThePre."/Makefile";
+    $fMakefile=$ThePre."/makefile";
+    print "eMakefile=".$eMakefile."\n";
+    print "fMakefile=".$fMakefile."\n";
+    if (-e $eMakefile || -e $fMakefile)
+    {
+	$order="(cd ".$ThePre." && make clean)";
+	print $order."\n";
+	if (system($order) != 0) {
+	    die "Error when doing clean\n";
+	}
+	#
+	$eConfigure=$ThePre."/configure";
+	if (-e $eConfigure)
+	{
+	    $order="(cd ".$ThePre." && make clean)";
+	    print $order."\n";
+	    if (system($order) != 0) {
+		die "Error when doing make clean\n";
+	    }
+	}
+    }
+}
+

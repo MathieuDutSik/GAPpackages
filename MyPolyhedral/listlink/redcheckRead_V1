@@ -1,0 +1,32 @@
+#!/usr/bin/perl -w
+
+$File=$ARGV[0];
+open(INFILE, $File) or die "Impossible to open ".$File;
+@U=<INFILE>;
+close(INFILE);
+
+
+for ($iLine=1; $iLine<=scalar(@U); $iLine++)
+{
+    $eLine=$U[$iLine-1];
+    @C=split(" ", $eLine);
+    $str=$C[0];
+    if ($str eq "Redundant")
+    {
+	$_=$eLine;
+	s/\n//;
+	$fLine=$_;
+	@DLE=split(":", $fLine);
+	print "return [";
+	@CKL=split(" ", $DLE[1]);
+	for ($iEnt=1; $iEnt<=scalar(@CKL); $iEnt++)
+	{
+	    print $CKL[$iEnt-1];
+	    if ($iEnt < scalar(@CKL))
+	    {
+		print ",";
+	    }
+	}
+	print "];\n";
+    }
+}

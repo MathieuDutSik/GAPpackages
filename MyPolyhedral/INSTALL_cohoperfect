@@ -1,0 +1,42 @@
+Here is how you need to install the program.
+move the directory "cohoperfect" into gap4r7/pkg
+
+           PREREQUISITES:
+
+Following softwares should be installed:
+---LATEX and related programs (for plots and tables)
+---GMP (The GNU Multiprecision library)
+   with libraries, development files and C++ development files
+   Web site of the GMP: https://gmplib.org/
+   Options:
+   ---On ubuntu the following should work:
+      sudo apt-get install libgmp-dev
+   ---On fedora systems the way to install
+      sudo yum install gmp-devel
+   ---If gmp is installed in a non-trivial place say
+      /opt/gmp then the way is to do
+      export LDFLAGS="-L/opt/gmp/lib"
+      export CPPFLAGS="-I/opt/gmp/include"
+
+       COMPILATION OF EXTERNAL PROGRAMS:
+
+run ./configure for the full compilation of
+the external programs of the software
+(Use ./clean to remove all compiled programs)
+
+              GAP INSTALLATION
+
+Your File .gap/gap.ini must contain the following line:
+   SetUserPreference( "PackagesToLoad", [ "cohoperfect"]);
+if you have no other needed packages. If the file is not
+existent then you need to create it.
+
+               MANUAL
+
+Manual in then in manual/manual.pdf and details
+some functions.
+
+               EXAMPLES
+
+Examples are in directory "Examples" and details
+some basic examples of usage of the program.

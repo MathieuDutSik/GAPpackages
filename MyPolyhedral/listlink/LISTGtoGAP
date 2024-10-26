@@ -1,0 +1,62 @@
+#!/usr/bin/perl -w
+
+$IsFirst=1;
+
+print "return [\n";
+while(<STDIN>)
+{
+    @U1=split(", order ", $_);
+    @U2=split(": ", $_);
+    if (scalar(@U1) > 1)
+    {
+	$strNb=$U1[1];
+	@W=split("", $strNb);
+	$strNbRed="";
+	for ($i=1; $i<=scalar(@W)-2; $i++)
+	{
+	    $eChar=$W[$i-1];
+	    $strNbRed=$strNbRed.$eChar;
+	}
+	$NbVert=$strNbRed;
+	$idxVert=0;
+	if ($IsFirst eq 0)
+	{
+	    print ",\n";
+	}
+	$IsFirst=0;
+	print "[";
+    }
+    if (scalar(@U2) > 1)
+    {
+	$idxVert++;
+	$strAdj=$U2[1];
+	@W=split("", $strAdj);
+	$strAdjRed="";
+	for ($i=1; $i<=scalar(@W)-2; $i++)
+	{
+	    $eChar=$W[$i-1];
+	    $strAdjRed=$strAdjRed.$eChar;
+	}
+	@W2=split(" ", $strAdjRed);
+	print "[";
+	for ($i2=1; $i2<=scalar(@W2); $i2++)
+	{
+	    if ($i2 > 1)
+	    {
+		print ",";
+	    }
+	    $hIdx=$W2[$i2-1] + 1;
+	    print $hIdx;
+	}
+	print "]";
+	if ($idxVert eq $NbVert)
+	{
+	    print "]";
+	}
+	else
+	{
+	    print ",\n";
+	}
+    }
+}
+print "];\n";

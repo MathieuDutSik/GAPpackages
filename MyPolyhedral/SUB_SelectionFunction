@@ -1,0 +1,847 @@
+#!/usr/bin/perl -w
+use strict;
+use warnings;
+
+#
+# Make the selection of relevant functions
+# [INPUT]:
+# ---source code
+# ---Generation/ListSearch_Example
+# ---Generation/ListSearch_Manual
+# [OUTPUT];
+# ---NeededBinaries
+
+my $uu=scalar(@ARGV);
+if ($uu ne 3)
+{
+    print "This program is used as\n";
+    print "SUB_SelectionFunction [projectname] [choiceFCT] [removeComment]\n";
+    print "with [choiceFCT] being unique or multiple\n";
+    print "with [removeComment] being true or false\n";
+    die;
+}
+
+my $ProjectName=$ARGV[0];
+my $choiceFCT=$ARGV[1];
+my $removeComment=$ARGV[2];
+if ($choiceFCT ne "unique" && $choiceFCT ne "multiple")
+{
+    print "choiceFCT=".$choiceFCT."\n";
+    print "But it should be unique or multiple\n";
+    die;
+}
+if ($removeComment ne "true" && $removeComment ne "false")
+{
+    print "removeComment=".$removeComment."\n";
+    print "But it should be true or false\n";
+    die;
+}
+
+
+
+sub StringHack($)
+{
+    my ($strIN) = @_;
+    my @Uspl=split("MyPolyhedral", $strIN);
+    my $UsplSize=scalar(@Uspl);
+#    print "|Uspl|=".$UsplSize."\n";
+    if ($UsplSize eq 0)
+    {
+	#	print "DEBUG: strIN=".$strIN."\n";
+	return $strIN;
+    }
+    my $strOUT=$Uspl[0];
+#    print "ProjectName=".$ProjectName."\n";
+    for (my $iUspl=2; $iUspl<=$UsplSize; $iUspl++)
+    {
+	$strOUT=$strOUT.$ProjectName.$Uspl[$iUspl-1];
+    }
+    return $strOUT;
+}
+
+sub CleanLineDies($)
+{
+    my ($strINcl) = @_;
+    my @WdieSpl=split("AppendTo", $strINcl);
+    if (scalar(@WdieSpl) ne 1)
+    {
+	return $strINcl;
+    }
+    my @VdieSpl=split("", $strINcl);
+    my $eStrRET="";
+    my $IsInside=1;
+    my $nbCharCL=scalar(@VdieSpl);
+    for (my $iChar=1; $iChar<=$nbCharCL; $iChar++)
+    {
+	my $eChar=$VdieSpl[$iChar-1];
+	if ($eChar eq "#" && $removeComment eq "true")
+	{
+	    $IsInside=0;
+	}
+	if ($IsInside eq 1)
+	{
+	    $eStrRET=$eStrRET.$eChar;
+	}
+    }
+    return $eStrRET;
+}
+
+
+sub IsTrivialLine($)
+{
+    my ($strINP) = @_;
+    my @Vtriv=split("", $strINP);
+    my $IsTrivial=1;
+    for (my $iChar=1; $iChar<=scalar(@Vtriv); $iChar++)
+    {
+	if ($Vtriv[$iChar-1] ne " ")
+	{
+	    $IsTrivial=0;
+	}
+    }
+    return $IsTrivial;
+}
+
+
+
+my $eMainFile="init.g";
+
+open(INF2, $eMainFile) or die "impossible to open ".$eMainFile;
+my @ELF=<INF2>;
+close(INF2);
+
+my $nbLine=scalar(@ELF);
+my @ListFilesFunctions=();
+my $nbFile=0;
+for (my $iLine=0; $iLine<$nbLine; $iLine++)
+{
+    $_=$ELF[$iLine];
+    s/\n//;
+    my $eLine=$_;
+    #
+    my @U=split("lib/", $eLine);
+    if (@U eq 2)
+    {
+	my $eStr=$U[1];
+	my @V=split("", $eStr);
+	my $nbChar=scalar(@V);
+	my $fStr="";
+	my $WeAppend=1;
+	for (my $iChar=0; $iChar<$nbChar; $iChar++)
+	{
+	    my $eChar=$V[$iChar];
+	    if ($eChar eq "\"")
+	    {
+		$WeAppend=0;
+	    }
+	    if ($WeAppend eq 1)
+	    {
+		$fStr=$fStr.$eChar;
+	    }
+	}
+	$ListFilesFunctions[$nbFile]=$fStr;
+	$nbFile=$nbFile+1;
+	print "Append nbFile=".$nbFile." eFile=".$fStr."\n";
+    }
+}
+my $nbFunction=0;
+my @ListFunctionNames=();
+my %ListFunctionNames_hash=();
+my @ListFunctionDependencies=();
+my @ListFunctionBinaryDepend=();
+my @ListFunctionDATA_Depend=();
+my @ListIFile=();
+my @ListIBegin=();
+my @ListIEnd=();
+
+my $nbTop=0;
+
+
+sub GetFunctionCallIndex($)
+{
+    my ($strFctName) = @_;
+    if (exists $ListFunctionNames_hash{$strFctName})
+    {
+        return $ListFunctionNames_hash{$strFctName};
+    }
+    return -1;
+}
+
+
+my @ListExternalFct_Name=();
+my %ListExternalFct_Name_hash=();
+my @ListExternalFct_Binary=();
+my @ListExternalFct_Status=();
+my @ListExternalFct_iFile=();
+
+sub GetBinaryCallIndex($)
+{
+    my ($strBinary) = @_;
+    if (exists $ListExternalFct_Name_hash{$strBinary})
+    {
+        return $ListExternalFct_Name_hash{$strBinary};
+    }
+    return -1;
+}
+
+
+
+
+my $ListAllowedChar="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_";
+sub IsAllowedChar($)
+{
+    my ($eSpecChar) = @_;
+    my @VSallow=split("", $ListAllowedChar);
+    my $nbAllow=scalar(@VSallow);
+    for (my $iAllow=1; $iAllow<=$nbAllow; $iAllow++)
+    {
+	if ($eSpecChar eq $VSallow[$iAllow-1])
+	{
+	    return 1;
+	}
+    }
+    return 0;
+}
+
+
+sub AllowReduction($)
+{
+    my ($strProg) = @_;
+    my $strReturn="";
+    my @VSred=split("", $strProg);
+    my $nbVSred=scalar(@VSred);
+    for (my $iVSred=0; $iVSred<$nbVSred; $iVSred++)
+    {
+	my $eCharProg=$VSred[$iVSred];
+	my $eStatProg=IsAllowedChar($eCharProg);
+        my $eCharRet=" ";
+	if ($eStatProg eq 1)
+	{
+	    $eCharRet=$eCharProg;
+	}
+	$strReturn=$strReturn.$eCharRet;
+    }
+    return $strReturn;
+}
+
+
+sub GetStringFunctionCall($)
+{
+    my ($strProg) = @_;
+    my $strRed=AllowReduction($strProg);
+    #    print "strProg=".$strProg."\n";
+    #    print "strRed=".$strRed."\n";
+    my @VS=split(" ", $strRed);
+    my $strCall="";
+    for (my $iVS=0; $iVS<scalar(@VS); $iVS++)
+    {
+	my $strFull=$VS[$iVS];
+	#       print "strFull=".$strFull."\n";
+	my $iFctCall=GetFunctionCallIndex($strFull);
+	if ($iFctCall ne -1)
+	{
+	    $strCall=$strCall." ".$iFctCall;
+	}
+    }
+    return $strCall;
+}
+
+
+sub GetBinaryFunctionCall($)
+{
+    my ($strProg) = @_;
+    my $strRed=AllowReduction($strProg);
+    #    print "strProg=".$strProg."\n";
+    #    print "strRed=".$strRed."\n";
+    my @VS=split(" ", $strRed);
+    my $strCall="";
+    for (my $iVS=0; $iVS<scalar(@VS); $iVS++)
+    {
+	my $strFull=$VS[$iVS];
+	#       print "strFull=".$strFull."\n";
+	my $iFctCall=GetBinaryCallIndex($strFull);
+	if ($iFctCall ne -1)
+	{
+	    $strCall=$strCall." ".$iFctCall;
+	}
+    }
+    return $strCall;
+}
+
+
+
+sub GetDATAFunctionCall($)
+{
+    my ($strProg) = @_;
+    my @VSdata=split("DirectoriesPackageLibrary", $strProg);
+    if (scalar(@VSdata) <= 1) {
+	return "";
+    }
+    my @VSdata2=split("DATA/", $VSdata[1]);
+    if (scalar(@VSdata2) <= 1) {
+	print "strProg=".$strProg."\n";
+	die "Logical error in the GAP code";
+    }
+    my @VSdata3=split("", $VSdata2[1]);
+    my $strCALL="";
+    my $IsCorrect=1;
+    for (my $iChar=0; $iChar<scalar(@VSdata3); $iChar++)
+    {
+	my $eChar=$VSdata3[$iChar];
+	if ($eChar eq "\"")
+	{
+	    $IsCorrect=0;
+	}
+	if ($IsCorrect eq 1)
+	{
+	    $strCALL=$strCALL.$eChar;
+	}
+    }
+    my $strCALLfinal=" ".$strCALL;
+    return $strCALLfinal;
+}
+
+
+my $IsGlobalBindFound=0;
+my $TheBinGlobalString;
+
+
+sub RetrieveILineForComment($$)
+{
+    my ($iLineBegin, $two_ref) = @_;
+    my @BO = @{ $two_ref };
+    if ($removeComment eq "true")
+    {
+        return $iLineBegin;
+    }
+    print "RetrieveILineForComment iLineBegin=".$iLineBegin."\n";
+    my $nbLineO=scalar(@BO);
+    while(1)
+    {
+        print "2: nbLineO=".$nbLineO."\n";
+        my @CL=split("", $BO[$iLineBegin-1]);
+        if (scalar(@CL) eq 0)
+        {
+            return $iLineBegin;
+        }
+        print "iLineBegin=".$iLineBegin." |CL|=".scalar(@CL)."\n";
+        if ($CL[0] ne "#")
+        {
+            return $iLineBegin;
+        }
+        $iLineBegin=$iLineBegin-1;
+    }
+}
+
+
+for (my $iFile=0; $iFile<$nbFile; $iFile++)
+{
+    my $eFile="lib/".$ListFilesFunctions[$iFile];
+    print "iFile=".$iFile."/".$nbFile."  eFile=".$eFile."\n";
+    open(INF3, $eFile) or die "impossible to open ".$eFile;
+    my @B=<INF3>;
+    close(INF3);
+    my $nbLine=scalar(@B);
+#    print "1: nbLine=".$nbLine."\n";
+    #
+    my $iFileWrite=0;
+    if ($choiceFCT eq "multiple")
+    {
+        $iFileWrite=$iFile;
+    }
+    #
+    my $WeAreInFct=0;
+    my $strFctCallAll;
+    my $strBinaryCallAll;
+    my $strDATAall;
+    my $eFctName;
+    my $iBegin;
+    my $iEnd;
+    for (my $iLine=0; $iLine<$nbLine; $iLine++)
+    {
+	$_=$B[$iLine];
+	s/\n//;
+	my $PreLine=$_;
+	my $eLine=CleanLineDies($PreLine);
+	my @W1=split("", $eLine);
+	my @W2=split(":=function", $eLine);
+	my @W3=split("Filename", $eLine);
+	my @W4=split("indGlobal", $eLine);
+	if (scalar(@W1) >= 2 && $W1[0] ne " " && $W1[1] ne " " && scalar(@W2) eq 2)
+	{
+            $iBegin=$iLine;
+            if ($removeComment ne "true")
+            {
+                while(1)
+                {
+                    my @CL=split("", $B[$iBegin-1]);
+                    if (scalar(@CL) eq 0)
+                    {
+                        last;
+                    }
+                    if ($CL[0] ne "#")
+                    {
+                        last;
+                    }
+                    $iBegin=$iBegin-1;
+                }
+            }
+	    $eFctName=$W2[0];
+            $strFctCallAll="";
+            $strBinaryCallAll="";
+            $strDATAall="";
+	    $WeAreInFct=1;
+	}
+	else
+	{
+	    if (scalar(@W1) >= 2 && $W1[0] eq "e" && $W1[1] eq "n" && $W1[2] eq "d" && $W1[3] eq ";")
+	    {
+		if ($WeAreInFct eq 0)
+		{
+		    print "Apparent inconsistency in the program\n";
+		    for (my $k=-10; $k<=0; $k++)
+		    {
+			print $B[$iLine + $k];
+		    }
+		    print "eLine=".$eLine."\n";
+		    print "or the input\n";
+		    die;
+		}
+		$iEnd=$iLine;
+#               print "Assigning ListFunctionNames\n";
+#                print "nbFunction=".$nbFunction." eFctName=".$eFctName."\n";
+		$ListFunctionNames[$nbFunction]=$eFctName;
+		$ListFunctionNames_hash{$eFctName}=$nbFunction;
+		$ListFunctionDependencies[$nbFunction]=$strFctCallAll;
+		$ListFunctionBinaryDepend[$nbFunction]=$strBinaryCallAll;
+		$ListFunctionDATA_Depend[$nbFunction]=$strDATAall;
+		$ListIFile[$nbFunction]=$iFile;
+		$ListIBegin[$nbFunction]=$iBegin;
+		$ListIEnd[$nbFunction]=$iEnd;
+		$nbFunction=$nbFunction+1;
+		$WeAreInFct=0;
+	    }
+	    else
+	    {
+		if ($WeAreInFct eq 1)
+		{
+		    my $strCallRet1=GetStringFunctionCall($eLine);
+		    $strFctCallAll=$strFctCallAll.$strCallRet1;
+		    #
+		    my $strCallRet2=GetBinaryFunctionCall($eLine);
+		    $strBinaryCallAll=$strBinaryCallAll.$strCallRet2;
+		    #
+		    my $strCallRet3=GetDATAFunctionCall($eLine);
+		    $strDATAall=$strDATAall.$strCallRet3;
+		}
+		else
+		{
+		    if (scalar(@W3) eq 2 || scalar(@W4) eq 2)
+		    {
+			#This is for binaries of the kind
+			#FileCompCovDens:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"ComputeCoveringDensity");
+			my @BindGlobalSplit=split("indGlobal", $eLine);
+			if (scalar(@BindGlobalSplit) eq 1)
+			{
+			    #print "eLine=".$eLine."\n";
+			    my @SLR=split(":=", $eLine);
+			    my $eName=$SLR[0];
+			    #print "eName=".$eName."\n";
+#			    print "SLR[0]=".$SLR[0]."\n";
+#			    print "SLR[1]=".$SLR[1]."\n";
+			    my @SLB=split(",", $SLR[1]);
+#			    print "SLB[0]=".$SLB[0]."\n";
+#			    print "SLB[1]=".$SLB[1]."\n";
+			    my @SLC=split("", $SLB[1]);
+			    my $WeAreIn=1;
+			    my $strBinBrack="";
+			    for (my $iChar=0; $iChar<scalar(@SLC); $iChar++)
+			    {
+				my $eChar=$SLC[$iChar];
+				if ($eChar eq ")")
+				{
+				    $WeAreIn=0;
+				}
+				if ($WeAreIn eq 1)
+				{
+				    $strBinBrack=$strBinBrack.$eChar;
+				}
+			    }
+			    #			@SLC=split(")", $SLB[1]);
+			    #			$strBinBrack=$SLC[0];
+			    my @CharSplit=split("", $strBinBrack);
+			    my $len=scalar(@CharSplit);
+			    my $eBinary="";
+			    for (my $iChar=1; $iChar<=$len-2; $iChar++)
+			    {
+				my $eChar=$CharSplit[$iChar];
+				$eBinary=$eBinary.$eChar;
+			    }
+			    #print "eBinary=".$eBinary."\n";
+			    #
+			    $ListExternalFct_Name[$nbTop]=$eName;
+			    $ListExternalFct_Name_hash{$eName}=$nbTop;
+			    $ListExternalFct_Binary[$nbTop]=$eBinary;
+                            $ListExternalFct_Status[$nbTop]=0;
+                            $ListExternalFct_iFile[$nbTop]=$iFile;
+#			    $ListExternalFct_FullCommand[$nbTop-1]=$eLine;
+#			    $ListExternalFct_IsCalled[$nbTop-1]=0;
+			    $nbTop=$nbTop+1;
+			}
+			else
+			{
+			    $IsGlobalBindFound=1;
+			    $TheBinGlobalString=$eLine;
+			}
+		    }
+		    else
+		    {
+			my @VW1=split(":=", $eLine);
+			if (scalar(@VW1) eq 2)
+			{
+			    # This is for handling cases like
+			    # Periodic_EquivalenceMethod4:=Equivalence_Method4;
+			    $eFctName=$VW1[0];
+			    my @VW2=split(";", $VW1[1]);
+			    my $iFctCall=GetFunctionCallIndex($VW2[0]);
+			    $ListFunctionNames[$nbFunction]=$eFctName;
+                            $ListFunctionNames_hash{$eFctName}=$nbFunction;
+			    $ListFunctionDependencies[$nbFunction]=" ".$iFctCall;
+			    $ListFunctionBinaryDepend[$nbFunction]="";
+			    $ListFunctionDATA_Depend[$nbFunction]="";
+			    $ListIFile[$nbFunction]=$iFile;
+                            #
+                            $iBegin=$iLine;
+                            if ($removeComment ne "true")
+                            {
+                                while(1)
+                                {
+                                    my @CL=split("", $B[$iBegin-1]);
+                                    if (scalar(@CL) eq 0)
+                                    {
+                                        last;
+                                    }
+                                    if ($CL[0] ne "#")
+                                    {
+                                        last;
+                                    }
+                                    $iBegin=$iBegin-1;
+                                }
+                            }
+                            #
+			    $ListIBegin[$nbFunction]=$iBegin;
+			    $ListIEnd[$nbFunction]=$iLine;
+			    $nbFunction=$nbFunction+1;
+			}
+		    }
+		}
+	    }
+	}
+    }
+}
+if ($IsGlobalBindFound eq 0)
+{
+    print "Failed to find the BindGlobal statement\n";
+    die;
+}
+
+
+print "nbFunction=".$nbFunction."  nbTop=".$nbTop."\n";
+my $PrintDatabase=0;
+if ($PrintDatabase eq 1)
+{
+    my $eFileLOG="Generation/FctDependencies_".$ProjectName.".log";
+    open(OUT, ">".$eFileLOG) or die "impossible to open ".$eFileLOG;
+    for (my $iFct=0; $iFct<$nbFunction; $iFct++)
+    {
+	my $eFctName=$ListFunctionNames[$iFct];
+	my $eFctDepend=$ListFunctionDependencies[$iFct];
+	my $iFile=$ListIFile[$iFct];
+	my $iBegin=$ListIBegin[$iFct];
+	my $iEnd=$ListIEnd[$iFct];
+	print OUT "iFct=".$iFct."  eFctName=".$eFctName."\n";
+	print OUT "  eFctDepend=".$eFctDepend."\n";
+	print OUT "  iFile=".$iFile." iBegin=".$iBegin." iEnd=".$iEnd."\n";
+    }
+    close(OUT);
+}
+
+my @ListFunctionStatus=();
+my @IsDone=();
+for (my $iFct=0; $iFct<$nbFunction; $iFct++)
+{
+    $ListFunctionStatus[$iFct]=0;
+    $IsDone[$iFct]=0;
+}
+my @LFile=();
+$LFile[0]="Generation/ListSearch_Example_".$ProjectName;
+$LFile[1]="Generation/ListSearch_Manual_".$ProjectName;
+for (my $iFile=0; $iFile<scalar(@LFile); $iFile++)
+{
+    my $eFile=$LFile[$iFile];
+    open(INFILE, $eFile) or die "impossible to open ".$eFile;
+    my @B=<INFILE>;
+    close(INFILE);
+    #
+    for (my $iLine=0; $iLine<scalar(@B); $iLine++)
+    {
+	$_=$B[$iLine];
+	s/\n//;
+	my $eLine=$_;
+	my $strRed=AllowReduction($eLine);
+	my @VS=split(" ", $strRed);
+	for (my $iVS=0; $iVS<scalar(@VS); $iVS++)
+	{
+	    my $eStr=$VS[$iVS];
+	    my $iFctCall=GetFunctionCallIndex($eStr);
+#	    print "eStr=".$eStr." iFctCall=".$iFctCall."\n";
+	    if ($iFctCall ne -1)
+	    {
+		$ListFunctionStatus[$iFctCall]=1;
+	    }
+	}
+    }
+}
+print "Reading of Manual and examples finished\n";
+while(1)
+{
+    my $nbNewAssign=0;
+    for (my $iFct=0; $iFct<$nbFunction; $iFct++)
+    {
+	if ($ListFunctionStatus[$iFct] eq 1 && $IsDone[$iFct] eq 0)
+	{
+	    $IsDone[$iFct]=1;
+	    my @LCall=split(" ", $ListFunctionDependencies[$iFct]);
+	    for (my $iCall=0; $iCall<scalar(@LCall); $iCall++)
+	    {
+		my $iFctCall=$LCall[$iCall];
+		if ($ListFunctionStatus[$iFctCall] eq 0)
+		{
+		    $nbNewAssign=$nbNewAssign+1;
+		    $ListFunctionStatus[$iFctCall]=1;
+		}
+	    }
+	}
+    }
+    print "nbNewAssign=".$nbNewAssign."\n";
+    if ($nbNewAssign eq 0)
+    {
+	last;
+    }
+}
+print "Update of the call lists\n";
+print "Now writing up the needed functions\n";
+
+my $nbBinary=$nbTop;
+my $FullDATAdependencies="";
+for (my $iFct=0; $iFct<$nbFunction; $iFct++)
+{
+    my $iFile=$ListIFile[$iFct];
+    my $iBegin=$ListIBegin[$iFct];
+    my $iEnd=$ListIEnd[$iFct];
+    if ($ListFunctionStatus[$iFct] eq 1)
+    {
+	my $FullDATAdependencies=$FullDATAdependencies.$ListFunctionDATA_Depend[$iFct];
+	my $strBinaryCall=$ListFunctionBinaryDepend[$iFct];
+	my @Bcall=split(" ", $strBinaryCall);
+	for (my $iCall=0; $iCall<scalar(@Bcall); $iCall++)
+	{
+	    my $iBin=$Bcall[$iCall];
+	    $ListExternalFct_Status[$iBin]=1;
+	}
+    }
+}
+
+
+my $order="mkdir -p ../".$ProjectName."/lib";
+print "order=".$order."\n";
+if (system($order) != 0) {
+    die "Error while creating the lib directory\n";
+}
+
+
+my $eFileBinary="Generation/NeededBinaries_".$ProjectName;
+open(OUT2, "> ".$eFileBinary) or die "impossible to open ".$eFileBinary;
+for (my $iBin=0; $iBin<$nbBinary; $iBin++)
+{
+    if ($ListExternalFct_Status[$iBin] eq 1)
+    {
+	print OUT2 $ListExternalFct_Binary[$iBin]."\n";
+    }
+}
+close(OUT2);
+
+
+my $eFileDATA="Generation/NeededDATA_".$ProjectName;
+open(OUT3, "> ".$eFileDATA) or die "impossible to open ".$eFileDATA;
+print OUT3 $FullDATAdependencies."\n";
+close(OUT3);
+
+#
+# Determining the used files.
+#
+
+my @ListIFileUsed=();
+for (my $iFile=0; $iFile<$nbFile; $iFile++)
+{
+    $ListIFileUsed[$iFile]=0;
+}
+for (my $iFct=0; $iFct<$nbFunction; $iFct++)
+{
+    my $iFile=$ListIFile[$iFct];
+    if ($ListFunctionStatus[$iFct] eq 1)
+    {
+        $ListIFileUsed[$iFile]=$ListIFileUsed[$iFile]+1;
+    }
+}
+
+
+
+#
+# Creation of init.g file
+#
+
+my $eFileINIT="../".$ProjectName."/init.g";
+print "eFileINIT=".$eFileINIT."\n";
+open(OUT, ">".$eFileINIT) or die "impossible to open ".$eFileINIT;
+print OUT "# DeclareAutoPackage(\"".$ProjectName."\", \"1.0\", true);\n";
+print OUT "# DeclarePackageAutoDocumentation(\"".$ProjectName."\", \"doc\");\n";
+if ($choiceFCT eq "unique")
+{
+    print OUT "ReadPkg(\"".$ProjectName."\", \"lib/fct.g\");\n";
+}
+if ($choiceFCT eq "multiple")
+{
+    my $IsFirst=0;
+    for (my $iFile=0; $iFile<$nbFile; $iFile++)
+    {
+        if ($ListIFileUsed[$iFile] > 0)
+        {
+            print OUT "ReadPkg(\"".$ProjectName."\", \"lib/".$ListFilesFunctions[$iFile]."\");\n";
+        }
+    }
+}
+close(OUT);
+
+
+
+
+
+my @ArrFromIFileWrite=();
+for (my $iFile=0; $iFile<$nbFile; $iFile++)
+{
+    $ArrFromIFileWrite[$iFile]=0;
+}
+if ($choiceFCT eq "multiple")
+{
+    my $iArr=0;
+    for (my $iFile=0; $iFile<$nbFile; $iFile++)
+    {
+        if ($ListIFileUsed[$iFile] > 0)
+        {
+            $ArrFromIFileWrite[$iFile]=$iArr;
+            $iArr=$iArr+1;
+        }
+    }
+}
+
+
+
+
+
+my @ArrayFileRealId=();
+if ($choiceFCT eq "unique")
+{
+    my $eFileSynthetic="../".$ProjectName."/lib/fct.g";
+    local *FILE;
+    open(FILE, ">".$eFileSynthetic) or die "impossible to open ".$eFileSynthetic;
+    print FILE $TheBinGlobalString."\n";
+    push(@ArrayFileRealId, *FILE);
+}
+if ($choiceFCT eq "multiple")
+{
+    my $IsFirst=1;
+    for (my $iFile=0; $iFile<$nbFile; $iFile++)
+    {
+        if ($ListIFileUsed[$iFile] > 0)
+        {
+            my $eFileSynthetic="../".$ProjectName."/lib/".$ListFilesFunctions[$iFile];
+            local *FILE;
+            open(FILE, ">".$eFileSynthetic) or die "impossible to open ".$eFileSynthetic;
+            if ($IsFirst eq 1)
+            {
+                print FILE $TheBinGlobalString."\n";
+                $IsFirst=0;
+            }
+            push(@ArrayFileRealId, *FILE);
+        }
+    }
+}
+
+my $nbWriteBinary=0;
+for (my $iBin=0; $iBin<$nbBinary; $iBin++)
+{
+    if ($ListExternalFct_Status[$iBin] eq 1)
+    {
+	$nbWriteBinary=$nbWriteBinary+1;
+	#	$eLineIN=$ListExternalFct_FullCommand[$iBin];
+	#	$eLineOUT=StringHack($eLineIN);
+	#	print OUT $eLineOUT."\n";
+	my $eName=$ListExternalFct_Name[$iBin];
+	my $eBinary=$ListExternalFct_Binary[$iBin];
+        my $iFile=$ListExternalFct_iFile[$iBin];
+        my $iArr=$ArrFromIFileWrite[$iFile];
+        local *FILE=$ArrayFileRealId[$iArr];
+        print FILE $eName.":=Filename(DirectoriesPackagePrograms(\"".$ProjectName."\"),\"".$eBinary."\");\n";
+    }
+}
+print "nbWriteBinary=".$nbWriteBinary." nbBinary=".$nbBinary."\n";
+print "Top part written\n";
+
+my $nbWriteFunction=0;
+for (my $iFct=0; $iFct<$nbFunction; $iFct++)
+{
+    if ($ListFunctionStatus[$iFct] eq 1)
+    {
+        my $iFile=$ListIFile[$iFct];
+        my $iArr=$ArrFromIFileWrite[$iFile];
+        my $iBegin=$ListIBegin[$iFct];
+        my $iEnd=$ListIEnd[$iFct];
+        local *FILE=$ArrayFileRealId[$iArr];
+        #
+        #
+        #
+	my $eFile="lib/".$ListFilesFunctions[$iFile];
+	$nbWriteFunction=$nbWriteFunction+1;
+	open(IN, $eFile) or die "impossible to open ".$eFile;
+	my @B=<IN>;
+	close(IN);
+        #
+        #
+        #
+	print FILE "\n\n";
+	for (my $iLine=$iBegin; $iLine<=$iEnd; $iLine++)
+	{
+	    $_=$B[$iLine];
+	    s/\n//;
+	    my $eLine1=$_;
+#	    print "eLine1=".$eLine1."\n";
+	    my $eLine2=StringHack($eLine1);
+#	    print "eLine2=".$eLine2."\n";
+	    my $eLine3=CleanLineDies($eLine2);
+#	    print "eLine3=".$eLine3."\n";
+	    my $test=IsTrivialLine($eLine3);
+	    if ($test eq 0)
+	    {
+		print FILE $eLine3."\n";
+	    }
+	}
+    }
+}
+print "nbWriteFunction=".$nbWriteFunction."   nbFunction=".$nbFunction."\n";
+print "Function code written\n";
+for (my $iFileOut=0; $iFileOut<scalar(@ArrayFileRealId); $iFileOut++)
+{
+    close($ArrayFileRealId[$iFileOut]);
+}
+print "Normal termination of the program\n";

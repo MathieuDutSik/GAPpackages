@@ -1,0 +1,6 @@
+return rec(
+  MaxRad := 3,
+  det := 1024,
+  min := 4,
+  n := 12,
+  name := "Lambda12min" );

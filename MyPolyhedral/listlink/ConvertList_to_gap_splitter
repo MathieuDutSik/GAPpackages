@@ -1,0 +1,79 @@
+#!/usr/bin/perl -w
+
+$uu=scalar(@ARGV);
+if ($uu ne 3)
+{
+    print "ConvertList_to_gap_splitter is used as\n";
+    print "ConvertList_to_gap_splitter [prefix] [Size]  [File]\n";
+    print "\n";
+    print "It splits large lists of lines\n";
+    print "into small file\n";
+    die;
+}
+
+
+$Prefix=$ARGV[0];
+$Size=$ARGV[1];
+$File=$ARGV[2];
+
+
+$idxFile=1;
+sub FlushList()
+{
+    $FileName=$Prefix.$idxFile;
+    open(OUT, "> ".$FileName);
+    print OUT "return [";
+    for ($iLine=1; $iLine<=scalar(@ListString); $iLine++)
+    {
+	if ($iLine > 1)
+	{
+	    print OUT ",\n";
+	}
+	else
+	{
+	    print OUT "\n";
+	}
+	print OUT $ListString[$iLine-1];
+    }
+    print OUT "];\n";
+    close(OUT);
+    $idxFile++;
+    @ListString=();
+}
+
+
+
+
+
+
+open(INFILE, $File) or die "impossible to open file ".$File;
+@ListString=();
+while(<INFILE>)
+{
+    $eLine=$_;
+    @U=split(" ", $eLine);
+    $nbEnt=scalar(@U);
+    $str="[";
+    for ($iEnt=1; $iEnt<=$nbEnt; $iEnt++)
+    {
+	if ($iEnt > 1)
+	{
+	    $str=$str.",";
+	}
+	$str=$str.$U[$iEnt-1];
+    }
+    $str=$str."]";
+    $ListString[scalar(@ListString)]=$str;
+    if (scalar(@ListString) eq $Size)
+    {
+	FlushList();
+    }
+}
+FlushList();
+close(INFILE);
+
+$FileName=$Prefix."0";
+open(OUT, "> ".$FileName);
+$DIF=$idxFile-1;
+print OUT "return [".$DIF.",".$Size."];\n";
+close(OUT);

@@ -1,0 +1,110 @@
+\documentclass[12pt]{amsart}
+\usepackage{amsfonts, amsmath, latexsym, epsfig}
+\usepackage{amssymb}
+\usepackage{epsf}
+\usepackage{url}
+%\usepackage{tikz}
+
+
+\newcommand{\sfA}{\ensuremath{\mathsf{A}}}
+\newcommand{\RR}{\ensuremath{\mathbb{R}}}
+\newcommand{\NN}{\ensuremath{\mathbb{N}}}
+\newcommand{\QQ}{\ensuremath{\mathbb{Q}}}
+\newcommand{\CC}{\ensuremath{\mathbb{C}}}
+\newcommand{\ZZ}{\ensuremath{\mathbb{Z}}}
+\newcommand{\TT}{\ensuremath{\mathbb{T}}}
+\newcommand{\R}{\ensuremath{\mathbb{R}}}
+\newcommand{\N}{\ensuremath{\mathbb{N}}}
+\newcommand{\Q}{\ensuremath{\mathbb{Q}}}
+\newcommand{\C}{\ensuremath{\mathbb{C}}}
+\newcommand{\Z}{\ensuremath{\mathbb{Z}}}
+\newcommand{\T}{\ensuremath{\mathbb{T}}}
+\newtheorem{proposition}{Proposition}
+\newtheorem{theorem}{Theorem}
+\newtheorem{corollary}{Corollary}
+\newtheorem{algorithm}{Algorithm}
+\newtheorem{lemma}{Lemma}
+\newtheorem{problem}{Problem}
+\newtheorem{conjecture}{Conjecture}
+\newtheorem{claim}{Claim}
+\newtheorem{remark}{Remark}
+\newtheorem{definition}{Definition}
+\def\QuotS#1#2{\leavevmode\kern-.0em\raise.2ex\hbox{$#1$}\kern-.1em/\kern-.1em\lower.25ex\hbox{$#2$}}
+
+
+\urlstyle{sf}
+
+\DeclareMathOperator{\Aut}{Aut}
+\DeclareMathOperator{\Sym}{Sym}
+\DeclareMathOperator{\Isom}{Isom}
+\DeclareMathOperator{\vertt}{vert}
+\DeclareMathOperator{\conv}{conv}
+\DeclareMathOperator{\SC}{SC}
+\DeclareMathOperator{\SL}{SL}
+\DeclareMathOperator{\GL}{GL}
+\DeclareMathOperator{\PSL}{PSL}
+\DeclareMathOperator{\Out}{Out}
+\DeclareMathOperator{\Min}{Min}
+\DeclareMathOperator{\Dom}{Dom}
+\DeclareMathOperator{\cone}{cone}
+\DeclareMathOperator{\Stab}{Stab}
+
+
+\begin{document}
+
+\author{Mathieu Dutour Sikiri\'c}
+\address{Mathieu Dutour Sikiri\'c, Rudjer Boskovi\'c Institute, Bijenicka 54, 10000 Zagreb, Croatia}
+\email{mathieu.dutour@gmail.com}
+
+
+\title{Manual of the GAP package {\tt enumerationtiling}}
+\date{}
+
+\maketitle
+\tableofcontents
+
+\section{Installation}
+
+A priori the system works only on unix/linux systems.
+You need to follow the following steps:
+\begin{enumerate}
+\item The first step is to install {\tt GAP} which is available at \url{http://www.gap-system.org/}
+
+\item The archive {\bf enumerationtiling.tar.gz} can be downloaded from
+  {\url{https://sourceforge.net/projects/cohoperfect/?source=directory}}
+
+\item The archive {\bf enumerationtiling.tar.gz} should be untarred in the {\bf pkg} directory of GAP.
+
+\item Your File {\bf .gap/gap.ini} must contain the following line:
+\begin{verbatim}
+SetUserPreference( "InfoPackageLoadingLevel", 4 ); # for additional debugging informations
+SetUserPreference( "PackagesToLoad", [ "enumerationtiling"]);
+\end{verbatim}
+if you have no other needed packages. If the file is not existent then you need to create it.
+
+\item Then one needs to run the {\bf ./configure} perl script in the {\bf enumerationtiling} directory in order to compile the external programs.
+\end{enumerate}
+There are only two dependencies to the software:
+\begin{enumerate}
+\item The GNU gmp multiprecision library. It is installed in many systems and can be obtained via \url{https://gmplib.org/}. On ubuntu the following should work: {\tt sudo apt-get install libgmp-dev}.
+\item The latex publishing system, specifically the {\tt latex}, {\tt dvips} and {\tt ps2pdf} programs.  
+\end{enumerate}
+
+
+\section{Computation of the results of the paper}
+
+The computation of the paper can be computed by running the examples in the directory {\tt Examples/EnumDim4}.
+The program to be used is {\tt EnumerateFullTiling.g}
+
+The script can be run from the command line by typing
+\begin{verbatim}
+gap.sh EnumerateFullTiling.g
+\end{verbatim}
+
+
+
+
+
+
+
+\end{document}

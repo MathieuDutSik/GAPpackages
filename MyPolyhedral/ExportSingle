@@ -1,0 +1,163 @@
+#!/usr/bin/perl -w
+use strict;
+use warnings;
+
+my $uu=scalar(@ARGV);
+if ($uu ne 1)
+{
+    print "This script is used as\n";
+    print "ExportSingle [projectname]\n";
+    die;
+}
+my $ProjectName=$ARGV[0];
+
+#
+# First radical cleanup
+#
+
+my $order1="touch ustkl~";
+print $order1."\n";
+if (system($order1) != 0) {
+    die "impossible to create empty file\n";
+}
+
+my $order2="find . -name \"*~\" | grep -v cddlib | xargs rm";
+print $order2."\n";
+if (system($order2) != 0) {
+    die "impossible to remove directory\n";
+}
+
+
+my $order3="rm -rf ../".$ProjectName;
+print $order3."\n";
+if (system($order3) != 0) {
+    die "impossible to remove directory\n";
+}
+
+my $order4="mkdir -p ../".$ProjectName;
+print $order4."\n";
+if (system($order4) != 0) {
+    die "impossible to create directory\n";
+}
+
+my $order5="mkdir -p Generation";
+print $order5."\n";
+if (system($order5) != 0) {
+    die "impossible to create directory\n";
+}
+
+#
+# Then copying data sets
+#
+
+my $order6="./SUB_WorkExample ".$ProjectName;
+print $order6."\n";
+if (system($order6) != 0) {
+    die "Impossible to run SUB_WorkExample\n";
+}
+
+my $order7="./SUB_WorkManual ".$ProjectName;
+print $order7."\n";
+if (system($order7) != 0) {
+    die "Impossible to run SUB_WorkManual\n";
+}
+
+#
+# Selecting the GAP code and copying it
+#
+
+my $choiceFCT;
+#$choiceFCT="unique";
+$choiceFCT="multiple";
+
+my $removeComment;
+#$removeComment="true";
+$removeComment="false";
+
+
+my $order8="./SUB_SelectionFunction ".$ProjectName." ".$choiceFCT." ".$removeComment;
+print $order8."\n";
+if (system($order8) != 0) {
+    die "Impossible to run SUB_SelectionFunction\n";
+}
+
+#
+# Copying the scripts and the binaries
+#
+
+my $order9="./SUB_CopyDataSets ".$ProjectName;
+print $order9."\n";
+if (system($order9) != 0) {
+    die "Impossible to run SUB_CopyDataSets\n";
+}
+
+my $order10="./SUB_DetermineFileStatus ".$ProjectName;
+print $order10."\n";
+if (system($order10) != 0) {
+    die "Impossible to run SUB_DetermineFileStatus\n";
+}
+
+my $order11="./SUB_PackageExportation ".$ProjectName;
+print $order11."\n";
+if (system($order11) != 0) {
+    die "Impossible to run SUB_PackageExportation\n";
+}
+
+my $order12="./SUB_CheckBelonging ".$ProjectName;
+print $order12."\n";
+if (system($order12) != 0) {
+    die "Impossible to run SUB_Check_Belonging\n";
+}
+
+#
+# Now making the archive
+#
+
+my $order13="(cd .. && rm -f ".$ProjectName.".tar.gz ".$ProjectName.".tar ".$ProjectName.".tar.bz2)";
+print $order13."\n";
+if (system($order13) != 0) {
+    die "Impossible to remove missing files\n";
+}
+
+
+my $order14="(cd .. && tar -h -c ".$ProjectName." > ".$ProjectName.".tar && bzip2 ".$ProjectName.".tar)";
+print $order14."\n";
+if (system($order14) != 0) {
+    die "Impossible to create the BZ2 archive\n";
+}
+
+#$order="(cd .. && tar -h -c ".$ProjectName." | gzip > ".$ProjectName.".tar.gz)";
+#print $order."\n";
+#if (system($order) != 0) {
+#    die "Impossible to create the GZ archive\n";
+#}
+
+
+my $RemovalCreationByproducts="NO";
+
+if ($RemovalCreationByproducts eq "YES")
+{
+    my $order15="rm -rf ../".$ProjectName;
+    print $order15."\n";
+    if (system($order15) != 0) {
+        die "impossible to remove directory after creation of archive\n";
+    }
+
+    my $eFile1="Generation/NeededBinaries_".$ProjectName;
+    my $eFile2="Generation/Binaries_PerlStatus_".$ProjectName;
+    my $eFile3="Generation/Binaries_BinaryStatus_".$ProjectName;
+    my $eFile4="Generation/ListSearch_Example_".$ProjectName;
+    my $eFile5="Generation/ListSearch_Manual_".$ProjectName;
+    my $eFile6="Generation/NeededDATA_".$ProjectName;
+
+    my $order16="rm ".$eFile1." ".$eFile2." ".$eFile3." ".$eFile4." ".$eFile5." ".$eFile6;
+    print $order16."\n";
+    if (system($order16) != 0) {
+        die "impossible to remove auxilliary files after creation of archive\n";
+    }
+}
+else
+{
+    print "Do not remove the product of the creation\n";
+}
+print "Normal termination of the cration program\n";

@@ -1,0 +1,50 @@
+#!/usr/bin/perl -w
+
+my @ListProg=("smith", "smithvalence", "rank", "solve", "nullspacebasis", "nullspacebasis_rank");
+
+my $nb_installed_prog = 0;
+for (my $i_p=0; $i_p<scalar(@ListProg); $i_p++)
+{
+    my $eProg = "ExternalProg/LINBOX/linbox/examples/".$ListProg[$i_p];
+    if (-e $eProg)
+    {
+        $nb_installed_prog++;
+    }
+}
+
+if ($nb_installed_prog ne scalar(@ListProg))
+{
+    my $tot_list_prog="";
+    for (my $i_p=0; $i_p<scalar(@ListProg); $i_p++)
+    {
+        $tot_list_prog = $tot_list_prog." ".$ListProg[$i_p];
+    }
+    $order="(cd ExternalProg/LINBOX && ./linbox-auto-install.sh --enable-openblas=yes && cd linbox/examples && make".$tot_list_prog.")";
+    print $order."\n";
+    if (system($order) != 0) {
+	die "Error when compiling\n";
+    }
+}
+for (my $i_p=0; $i_p<scalar(@ListProg); $i_p++)
+{
+    my $eProg = "ExternalProg/LINBOX/linbox/examples/".$ListProg[$i_p];
+    if (!(-e $eProg))
+    {
+        print "Compilation of ".$eProg." failed\n";
+        exit -1;
+    }
+}
+print "\nCOMPILED linbox (smith/smithvalence/rank)\n\n";
+
+
+for (my $i_p=0; $i_p<scalar(@ListProg); $i_p++)
+{
+    my $eProg = $ListProg[$i_p];
+    my $order="(cd ExternalProg/Binaries && ln -sf ../LINBOX/linbox/examples/".$eProg.")";
+    print $order."\n";
+    if (system($order) != 0) {
+        die "Error when linking\n";
+    }
+}
+
+exit 0;

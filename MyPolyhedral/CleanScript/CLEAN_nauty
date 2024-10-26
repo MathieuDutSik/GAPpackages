@@ -1,0 +1,7 @@
+DoClean("ExternalProg/nauty24r2");
+$order="(cd ExternalProg/nauty24r2 && rm -f config.log config.status makefile && rm -f addedgeg amtog biplabg catg complg copyg countg deledgeg directg dreadnaut dreadnautB dretog genbg geng genrang labelg listg multig newedgeg NRswitchg pickg shortg showg planarg gentourng)";
+print $order."\n";
+if (system($order) != 0) {
+    die "Error when cleaning nauty\n";
+}
+print "\nCLEANED nauty\n\n";

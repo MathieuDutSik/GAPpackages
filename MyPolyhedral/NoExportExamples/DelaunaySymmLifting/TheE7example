@@ -1,0 +1,19 @@
+GramMat:=ClassicalSporadicLattices("E7");
+LFC:=DelaunayComputationStandardFunctions(GramMat);
+
+DelCO:=LFC.GetDelaunayDescription();
+
+
+ListSizes:=List(DelCO, x->Length(x.EXT));
+pos:=Position(ListSizes, 8);
+
+SHV:=ShortestVectorDutourVersion(GramMat);
+
+TheStabBigMatr:=Image(DelCO[pos].TheStab.PhiPermMat);
+TheStabSmallMatr:=Group(List(GeneratorsOfGroup(TheStabBigMatr), x->FuncExplodeBigMatrix(x).MatrixTransformation));
+
+TheBigMatrGroup:=LFC.GetMatrixGroup();
+
+TheReducedDelCO:=SymmetryBreakingDelaunayDecomposition(DelCO, TheBigMatrGroup, TheStabSmallMatr, SHV);
+test1:=CheckCoherencyDelaunayDecomposition(DelCO, GramMat);
+test2:=CheckCoherencyDelaunayDecomposition(TheReducedDelCO, GramMat);

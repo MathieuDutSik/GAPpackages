@@ -1,0 +1,36 @@
+Determinant GramMat=512
+We have 5 orbits of Delaunay polytopes
+Orbit 1 :   nbV=32  OrdStab=147456  SqrRadius=5/2
+We have 4 orbits of facets
+  Orbit 1 AdjOrbit=2 SqrDist=1/2
+  Orbit 2 AdjOrbit=3 SqrDist=9/8
+  Orbit 3 AdjOrbit=1 SqrDist=1
+  Orbit 4 AdjOrbit=1 SqrDist=2
+
+Orbit 2 :   nbV=10  OrdStab=2880  SqrRadius=2
+We have 3 orbits of facets
+  Orbit 1 AdjOrbit=3 SqrDist=11/24
+  Orbit 2 AdjOrbit=1 SqrDist=1/2
+  Orbit 3 AdjOrbit=2 SqrDist=8/9
+
+Orbit 3 :   nbV=18  OrdStab=80640  SqrRadius=17/8
+We have 6 orbits of facets
+  Orbit 1 AdjOrbit=2 SqrDist=11/24
+  Orbit 2 AdjOrbit=3 SqrDist=1
+  Orbit 3 AdjOrbit=4 SqrDist=11/24
+  Orbit 4 AdjOrbit=5 SqrDist=9/8
+  Orbit 5 AdjOrbit=1 SqrDist=9/8
+  Orbit 6 AdjOrbit=3 SqrDist=1/2
+
+Orbit 4 :   nbV=10  OrdStab=40320  SqrRadius=11/6
+We have 3 orbits of facets
+  Orbit 1 AdjOrbit=3 SqrDist=11/24
+  Orbit 2 AdjOrbit=5 SqrDist=1/2
+  Orbit 3 AdjOrbit=4 SqrDist=2/9
+
+Orbit 5 :   nbV=18  OrdStab=10321920  SqrRadius=2
+We have 2 orbits of facets
+  Orbit 1 AdjOrbit=3 SqrDist=9/8
+  Orbit 2 AdjOrbit=4 SqrDist=1/2
+
+Max Square Radius=5/2

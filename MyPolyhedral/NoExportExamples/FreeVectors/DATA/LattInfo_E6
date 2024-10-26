@@ -1,0 +1,6 @@
+return rec(
+  MaxRad := 4/3,
+  det := 3,
+  min := 2,
+  n := 6,
+  name := "E6" );

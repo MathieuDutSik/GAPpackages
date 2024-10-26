@@ -1,0 +1,4 @@
+SetUserPreference( "InfoPackageLoadingLevel", 4 ); # for additional debugging informations
+SetUserPreference( "PackagesToLoad", [ "enumerationtiling"]);
+gap.sh EnumerateFullTiling.g
+############################

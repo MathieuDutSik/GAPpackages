@@ -1,0 +1,6 @@
+return rec(
+  MaxRad := 3,
+  det := 243,
+  min := 3,
+  n := 10,
+  name := "O10" );

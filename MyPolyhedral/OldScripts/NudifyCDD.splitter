@@ -1,0 +1,111 @@
+#!/usr/bin/perl -w
+
+# This script takes the output of glrs
+# and create a sequence of files to be
+# loaded sequencially by GAP
+
+
+$uu=scalar(@ARGV);
+if ($uu ne 3)
+{
+    print "NudifyCDD.splitter is used as\n";
+    print "NudifyCDD.splitter [prefix] [Size]  [File]\n";
+    print "\n";
+    print "It splits large lists of lines\n";
+    print "into small file\n";
+    die;
+}
+
+$Prefix=$ARGV[0];
+$Size=$ARGV[1];
+$File=$ARGV[2];
+
+
+$idxFile=1;
+sub FlushList()
+{
+    $FileName=$Prefix.$idxFile;
+    open(OUT, "> ".$FileName);
+    print OUT "return [";
+    print OUT $ChainSaw;
+    print OUT "];\n";
+    close(OUT);
+    $ChainSaw="";
+    $idxFile++;
+}
+
+
+
+sub StdConvert($)
+{
+    my ($ili)=@_;
+    @HL=split("", $ili);
+    $ChainLine="[";
+    for ($ipos=1; $ipos<scalar(@HL)-1; $ipos++)
+    {
+	$let=$HL[$ipos];
+	if ($let eq " ")
+	{
+	    $ChainLine=$ChainLine.",";
+	}
+	else
+	{
+	    $ChainLine=$ChainLine.$let;
+	}
+    }
+    $ChainLine=$ChainLine."]";
+#    print $ChainLine."\n";
+    return $ChainLine;
+}
+
+
+
+
+
+open(INFILE, $File) or die "impossible to open file ".$File;
+$nbTotal=0;
+$ChainSaw="";
+$nbLine=0;
+$posBegin=7500;
+$pos=0;
+while(<INFILE>)
+{
+    $Chain=$_;
+    $pos=$pos+1;
+    if ($Chain eq "begin\n")
+    {
+	$posBegin=$pos+2;
+    }
+    if ($Chain eq "end\n")
+    {
+	FlushList();
+	last;
+    }
+    if ($pos >= $posBegin)
+    {
+	$line=StdConvert($Chain);
+	if ($nbLine eq 0)
+	{
+	    $Append="";
+	}
+	else
+	{
+	    $Append=",\n";
+	}
+	$ChainSaw=$ChainSaw.$Append.$line;
+	$nbLine++;
+	$nbTotal++;
+	if ($nbLine eq $Size)
+	{
+	    FlushList();
+	    $nbLine=0;
+	}
+    }
+}
+close(INFILE);
+
+$FileName=$Prefix."0";
+open(OUT, "> ".$FileName);
+$DIF=$idxFile-1;
+print OUT "return [".$DIF.",".$Size.",".$nbTotal."];\n";
+close(OUT);

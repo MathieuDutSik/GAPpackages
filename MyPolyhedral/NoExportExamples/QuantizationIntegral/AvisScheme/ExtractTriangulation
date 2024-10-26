@@ -1,0 +1,101 @@
+#!/usr/bin/perl -w
+
+# This script takes the output of glrs
+# with printcobasis and allbases
+# and obtain the triangulation from it.
+
+sub CalcMod($$)
+{
+    my ($i, $j) = @_;
+    my $quot;
+    my $res;
+    $quot=int($i/$j);
+    $res=$i-$quot*$j;
+    return $res;
+}
+sub ReduceStar($)
+{
+    my ($estr) = @_;
+    @WRL=split("", $estr);
+    $ret="";
+    for ($iCol=1; $iCol<=scalar(@WRL)-1; $iCol++)
+    {
+	$ret=$ret.$WRL[$iCol-1];
+    }
+    $LastChar=$WRL[scalar(@WRL)-1];
+    if ($LastChar ne "*")
+    {
+	$ret=$ret.$LastChar;
+    }
+    return $ret;
+}
+
+
+
+$AfterEnd=0;
+$iLine=0;
+$RefLine=40000;
+$PRevBase="B#0";
+$IsFirstTriangle=1;
+print "return [\n";
+while(<>)
+{
+    $eLine=$_;
+    $iLine=$iLine+1;
+    if ($eLine eq "begin\n")
+    {
+	$RefLine=$iLine+2;
+	$RefMod=CalcMod($RefLine,2);
+    }
+    if ($eLine eq "end\n")
+    {
+	$AfterEnd=1;
+    }
+    $IsOK=0;
+    @U=split(" ", $eLine);
+    if ($iLine >= $RefLine && $AfterEnd eq 0)
+    {
+	if ($U[3] eq "vertices/rays")
+	{
+	    $IsOK=1;
+	}
+    }
+    if ($IsOK eq 1)
+    {
+#	print $eLine;
+#	print "U[1]=".$U[1]."\n";
+	if ($U[1] ne $PRevBase)
+	{
+#	    print $eLine;
+	    $PRevBase=$U[1];
+	    $det=$U[scalar(@U)-1];
+	    if ($IsFirstTriangle eq 0)
+	    {
+		print ",\n";
+	    }
+	    $IsFirstTriangle=0;
+	    print "rec(LV:=[";
+	    $pos=5;
+	    $IsFirstVertex=1;
+	    while(1)
+	    {
+		$estr=$U[$pos-1];
+		@WRL=split("", $estr);
+		if ($WRL[0] eq "I")
+		{
+		    last;
+		}
+		$TheNB=ReduceStar($estr);
+		if ($IsFirstVertex eq 0)
+		{
+		    print ",";
+		}
+		$IsFirstVertex=0;
+		print $TheNB;
+		$pos=$pos+1;
+	    }
+	    print "], det:=".$det.")";
+	}
+    }
+}
+print "];\n";

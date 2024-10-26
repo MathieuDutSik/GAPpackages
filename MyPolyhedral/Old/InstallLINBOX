@@ -1,0 +1,60 @@
+#!/usr/bin/perl -w
+
+use Cwd;
+my $dir = getcwd;
+
+$order="rm -rf ExternalProg/LINBOX_WORLD/opt";
+print $order."\n";
+system $order;
+
+$order="mkdir ExternalProg/LINBOX_WORLD/opt";
+print $order."\n";
+system $order;
+
+$order="(cd ExternalProg/LINBOX_WORLD && rm -rf Compil)";
+print $order."\n";
+system $order;
+
+$order="(cd ExternalProg/LINBOX_WORLD && cp -r SVN_DOWNLOAD Compil)";
+print $order."\n";
+system $order;
+
+$PrefixFFLAS=$dir."/ExternalProg/LINBOX_WORLD/opt/fflas-fppack";
+$PrefixGIVARO=$dir."/ExternalProg/LINBOX_WORLD/opt/givaro";
+$PrefixLINBOX=$dir."/ExternalProg/LINBOX_WORLD/opt/linbox";
+
+#
+# First GIVARO
+#
+
+$order="(cd ExternalProg/LINBOX_WORLD/Compil/givaro/branches/3.8 && ./autogen.sh)";
+print $order."\n";
+system $order;
+
+$order="(cd ExternalProg/LINBOX_WORLD/Compil/givaro/branches/3.8 && ./configure --prefix=".$PrefixGIVARO." && make && make install)";
+print $order."\n";
+system $order;
+
+#
+# Second fflas-ffpack
+#
+
+$order="(cd ExternalProg/LINBOX_WORLD/Compil/fflas-ffpack/trunk && ./autogen.sh)";
+print $order."\n";
+system $order;
+
+$order="(cd ExternalProg/LINBOX_WORLD/Compil/fflas-ffpack/trunk && ./configure --prefix=".$PrefixFFLAS." --with-givaro=".$PrefixGIVARO." && make && make install)";
+print $order."\n";
+system $order;
+
+#
+# Third LINBOX
+#
+
+$order="(cd ExternalProg/LINBOX_WORLD/Compil/linbox && ./autogen.sh)";
+print $order."\n";
+system $order;
+
+$order="(cd ExternalProg/LINBOX_WORLD/Compil/linbox && ./configure --prefix=".$PrefixFFLAS." --with-givaro=".$PrefixGIVARO." && make && make install)";
+print $order."\n";
+system $order;

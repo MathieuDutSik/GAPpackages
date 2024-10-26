@@ -1,0 +1,63 @@
+GramMat:=ClassicalSporadicLattices("E6");
+
+MatrixGRP:=Method2AutomorphismLattice(GramMat);
+
+DelCO:=DelaunayDescriptionStandard(
+    rec(GramMat:=GramMat,
+        MatrixGRP:=MatrixGRP)
+       );
+
+AffineGroup:=Group(List(GeneratorsOfGroup(MatrixGRP), x->FuncCreateBigMatrix(ListWithIdenticalEntries(Length(GramMat),0), x)));
+
+
+CP:=CenterRadiusDelaunayPolytopeGeneral(GramMat, DelCO[1].EXT);
+eVect1:=CP.Center;
+eVect2:=-CP.Center;
+eVect2[1]:=1;
+ListCoset:=[eVect1, eVect2];
+
+
+ThePrefix:="./DelaunayDesc_E6/";
+Exec("mkdir -p ", ThePrefix);
+IsSaving:=true;
+
+KillingDelaunay:=function(EXT)
+  return false;
+end;
+KillingAdjacency:=function(EXT1, EXT2)
+  return false;
+end;
+
+kSought:=5;
+ListVert:=[eVect1];
+ListBoundary:=[];
+while(true)
+do
+  ListCosetTotal:=[];
+  for eVert in ListVert
+  do
+    ListCoset:=Orbit(AffineGroup, PeriodicVectorMod1(eVert), PeriodicOnClassesMod1);
+    Append(ListCosetTotal, ListCoset);
+  od;
+  Print("|ListCosetTotal|=", Length(ListCosetTotal), "\n");
+  ListFunc:=Periodic_DelaunayComputationStandardFunctions(GramMat, AffineGroup, ListCosetTotal);
+  TheBoundary:=ListFunc.GetBoundary(kSought);
+  Add(ListBoundary, TheBoundary);
+  NewListVert:=[];
+  for iRank in [2..kSought+3]
+  do
+    for eFace in TheBoundary[iRank]
+    do
+      if eFace.IsHomologyInvar=false then
+        Add(NewListVert, eFace.Center);
+      fi;
+    od;
+  od;
+  if Length(NewListVert)=0 then
+    Print("Everything seems ok\n");
+    TheHomol:=ListFunc.GetOrbitFoldHomology(kSought);
+    break;
+  else
+    Add(ListVert, NewListVert[1]);
+  fi;
+od;

@@ -1,0 +1,27 @@
+#!/usr/bin/perl -w
+$eProg="ExternalProg/ppl-1.2/demos/ppl_lcdd/ppl_lcdd";
+$test=0;
+if (-e $eProg)
+{$test=1;}
+if ($test eq 0)
+{
+    $order="(cd ExternalProg/ppl-1.2 && ./configure && make)";
+    print $order."\n";
+    if (system($order) != 0) {
+	die "Error when compiling ppl\n";
+    }
+}
+if (!(-e $eProg))
+{
+    print "Compilation of ".$eProg." failed\n";
+    exit -1;
+}
+print "\nCOMPILED ppl\n\n";
+
+$order="(cd ExternalProg/Binaries && ln -sf ../ppl-1.2/demos/ppl_lcdd/ppl_lcdd)";
+print $order."\n";
+if (system($order) != 0) {
+    die "Error when linking\n";
+}
+
+exit 0;

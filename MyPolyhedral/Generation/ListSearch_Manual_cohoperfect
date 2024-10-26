@@ -1,0 +1,5 @@
+SetUserPreference( "InfoPackageLoadingLevel", 4 ); # for additional debugging informations
+SetUserPreference( "PackagesToLoad", [ "cohoperfect"]);
+gap.sh DoEnumerationTest.g
+gap.sh DoEnumerationComplete.g
+############################

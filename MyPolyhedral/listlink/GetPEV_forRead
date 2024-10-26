@@ -1,0 +1,37 @@
+#!/usr/bin/perl -w
+
+$uu=scalar(@ARGV);
+if ($uu ne 2)
+{
+    print "GetPEV_forRead [eFileIn] [eFileOut]\n";
+    die;
+}
+
+$eFileIn=$ARGV[0];
+$eFileOut=$ARGV[1];
+
+open(INFILE, $eFileIn) or die "impossible to open ".$eFileIn;
+@B=<INFILE>;
+close(INFILE);
+
+$nbEnt=$B[0];
+open(OUT, "> ".$eFileOut);
+print OUT "return [";
+for ($iEnt=1; $iEnt<=$nbEnt; $iEnt++)
+{
+    $eLine=$B[$iEnt];
+#    print "eLine=".$eLine;
+    $_=$eLine;
+    s/\./ /;
+    $eLineMod=$_;
+#    print "eLineMod=".$_."\n";
+    
+    @U=split(" ", $eLineMod);
+    print OUT "[".$U[0].",".$U[1]."]";
+    if ($iEnt < $nbEnt)
+    {
+	print OUT ",\n";
+    }
+}
+print OUT "];\n";
+close(OUT);

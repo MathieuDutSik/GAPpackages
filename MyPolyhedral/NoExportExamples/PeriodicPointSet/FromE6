@@ -1,0 +1,21 @@
+GramMat:=ClassicalSporadicLattices("E6");
+PointGRP:=Method2AutomorphismLattice(GramMat);
+
+
+DelCO:=DelaunayDescriptionStandard(
+    rec(GramMat:=GramMat,
+        PointGRP:=PointGRP)
+       );
+
+AffineGroup:=Group(List(GeneratorsOfGroup(PointGRP), x->FuncCreateBigMatrix(ListWithIdenticalEntries(Length(GramMat),0), x)));
+
+
+CP:=CenterRadiusDelaunayPolytopeGeneral(GramMat, DelCO[1].EXT);
+eVect1:=CP.Center;
+eVect2:=-CP.Center;
+eVect2[1]:=1;
+ListCosets:=List([eVect1, eVect2], PeriodicVectorMod1);
+
+ListFunc:=Periodic_DelaunayComputationStandardFunctions(GramMat, AffineGroup, ListCosets);
+TheDesc:=ListFunc.GetDelaunayDescription();
+ListVoronoiVertices:=ListFunc.GetVoronoiVertices();

@@ -1,0 +1,139 @@
+#!/usr/bin/perl -w
+
+# This script takes the output of glrs
+# with printcobasis and allbases
+# and obtain the triangulation from it.
+
+sub CalcMod($$)
+{
+    my ($i, $j) = @_;
+    my $quot;
+    my $res;
+    $quot=int($i/$j);
+    $res=$i-$quot*$j;
+    return $res;
+}
+sub ReduceStar($)
+{
+    my ($estr) = @_;
+    @WRL=split("", $estr);
+    $ret="";
+    for ($iCol=1; $iCol<=scalar(@WRL)-1; $iCol++)
+    {
+	$ret=$ret.$WRL[$iCol-1];
+    }
+    $LastChar=$WRL[scalar(@WRL)-1];
+    if ($LastChar ne "*")
+    {
+	$ret=$ret.$LastChar;
+    }
+    return $ret;
+}
+$uu=scalar(@ARGV);
+if ($uu ne 3)
+{
+    print "You are running in a lot of troubles ....\n";
+    die;
+}
+
+$FileTrig=$ARGV[0];
+$FileFacet=$ARGV[1];
+$FileMeta=$ARGV[2];
+open(OUTTRIG, "> ".$FileTrig);
+open(OUTFACET, "> ".$FileFacet);
+open(OUTMETA, "> ".$FileMeta);
+
+
+$AfterEnd=0;
+$iLine=0;
+$RefLine=40000;
+$PRevBase="B#0";
+$IsFirstTriangle=1;
+$IsFirstFacet=1;
+$nbFacet=0;
+print OUTTRIG "return [\n";
+#print "BEFORE\n";
+while(<STDIN>)
+{
+    $eLine=$_;
+    $iLine=$iLine+1;
+    if ($eLine eq "begin\n")
+    {
+	$RefLine=$iLine+2;
+    }
+    if ($eLine eq "end\n")
+    {
+	$AfterEnd=1;
+    }
+    $IsTrig=0;
+    $IsFacet=0;
+    @U=split(" ", $eLine);
+    $len=scalar(@U);
+    if ($iLine >= $RefLine && $AfterEnd eq 0)
+    {
+	if ($len > 3)
+	{
+	    if ($U[3] eq "vertices/rays")
+	    {
+		$IsTrig=1;
+	    }
+	}
+	if ($IsTrig eq 0)
+	{
+	    $IsFacet=1;
+	}
+    }
+    if ($IsTrig eq 1)
+    {
+	if ($U[1] ne $PRevBase)
+	{
+	    $PRevBase=$U[1];
+	    $det=$U[scalar(@U)-1];
+	    if ($IsFirstTriangle eq 0)
+	    {
+		print OUTTRIG ",\n";
+	    }
+	    $IsFirstTriangle=0;
+	    print OUTTRIG "rec(LV:=[";
+	    $pos=5;
+	    $IsFirstVertex=1;
+	    while(1)
+	    {
+		$estr=$U[$pos-1];
+		@WRL=split("", $estr);
+		if ($WRL[0] eq "I")
+		{
+		    last;
+		}
+		$TheNB=ReduceStar($estr);
+		if ($IsFirstVertex eq 0)
+		{
+		    print OUTTRIG ",";
+		}
+		$IsFirstVertex=0;
+		print OUTTRIG $TheNB;
+		$pos=$pos+1;
+	    }
+	    print OUTTRIG "], det:=".$det.")";
+	}
+    }
+    if ($IsFacet eq 1)
+    {
+	if ($IsFirstFacet eq 1)
+	{
+	    @VSL=split(" ", $eLine);
+	    $TheDim=scalar(@VSL);
+	    $IsFirstFacet=0;
+	}
+	$nbFacet++;
+	print OUTFACET $eLine;
+    }
+}
+#print "nbFacet=".$nbFacet."\n";
+#print "TheDim=".$TheDim."\n";
+#print OUTMETA "BONJOUR\n";
+print OUTTRIG "];\n";
+print OUTMETA $nbFacet." ".$TheDim."\n";
+close(OUTTRIG);
+close(OUTFACET);
+close(OUTMETA);

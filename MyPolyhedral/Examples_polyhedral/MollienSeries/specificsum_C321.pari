@@ -1,0 +1,30 @@
+poly=0
+IdMat = matid(6)
+a=[1,0,0,0,0,0;0,1,0,0,0,0;0,0,1,0,0,0;0,0,0,1,0,0;0,0,0,0,1,0;0,0,0,0,0,1]
+b = IdMat - t*a
+TheDet = matdet(b)
+poly = poly + 1 / TheDet
+
+a=[1,-1,0,0,0,1;0,-1,0,0,0,2;0,0,1,0,0,0;0,0,0,1,0,0;0,0,0,0,1,0;0,0,0,0,0,1]
+b = IdMat - t*a
+TheDet = matdet(b)
+poly = poly + 2 / TheDet
+
+a=[1,-1,0,0,0,1;0,-1,0,0,0,2;0,0,1,-1,0,1;0,0,0,-1,0,2;0,0,0,0,1,0;0,0,0,0,0,1]
+b = IdMat - t*a
+TheDet = matdet(b)
+poly = poly + 1 / TheDet
+
+a=[0,0,1,0,0,0;0,0,0,1,0,0;1,0,0,0,0,0;0,1,0,0,0,0;0,0,0,0,1,0;0,0,0,0,0,1]
+b = IdMat - t*a
+TheDet = matdet(b)
+poly = poly + 2 / TheDet
+
+a=[0,0,1,-1,0,1;0,0,0,-1,0,2;1,0,0,0,0,0;0,1,0,0,0,0;0,0,0,0,1,0;0,0,0,0,0,1]
+b = IdMat - t*a
+TheDet = matdet(b)
+poly = poly + 2 / TheDet
+
+PsigmaSum = poly / 8
+TheSum = 1/((1-t)^3*(1-t^2)^2*(1-t^3))
+control = PsigmaSum - TheSum

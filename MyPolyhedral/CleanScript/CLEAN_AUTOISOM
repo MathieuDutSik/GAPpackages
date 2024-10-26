@@ -1,0 +1,3 @@
+DoClean("ExternalProg/export.V2.5");
+print "\nCLEANED export.V2.5 (AUTO/ISOM)\n\n";
+

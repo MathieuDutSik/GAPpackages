@@ -1,0 +1,3 @@
+DoClean("ExternalProg/lrslib-042cmod");
+print "\nCLEANED lrslib (gmp)\n\n";
+

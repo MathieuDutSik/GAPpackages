@@ -1,0 +1,134 @@
+#!/usr/bin/perl -w
+
+# This script takes the output of glrs
+# and create a sequence of files to be
+# loaded sequencially by GAP
+
+$nbE=0;
+while(1)
+{
+    $let=getc();
+    if ($let eq "\n")
+    {
+	$nbE++;
+    }
+    if ($nbE eq 3)
+    {
+	last;
+    }
+}
+
+$uu=scalar(@ARGV);
+if ($uu ne 2)
+{
+    print "NudifyLRS.splitter is used as\n";
+    print "NudifyLRS.splitter [prefix] [Size] < [File]\n";
+    print "\n";
+    print "It splits large lists of lines\n";
+    print "into small file\n";
+    die;
+}
+$Prefix=$ARGV[0];
+$Size=$ARGV[1];
+
+
+
+$idxFile=1;
+sub FlushList()
+{
+    $FileName=$Prefix.$idxFile;
+    open(OUT, "> ".$FileName);
+    print OUT "return [";
+    print OUT $ChainSaw;
+    print OUT "];\n";
+    close(OUT);
+    $ChainSaw="";
+    $idxFile++;
+}
+
+
+sub ReadOneLine()
+{
+    $ChainLine="[";
+    $first=1;
+    while(1)
+    {
+	$let=getc();
+	if ($let eq "\n")
+	{
+	    last;
+	}
+	if ($let ne " ")
+	{
+	    $ChainNbr=$let;
+	    while(1)
+	    {
+		$let=getc();
+		if ($let ne " ")
+		{
+		    $ChainNbr=$ChainNbr.$let;
+		}
+		else
+		{
+		    last;
+		}
+	    }
+	    if ($first eq 1)
+	    {
+		$ChainLine=$ChainLine.$ChainNbr;
+	    }
+	    else
+	    {
+		$ChainLine=$ChainLine.",".$ChainNbr;
+	    }
+	    $first=0;
+	}
+    }
+    $ChainLine=$ChainLine."]";
+#    print $ChainLine."\n";
+    return $ChainLine;
+}
+
+
+
+
+
+$nbTotal=0;
+$ChainSaw="";
+$nbLine=0;
+while(1)
+{
+    $Chain=ReadOneLine();
+    if ($nbLine eq 0)
+    {
+	$Append="";
+    }
+    else
+    {
+	$Append=",";
+    }
+    $ChainSaw=$ChainSaw.$Append.$Chain;
+    $nbLine++;
+    $nbTotal++;
+    $let=getc();
+    if ($let ne "e")
+    {
+	if ($nbLine eq $Size)
+	{
+	    FlushList();
+	    $nbLine=0;
+	}
+    }
+    else
+    {
+	FlushList();
+	last;
+    }
+}
+close();
+
+$FileName=$Prefix."0";
+open(OUT, "> ".$FileName);
+$DIF=$idxFile-1;
+print OUT "return [".$DIF.",".$Size.",".$nbTotal."];\n";
+close(OUT);

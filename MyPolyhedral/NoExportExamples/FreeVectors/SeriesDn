@@ -1,0 +1,15 @@
+ListData:=[];
+for n in [3..10]
+do
+  TheGramMat:=LatticeDn(n);
+  ListBelt:=FreenessBeltListingStandard(TheGramMat);
+  ListRec:=[];
+  for iFree in [1..Length(ListBelt.ListFreeVectors)]
+  do
+    eFree:=ListBelt.ListFreeVectors[iFree];
+    TheOrb:=Orbit(ListBelt.VectorPres.GRPperm, eFree.MatchedVectors, OnSets);
+    Print("|O", iFree, "|=", Length(TheOrb), " |V|=", Length(eFree.MatchedVectors), "\n");
+    Add(ListRec, rec(OrbSize:=Length(TheOrb), nbVectors:=Length(eFree.MatchedVectors)));
+  od;
+  Add(ListData, ListRec);
+od;

@@ -1,0 +1,3 @@
+DoClean("ExternalProg/VectorSplitting");
+print "\nCLEANED VectorSplitting\n\n";
+

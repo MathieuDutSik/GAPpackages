@@ -1,0 +1,33 @@
+#!/usr/bin/perl -w
+
+$nbARG=scalar(@ARGV);
+
+if ($nbARG ne 2)
+{
+    print "libexact_convertGAP is used as\n";
+    print "libexact_convertGAP [FileIN] [FileOUT]\n";
+    die;
+}
+
+$eFileIN=$ARGV[0];
+$eFileOUT=$ARGV[1];
+
+open(IN, $eFileIN) or die "impossible to open ".$eFileIN;
+@U=<IN>;
+close(IN);
+
+open(OUT, "> ".$eFileOUT);
+print OUT "return [";
+for ($iSol=0; $iSol<scalar(@U); $iSol++)
+{
+    if ($iSol > 0)
+    {
+	print OUT ",\n";
+    }
+    $_=$U[$iSol];
+    s/\n//;
+    s/ /,/g;
+    print OUT "[".$_."]";
+}
+print OUT "];\n";
+close(OUT);

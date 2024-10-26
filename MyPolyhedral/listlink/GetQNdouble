@@ -1,0 +1,29 @@
+#!/usr/bin/perl -w
+
+$N=$ARGV[0];
+$a=$ARGV[1];
+$b=$ARGV[2];
+
+
+sub GetReal($)
+{
+    my ($str1) = @_;
+    $_=$str1;
+    s/\n//;
+    $esl=$_;
+    @VV=split("/", $esl);
+    if (scalar(@VV) eq 2)
+    {
+	$fre=$VV[0]/$VV[1];
+	return $fre;
+    }
+    else
+    {
+	return $esl;
+    }
+}
+
+$aR=GetReal($a);
+$bR=GetReal($b);
+$ret=$aR+$bR*sqrt($N);
+print "return \"".$ret."\";\n";

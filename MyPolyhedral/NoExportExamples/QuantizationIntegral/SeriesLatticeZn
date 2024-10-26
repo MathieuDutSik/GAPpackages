@@ -1,0 +1,9 @@
+ListInt:=[];
+for n in [2..10]
+do
+  TheGramMat:=IdentityMat(n);
+  TheIntegral:=QuantizationConstantStandard(TheGramMat);
+  Print("TheIntegral=", TheIntegral, "\n");
+  FormulaInt:=n*2*(1/8)*(1/3);
+  Add(ListInt, rec(n:=n, Int:=TheIntegral, FormulaInt:=FormulaInt));
+od;

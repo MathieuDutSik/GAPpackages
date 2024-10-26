@@ -1,0 +1,63 @@
+#!/usr/bin/perl -w
+
+$uu=scalar(@ARGV);
+if ($uu ne 1)
+{
+    print "CsdpSolRead [eFileIn]\n";
+    print "With eFileIn the input\n";
+    die;
+}
+
+$eFileIn=$ARGV[0];
+
+open(INFILE, $eFileIn);
+@B=<INFILE>;
+close(INFILE);
+$nbLine=scalar(@B);
+
+$TheMult=100000;
+$eLineFirst=$B[0];
+@U=split(" ", $eLineFirst);
+$nbEnt=scalar(@U);
+$strY="[";
+for ($iEnt=1; $iEnt<=$nbEnt; $iEnt++)
+{
+    $eVal=$U[$iEnt-1];
+    $h=$eVal*$TheMult;
+    $h2=int($h);
+    if ($iEnt > 1)
+    {
+	$strY=$strY.",";
+    }
+    $strVal=$h2."/".$TheMult;
+    $strY=$strY.$strVal;
+}
+$strY=$strY."]";
+
+print "return rec(y:=".$strY.", ListEnt:=[";
+for ($iLine=2; $iLine<=$nbLine; $iLine++)
+{
+    $_=$B[$iLine-1];
+    s/\n//;
+    @U=split(" ", $_);
+    $iCase=$U[0];
+    $iMat=$U[1];
+    $i=$U[2];
+    $j=$U[3];
+    #
+    $eVal=$U[4];
+    $h=$eVal*$TheMult;
+    $h2=int($h);
+    if ($iEnt > 1)
+    {
+	$strY=$strY.",";
+    }
+    $strVal=$h2."/".$TheMult;
+    print "rec(iCase:=".$iCase.", iMat:=".$iMat.", i:=".$i.", j:=".$j.", eVal:=".$strVal.")";
+    if ($iLine < $nbLine)
+    {
+	print ",\n";
+    }
+
+}
+print "]);\n";

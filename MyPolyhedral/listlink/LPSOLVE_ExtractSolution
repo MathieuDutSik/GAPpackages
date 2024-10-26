@@ -1,0 +1,95 @@
+#!/usr/bin/perl -w
+$File=$ARGV[0];
+open(INFILE, $File);
+@RESULT=<INFILE>;
+close(INFILE);
+
+$Thr=0.0001;
+
+$nbLine=scalar(@RESULT);
+#print "nbLine=".$nbLine."\n";
+$WeWrite=0;
+$idx=0;
+@LVal=();
+@NearZero=();
+for ($iLine=1; $iLine<=$nbLine; $iLine++)
+{
+    $_=$RESULT[$iLine-1];
+    s/\n//;
+    $eLine=$_;
+    if ($WeWrite eq 1)
+    {
+	$eStr="";
+	@U=split("", $eLine);
+	for ($iChar=2; $iChar<=scalar(@U); $iChar++)
+	{
+	    $eChar=$U[$iChar-1];
+	    $eStr=$eStr.$eChar;
+	}
+	@V=split(" ", $eStr);
+	$jdx=$V[0];
+	$eVal=$V[1];
+	$idx++;
+	if ($idx ne $jdx)
+	{
+	    print "eLine=".$eLine."\n";
+	    print "eStr=".$eStr."\n";
+	    print "Our code is broken\n";
+	    die;
+	}
+	if (abs($eVal) > $Thr)
+	{
+	    $nz=0;
+	}
+	else
+	{
+	    $nz=1;
+	}
+	$LVal[$idx-1]=$eVal;
+	$NearZero[$idx-1]=$nz;
+    }
+    if ($WeWrite eq 0)
+    {
+#	print "eLine=".$eLine."\n";
+	@U=split("", $eLine);
+	$nbChar=scalar(@U);
+	if ($nbChar > 0)
+	{
+	    @V=split(" ", $eLine);
+	    if ($V[0] eq "Actual")
+	    {
+		$WeWrite=1;
+	    }
+	}
+    }
+}
+$TheDim=$idx;
+#print "idx=".$idx."\n";
+
+#
+# Printing for GAP to read.
+#
+
+
+
+print "return rec(";
+print "eVect:=[";
+for ($i=1; $i<=$TheDim; $i++)
+{
+    if ($i>1)
+    {
+	print ",";
+    }
+    print $LVal[$i-1];
+}
+print "]";
+print ", NearZero:=[";
+for ($i=1; $i<=$TheDim; $i++)
+{
+    if ($i>1)
+    {
+	print ",";
+    }
+    print $NearZero[$i-1];
+}
+print "]);\n";

@@ -1,0 +1,3 @@
+DoClean("ExternalProg/SV");
+print "\nCLEANED sv\n\n";
+

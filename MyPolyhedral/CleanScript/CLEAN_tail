@@ -1,0 +1,11 @@
+$order="rm -rf bin/* ExternalProg/Binaries/*";
+print $order."\n";
+if (system($order) != 0) {
+    die "Error when cleaning the files\n";
+}
+
+$order="rm -rf ExternalProg/*_install";
+print $order."\n";
+if (system($order) != 0) {
+    die "Error when cleaning the directories\n";
+}

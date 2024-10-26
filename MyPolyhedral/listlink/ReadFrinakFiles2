@@ -1,0 +1,99 @@
+#!/usr/bin/perl -w
+use strict;
+use warnings;
+
+my $nbU=scalar(@ARGV);
+if ($nbU ne 2)
+{
+    print "ReadFrinakFiles2 is used as\n";
+    print "ReadFrinakFiles2 [in] [out]\n";
+    print "with [in] the input\n";
+    print "with [out] the output\n";
+    exit(1);
+}
+
+my $FileIN=$ARGV[0];
+my $FileOUT=$ARGV[1];
+open(IN, $FileIN) or die "impossible to open ".$FileIN;
+my @RESULT=<IN>;
+close(IN);
+
+my $nbLine;
+if (scalar(@RESULT) eq 0)
+{
+    $nbLine=0;
+}
+else
+{
+    my $LastLine=$RESULT[scalar(@RESULT)-1];
+    my @ULast=split("Number of Cover", $LastLine);
+    if (scalar(@ULast) eq 2)
+    {
+	$nbLine=scalar(@RESULT)-3;
+    }
+    else
+    {
+	$nbLine=scalar(@RESULT);
+    }
+}
+
+my $nbCase=0;
+my @ListEmpty=(-1);
+for (my $iLine=0; $iLine<$nbLine; $iLine++)
+{
+    my $eLine=$RESULT[$iLine];
+    if ($eLine eq "\n")
+    {
+	$nbCase++;
+	$ListEmpty[scalar(@ListEmpty)]=$iLine;
+    }
+}
+
+
+open(OUT, "> ".$FileOUT);
+print OUT "return [";
+for (my $iCase=0; $iCase<$nbCase; $iCase++)
+{
+    if ($iCase > 0)
+    {
+	print OUT ",\n\n";
+    }
+    print OUT "[";
+    for (my $iLine=$ListEmpty[$iCase]+1; $iLine<$ListEmpty[$iCase+1]; $iLine++)
+    {
+	$_=$RESULT[$iLine];
+	s/\n//;
+	my $PreLine=$_;
+	if ($iLine > $ListEmpty[$iCase]+1)
+	{
+	    print OUT ",\n";
+	}
+	my @U=split("", $PreLine);
+	my $eLine="";
+	for (my $iU=0; $iU<scalar(@U); $iU++)
+	{
+	    my $eChar=$U[$iU];
+	    if ($eChar ne "[" && $eChar ne "]")
+	    {
+		$eLine=$eLine.$eChar;
+	    }
+	}
+	print OUT "[";
+	my @V=split(" ", $eLine);
+	my $nbEnt=scalar(@V);
+	for (my $iEnt=0; $iEnt<$nbEnt; $iEnt++)
+	{
+	    if ($iEnt > 0)
+	    {
+		print OUT ",";
+	    }
+	    print OUT $V[$iEnt];
+	}
+	print OUT "]";
+    }
+    print OUT "]";
+}
+print OUT "];\n";
+close(OUT);
+
+

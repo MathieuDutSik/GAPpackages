@@ -1,0 +1,11 @@
+#TheGramMat:=ClassicalSporadicLattices("E6");
+#TheGramMat:=ClassicalSporadicLattices("E7");
+TheGramMat:=ClassicalSporadicLattices("ER7");
+
+ListFunc:=DelaunayComputationStandardFunctions(TheGramMat);
+EXT:=ListFunc.GetVoronoiVertices();
+GRPext:=__TheCore_Automorphism(EXT);
+Print("|EXT|=", Length(EXT), " |GRPext|=", Order(GRPext), "\n");
+
+ListBeltInfoPolytope:=BeltComputation(EXT, GRPext);
+

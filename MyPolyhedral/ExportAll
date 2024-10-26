@@ -1,0 +1,14 @@
+#!/usr/bin/perl -w
+
+my @ListProjectName=("cohoperfect", "polyhedral");
+my $nbProject=scalar(@ListProjectName);
+
+for (my $iProj=0; $iProj<$nbProject; $iProj++)
+{
+    my $ProjectName=$ListProjectName[$iProj];
+    my $order="./ExportSingle ".$ProjectName;
+    print $order."\n";
+    if (system($order) != 0) {
+	die "Error in ExportSingle";
+    }
+}

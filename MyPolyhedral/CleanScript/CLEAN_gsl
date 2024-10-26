@@ -1,0 +1,3 @@
+DoClean("ExternalProg/gsl-1.16");
+print "\nCLEANED gsl-1.16\n\n";
+

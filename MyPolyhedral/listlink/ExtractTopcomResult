@@ -1,0 +1,45 @@
+#!/usr/bin/perl -w
+
+$uu=scalar(@ARGV);
+
+if ($uu ne 2)
+{
+    print "ExtractTopcomResult is used as\n";
+    print "ExtractTopcomResult [FileIn] [FileOut]\n";
+    die
+}
+
+$FileIn=$ARGV[0];
+$FileOut=$ARGV[1];
+
+
+open(INFILE, $FileIn);
+@RESULT=<INFILE>;
+close(INFILE);
+
+open(OUT, "> ".$FileOut);
+print OUT "return [";
+
+$nbLine=scalar(@RESULT);
+for ($iLine=1; $iLine<=$nbLine; $iLine++)
+{
+    $_=$RESULT[$iLine-1];
+    s/\n//;
+    $strA=$_;
+    @U=split(":=", $strA);
+    $strB=$U[1];
+    @U=split(":", $strB);
+    $strC=$U[1];
+    @U=split("]", $strC);
+    $strD=$U[0];
+    $_=$strD;
+    s/{/[/g;
+    s/}/]/g;
+    $strE=$_;
+    if ($iLine > 1)
+    {
+	print OUT ",\n";
+    }
+    print OUT $strE;
+}
+print OUT "];\n";

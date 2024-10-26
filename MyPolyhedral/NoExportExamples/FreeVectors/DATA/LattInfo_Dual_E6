@@ -1,0 +1,6 @@
+return rec(
+  MaxRad := 2,
+  det := 243,
+  min := 4,
+  n := 6,
+  name := "Dual_E6" );

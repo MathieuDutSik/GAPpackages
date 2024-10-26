@@ -1,0 +1,3 @@
+DoClean("ExternalProg/lp_solve_5.5");
+print "\nCLEANED lp_solve\n\n";
+

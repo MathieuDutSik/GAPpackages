@@ -1,0 +1,27 @@
+#!/usr/bin/perl -w
+$eProg="ExternalProg/glpk-4.61/examples/glpsol";
+$test=0;
+if (-e $eProg)
+{$test=1;}
+if ($test eq 0)
+{
+    $order="(cd ExternalProg/glpk-4.61 && ./configure && make)";
+    print $order."\n";
+    if (system($order) != 0) {
+	die "Error when compiling\n";
+    }
+}
+if (!(-e $eProg))
+{
+    print "Compilation of ".$eProg." failed\n";
+    exit -1;
+}
+print "\nCOMPILED zsolve\n\n";
+
+$order="(cd ExternalProg/Binaries && ln -sf ../glpk-4.61/examples/glpsol)";
+print $order."\n";
+if (system($order) != 0) {
+    die "Error when linking\n";
+}
+
+exit 0;

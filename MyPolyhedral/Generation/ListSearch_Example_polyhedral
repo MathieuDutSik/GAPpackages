@@ -1,0 +1,5800 @@
+ListNames:=["G6", "G7", "ER7"];
+
+
+ListResult:=[];
+for eName in ListNames
+do
+  EXT:=ClassicalExtremeDelaunayPolytopes(eName);
+  GRP:=LinPolytope_Automorphism(EXT);
+  TheVol:=PolytopeVolumeRecursive(EXT, GRP);
+  Add(ListResult, [eName, TheVol]);
+od;
+Print("ListResult=", ListResult, "\n");
+############################
+for n in [3..9]
+do
+  EXT:=List(BuildSet(n,[0,1]), x->Concatenation([1],x));
+  GRP:=LinPolytope_Automorphism(EXT);
+  TheVol:=PolytopeVolumeRecursive(EXT, GRP);
+  Print("n=", n, "  TheVol=", TheVol, "\n");
+od;
+############################
+GramMat:=ClassicalSporadicLattices("E8");
+
+GRP:=ArithmeticAutomorphismGroup([GramMat]);
+TheMod:=2;
+ListOrb:=GetSublattices(GramMat, GRP, TheMod);
+GramMat1:=ListOrb[1].GramMat;
+GramMat2:=ListOrb[2].GramMat;
+test:=ArithmeticIsomorphism([GramMat1], [GramMat2]);
+
+
+GRP1:=ArithmeticAutomorphismGroup([GramMat1]);
+GRP2:=ArithmeticAutomorphismGroup([GramMat2]);
+
+
+############################
+TheChoice:=3;
+
+if TheChoice=1 then
+  GramMat:=ClassicalSporadicLattices("E8");
+  FileSave:="DATA/SubLattE8";
+elif TheChoice=2 then
+  GramMat:=ClassicalSporadicLattices("BW16");
+  FileSave:="DATA/SubLattBW16";
+elif TheChoice=3 then
+  GramMat:=LatticeDn(20).TheGram;
+  FileSave:="DATA/SubLattD20";
+elif TheChoice=4 then
+  GramMat:=LatticeDn(21).TheGram;
+  FileSave:="DATA/SubLattD21";
+else
+  Print("Please put what you have in mind here\n");
+  Print(NullMat(5));
+fi;
+
+GRP:=ArithmeticAutomorphismGroup([GramMat]);
+Print("We have the group\n");
+TheMod:=3;
+ListOrb:=GetSublattices(GramMat, GRP, TheMod);
+SaveDataToFile(FileSave, ListOrb);
+############################
+GetHyperplaneArrangement_An:=function(n)
+    local ListVect, i, j, eVect, eBasis, ListVectRed;
+    ListVect:=[];
+    for i in [1..n+1]
+    do
+        for j in [i+1..n+1]
+        do
+            eVect:=ListWithIdenticalEntries(n+1,0);
+            eVect[i]:=1;
+            eVect[j]:=-1;
+            Add(ListVect, eVect);
+        od;
+    od;
+    #
+    eBasis:=RowReduction(ListVect).EXT;
+    ListVectRed:=List(ListVect, x->SolutionMat(eBasis, x));
+    return ListVectRed;
+end;
+
+
+n:=7;
+eComplex:=GetHyperplaneArrangement_An(n);
+ListFace:=EnumerationHyperplaneRegion(eComplex);
+
+    
+############################
+n:=4;
+
+eRec:=LatticeDn(n);
+TheGram:=eRec.GramMat;
+
+SHV:=ShortestVectorDutourVersion(TheGram);
+nbV:=Length(SHV)/2;
+ListVect:=List([1..nbV], x->SHV[2*x]);
+
+
+eCase:=SHORT_CreateECaseForPolyhedralDecomposition(ListVect);
+
+eInfo:=POLYDEC_EnumerationLtype(eCase);
+
+############################
+#EXT:=ClassicalExtremeDelaunayPolytopes("G6");
+EXT:=ClassicalExtremeDelaunayPolytopes("G7");
+#EXT:=ClassicalExtremeDelaunayPolytopes([7,1]);
+
+GRP:=__TheCore_Automorphism(EXT);
+
+
+LevSearch:=RankMat(EXT);
+TheIncomp:=IncompleteSkeletonSearch(GRP, EXT, [], LevSearch);
+#TheBound:=BoundaryOperatorsCellularDecompositionPolytope(GRP, EXT, LevSearch-2);
+############################
+p1:=[
+[2,2,2],
+[2,2,-2],
+[2,-2,2],
+[2,-2,-2],
+[-2,2,2],
+[-2,2,-2],
+[-2,-2,2],
+[-2,-2,-2]];
+
+p2:=[
+[2,1,1],
+[2,1,-3],
+[2,-3,1],
+[2,-3,-3],
+[-2,2,2],
+[-2,2,-2],
+[-2,-2,2],
+[-2,-2,-2]];
+
+p3:=[
+[2,1,1],
+[2,1,-1],
+[2,-1,1],
+[2,-1,-1],
+[-2,2,2],
+[-2,2,-2],
+[-2,-2,2],
+[-2,-2,-2]];
+
+p4:=[
+[1,2,2],
+[2,2,-2],
+[2,-2,2],
+[3,-2,-2],
+[-2,2,2],
+[-2,2,-2],
+[-2,-2,2],
+[-2,-2,-2]];
+
+
+P1:=List(p1, x->Concatenation([1],x));
+P2:=List(p2, x->Concatenation([1],x));
+P3:=List(p3, x->Concatenation([1],x));
+P4:=List(p4, x->Concatenation([1],x));
+
+GetPartition:=function(ListP, eFCT)
+  local nbP, GRA, i, j;
+  nbP:=Length(ListP);
+  GRA:=NullGraph(Group(()), nbP);
+  for i in [1..nbP-1]
+  do
+    for j in [i+1..nbP]
+    do
+      if eFCT(ListP[i], ListP[j])<>false then
+        AddEdgeOrbit(GRA, [i,j]);
+        AddEdgeOrbit(GRA, [j,i]);
+      fi;
+    od;
+  od;
+  return ConnectedComponents(GRA);
+end;
+ListP:=[P1, P2, P3, P4];
+Partition_Lin:=GetPartition(ListP, LinPolytope_Isomorphism);
+Partition_Proj:=GetPartition(ListP, ProjPolytope_Isomorphism);
+Partition_Comb:=GetPartition(ListP, CombPolytope_Isomorphism);
+############################
+ComputeAllGroupInformations:=function(EXT)
+  local EXTred, CombGroupFile, GRPcomb, LinGroupFile, GRPlin, ProjGroupFile, GRPproj, SummaryGroupFile, test13, test12, test23, test12b, test23b, eRecDecomp, eCase;
+  EXTred:=ColumnReduction(EXT).EXT;
+  #
+  GRPcomb:=CombPolytope_Automorphism(EXTred);
+  #
+  GRPlin:=LinPolytope_Automorphism(EXTred);
+  #
+  GRPproj:=ProjPolytope_Automorphism(EXTred);
+  #
+  test13:=GRPlin=GRPcomb;
+  test12:=GRPlin=GRPproj;
+  test23:=GRPproj=GRPcomb;
+  eCase:=rec(GRPcomb:=GRPcomb, GRPlin:=GRPlin,
+             GRPproj:=GRPproj, test12:=test12, 
+             test13:=test13, test23:=test23, 
+             EXTred:=EXTred);
+  return eCase;
+end;
+
+
+FilePolytope:="./ListPolytopePaffenholz";
+TheTotalList:=ReadAsFunction(FilePolytope)();
+Print("|TheTotalList|=", Length(TheTotalList), "\n");
+
+ListCases:=[];
+nbPolytope:=Length(TheTotalList);
+ListNames:=[];
+ListTest12:=[];
+ListTest13:=[];
+ListTest23:=[];
+for iPolytope in [1..nbPolytope]
+do
+  Print("iPolytope=", iPolytope, "/", nbPolytope, "\n");
+  eRec:=TheTotalList[iPolytope];
+  EXT:=eRec.EXT;
+  if Length(EXT)<>Length(Set(EXT)) then
+    Print("We have problem\n");
+    Print(NullMat(5));
+  fi;
+  eCase:=ComputeAllGroupInformations(EXT);
+  Add(ListCases, eCase);
+  Add(ListTest12, eCase.test12);
+  Add(ListTest13, eCase.test13);
+  Add(ListTest23, eCase.test23);
+  Add(ListNames, eRec.eFile);
+od;
+nbCase:=Length(ListCases);
+############################
+eRec:=CutPolytope(6);
+EXT:=eRec.EXT;
+GRP:=LinPolytope_Automorphism(EXT);
+FAC:=DualDescription(EXT);
+
+TheResult:=CreateK_skeletton(GRP, EXT, FAC);
+############################
+n:=5;
+ListCosetsRed:=[];
+H:=ListWithIdenticalEntries(n,0);
+Add(ListCosetsRed, ShallowCopy(H));
+
+H[1]:=1/3;
+Add(ListCosetsRed, ShallowCopy(H));
+
+ListCosets:=List(ListCosetsRed, x->Concatenation([1], x));
+
+
+ListMat:=[];
+for i in [1..n]
+do
+  TheMat:=NullMat(n,n);
+  TheMat[i][i]:=1;
+  Add(ListMat, TheMat);
+od;
+for i in [1..n-1]
+do
+  for j in [i+1..n]
+  do
+    TheMat:=NullMat(n,n);
+    TheMat[i][j]:=1;
+    TheMat[j][i]:=1;
+    Add(ListMat, TheMat);
+  od;
+od;
+eCase:=rec(SuperMat:=IdentityMat(n),
+           Basis:=ListMat,
+           TheGroup:=Group([-IdentityMat(n)]), 
+           IsBravaisSpace:=true, 
+           ListCosets:=ListCosets);
+LFC:=Periodic_EnumerationProcedureLtype(eCase);
+
+ThePrefix:="./ListCOOP/";
+Exec("mkdir -p ", ThePrefix);
+
+Periodic_CheckCoherencyDelaunayDecomposition:=function(DelCO, GramMat)
+  local n, eDelaunay, EXT, CP, Vcent, reply, ListEXT;
+  n:=Length(GramMat);
+  for eDelaunay in DelCO
+  do
+    EXT:=eDelaunay.EXT;
+    CP:=CenterRadiusDelaunayPolytopeGeneral(GramMat, EXT);
+    Vcent:=CP.Center{[2..n+1]};
+    reply:=Periodic_ClosestVector(GramMat, ListCosetsRed, Vcent);
+    if reply.TheNorm>CP.SquareRadius then
+      Print("This code defies all expectation of errors,\n");
+      Print("it is simply wonderfully wrong !! \n");
+      Print(NullMat(5));
+    fi;
+    if reply.TheNorm<CP.SquareRadius then
+      Print("We find a closest vector than the one supposed to be,\n");
+      Print("i.e., a point inside of the empty sphere\n");
+      Print(NullMat(5));
+    fi;
+    ListEXT:=List(reply.ListVect, x->Concatenation([1], x));
+    if Set(ListEXT)<>Set(EXT) then
+      Print("We find some more point on the empty sphere,\n");
+      Print("this is not allowed\n");
+      Print(NullMat(5));
+    fi;
+  od;
+end;
+
+
+
+MyOutputOfLtype:=function(FileName, OneLtype, eCase)
+  local n, DimSpace, FAC1, EXT2, FAC2, FAC1red, EXT2red, TheSum, eExt, GramMat, output, nbDelaunay, iDelaunay, eDelaunay;
+  n:=Length(eCase.Basis[1]);
+  DimSpace:=Length(eCase.Basis);
+#  Print("n=", n, " DimSpace=", DimSpace, "\n");
+  FAC1:=WriteFaceInequalities(OneLtype, eCase);
+  FAC2:=EliminationByRedundancyDualDescription(FAC1.ListInequalities);
+  FAC1red:=List(FAC1.ListInequalities, x->x{[2..DimSpace+1]});
+  EXT2red:=DualDescription(FAC1red);
+  EXT2:=List(EXT2red, x->Concatenation([0],x));
+  TheSum:=[];
+  for eExt in EXT2
+  do
+    TheSum:=TheSum+eExt;
+  od;
+  GramMat:=FuncComputeMat(eCase.Basis, TheSum);
+  #
+  output:=OutputTextFile(FileName, true);
+  AppendTo(output, n, "\n\n");
+  #
+  nbDelaunay:=Length(OneLtype);
+  AppendTo(output, "Number of Delaunay polytopes=", nbDelaunay, "\n");
+  for iDelaunay in [1..nbDelaunay]
+  do
+    eDelaunay:=OneLtype[iDelaunay];
+    AppendTo(output, "Delaunay number ", iDelaunay, "\n");
+    WriteMatrix(output, eDelaunay.EXT);
+  od;
+  #
+  AppendTo(output, "Gram Matrix=\n");
+  WriteMatrix(output, GramMat);
+  #
+  CloseStream(output);
+end;
+
+
+
+
+nbLtypes:=LFC.LtypeDatabase.FuncGetNumberLtype();
+for iLtype in [1..nbLtypes]
+do
+  Print("iLtype=", iLtype, " / ", nbLtypes, "\n");
+  eLtype:=LFC.LtypeDatabase.FuncGetLtype(iLtype);
+  FileName:=Concatenation(ThePrefix, "Input", String(iLtype));
+  TheGramMat:=LFC.LtypeDatabase.FuncGetDiscInfo(iLtype).GramMat;
+  RemoveFileIfExist(FileName);
+  OutputToCOOP_PACOOP(FileName, eLtype, eCase, 100, "1e-5", "coop", 1);
+  Periodic_CheckCoherencyDelaunayDecomposition(eLtype, TheGramMat);
+  #
+  FileNameInfo:=Concatenation(ThePrefix, "MoreInfo", String(iLtype));
+  RemoveFileIfExist(FileNameInfo);
+  MyOutputOfLtype(FileNameInfo, eLtype, eCase);
+od;
+############################
+eRec:=CutPolytope(7);
+GRP:=LinPolytope_Automorphism(eRec.EXT);
+ListOrb:=DualDescriptionStandard(eRec.EXT, GRP); 
+############################
+Read("FctPaper.g");
+ListCases:=[rec(DoSL:=false, n:=3, d:=-3)];
+
+for eCase in ListCases
+do
+  TreatSingleCase(eCase);
+od;
+############################
+Read("FctPaper.g");
+#Resulting files are in subdirectory Result
+ListCases:=[];
+#
+for d in [-3, -4, -7, -8, -11, -15, -19, -20, -23, -24]
+do
+  Add(ListCases, rec(DoSL:=false, n:=3, d:=d));
+od;
+#
+for d in [-3, -4]
+do
+  Add(ListCases, rec(DoSL:=false, n:=4, d:=d));
+od;
+
+for eCase in ListCases
+do
+  TreatSingleCase(eCase);
+od;
+############################
+GetFundamentalInfo:=function(d)
+  local res, IsCorrect, eSum, eProd, Dval, eQuot;
+  res:=d mod 4;
+  IsCorrect:=false;
+  eSum:=0;
+  eProd:=0;
+  if res=0 then
+    eSum:=0;
+    eProd:=-d/4;
+    Dval:=-eProd;
+    IsCorrect:=true;
+    if IsInt((Dval-1)/4)=true or IsInt(Dval/4)=true then
+      IsCorrect:=false;
+    fi;
+  fi;
+  if res=1 then
+    eQuot:=(1-d)/4;
+    eSum:=1;
+    eProd:=eQuot;
+    IsCorrect:=true;
+  fi;
+  return rec(eSum:=eSum, eProd:=eProd, IsCorrect:=IsCorrect);
+end;
+
+
+TreatSingleCase:=function(eCase)
+  local DoSL, n, d, eFundInfo, eSum, eProd, RecOption, PrintHeaderGroup, eStrGRP, SavePrefix, FileHomol, outputHomol, RecFct, eCaseGen2, outputTable, FileTable;
+  DoSL:=eCase.DoSL;
+  n:=eCase.n;
+  d:=eCase.d;
+  eFundInfo:=GetFundamentalInfo(d);
+  if eFundInfo.IsCorrect=false then
+    Error("The input is not correct for modulo reasons");
+  fi;
+  eSum:=eFundInfo.eSum;
+  eProd:=eFundInfo.eProd;
+  if CorrectnessImaginaryQuadratic(eSum, eProd)=false then
+    Error("The ring is not imaginary quadratic");
+  fi;
+  RecOption:=rec(DoBound:=true,
+                 DoSign:=true,
+                 DoMat:=true,
+                 DoElt:=true,
+                 DoRotationSubgroup:=true);
+  if DoSL then
+    eStrGRP:="SL";
+  else
+    eStrGRP:="GL";
+  fi;
+  PrintHeaderGroup:=function(output, d, n, eSum, eProd)
+    AppendTo(output, "d=", d, "\n");
+    AppendTo(output, "eSum=", eSum, "  eProd=", eProd, "\n");
+    AppendTo(output, "ring Z[alpha] with\n");
+    AppendTo(output, "alpha^2");
+    if eSum<>0 then
+      if eSum=1 then
+        AppendTo(output, " - alpha");
+      elif eSum=-1 then
+        AppendTo(output, " + alpha");
+      elif eSum > 0 then
+        AppendTo(output, " - ", eSum, "alpha");
+      elif eSum < 0 then
+        AppendTo(output, " + ", -eSum, "alpha");
+      fi;
+    fi;
+    if eProd < 0 then
+      AppendTo(output, " - ", -eProd);
+    else
+      AppendTo(output, " + ", eProd);
+    fi;
+    AppendTo(output, "=0\n");
+    AppendTo(output, "Arithmetic group G=", eStrGRP, String(n), "(Z[alpha])\n");
+  end;
+  Exec("mkdir -p Result");
+  SavePrefix:=Concatenation("Result/HomologyImagQuad", eStrGRP, String(n), "_", String(d), "_");
+  Print("d=", d, " eSum=", eSum, " eProd=", eProd, "\n");
+  eCaseGen2:=GetSpaceImaginaryQuadratic(n, eSum, eProd);
+  if DoSL then
+    eCaseGen2.TheFilter:=eCaseGen2.IsInSL;
+  else
+    eCaseGen2.TheFilter:=eCaseGen2.TrivialFilter;
+  fi;
+  RecFct:=DoAllComputations_Perf_Complex_Matrix_SNF(eCaseGen2, SavePrefix);
+  #
+  FileHomol:=Concatenation(SavePrefix, "homol");
+  RemoveFileIfExist(FileHomol);
+  outputHomol:=OutputTextFile(FileHomol, true);
+  AppendTo(outputHomol, "n=", n, "\n");
+  AppendTo(outputHomol, "\n\n\n");
+  PrintHeaderGroup(outputHomol, d, n, eSum, eProd);
+  RecFct.PrintResult(outputHomol);
+  AppendTo(outputHomol, "\n");
+  CloseStream(outputHomol);
+  #
+  FileTable:=Concatenation(SavePrefix, "table_pre.tex");
+  RemoveFileIfExist(FileTable);
+  outputTable:=OutputTextFile(FileTable, true);
+  RecFct.PrintLatexResult(outputTable);
+  CloseStream(outputTable);
+  LATEX_Compilation(FileTable);
+  #
+end;
+############################
+ListFile:=[
+"SingleSHV_10_15",
+"SingleSHV_12_13",
+"SingleSHV_9_6",
+"SingleSHV_dim9_rank12",
+"SingleSHV_11_17",
+"SingleSHV_12_23",
+"SingleSHV_dim11_rnk11_det12"];
+
+
+ListResult:=[];
+for eFile in ListFile
+do
+  SHV:=ReadAsFunction(eFile)();
+  RecTest:=SHORT_TestRealizabilityShortestFamily(SHV);
+  eResult:=rec(SHV:=SHV, test:=RecTest.reply, testCone:=RecTest.replyCone);
+  Add(ListResult, eResult);
+od;
+############################
+# List of minimal configuration of vectors in dimension 8:
+ListSHV:=
+[ [ [ 1, 0, 0, 0, 0, 0, 0, 0 ], [ 0, 1, 0, 0, 0, 0, 0, 0 ], [ 0, 0, 1, 0, 0, 0, 0, 0 ], [ 0, 0, 0, 1, 0, 0, 0, 0 ], 
+      [ 0, 0, 0, 0, 1, 0, 0, 0 ], [ 0, 0, 0, 0, 0, 1, 0, 0 ], [ 0, 0, 0, 0, 0, 0, 1, 0 ], [ 0, 0, 0, 0, 0, 0, 0, 1 ] ], 
+  [ [ -1, -1, -1, 1, -1, 0, 0, 0 ], [ 1, 0, 0, 0, 0, 0, 0, 0 ], [ 0, 1, 0, 0, 0, 0, 0, 0 ], [ 0, 0, 1, 0, 0, 0, 0, 0 ], 
+      [ 0, 0, 0, 1, 1, 0, 0, 0 ], [ 0, 0, 0, 0, 0, 1, 0, 0 ], [ 0, 0, 0, 0, 0, 0, 1, 0 ], [ 0, 0, 0, 0, 0, 0, 0, 1 ] ], 
+  [ [ -1, -1, -1, -1, 1, -1, 0, 0 ], [ 1, 0, 0, 0, 0, 0, 0, 0 ], [ 0, 1, 0, 0, 0, 0, 0, 0 ], [ 0, 0, 1, 0, 0, 0, 0, 0 ], 
+      [ 0, 0, 0, 1, 0, 0, 0, 0 ], [ 0, 0, 0, 0, 1, 1, 0, 0 ], [ 0, 0, 0, 0, 0, 0, 1, 0 ], [ 0, 0, 0, 0, 0, 0, 0, 1 ] ], 
+  [ [ -1, -1, -1, -1, -1, 1, -1, 0 ], [ 1, 0, 0, 0, 0, 0, 0, 0 ], [ 0, 1, 0, 0, 0, 0, 0, 0 ], [ 0, 0, 1, 0, 0, 0, 0, 0 ], 
+      [ 0, 0, 0, 1, 0, 0, 0, 0 ], [ 0, 0, 0, 0, 1, 0, 0, 0 ], [ 0, 0, 0, 0, 0, 1, 1, 0 ], [ 0, 0, 0, 0, 0, 0, 0, 1 ] ], 
+  [ [ -1, 3, -1, -1, -1, -1, -1, 0 ], [ 1, 0, 0, 0, 0, 0, 0, 0 ], [ 0, 0, 1, 0, 0, 0, 0, 0 ], [ 0, 0, 0, 1, 0, 0, 0, 0 ], 
+      [ 0, 0, 0, 0, 1, 0, 0, 0 ], [ 0, 0, 0, 0, 0, 1, 0, 0 ], [ 0, 0, 0, 0, 0, 0, 1, 0 ], [ 0, 0, 0, 0, 0, 0, 0, 1 ] ], 
+  [ [ -1, -1, 0, 0, 0, -1, -1, 0 ], [ 1, 0, 0, 0, 0, 0, 0, 0 ], [ 0, 1, 0, 0, 0, 0, 0, 0 ], [ 0, 0, 1, 0, -1, 1, 0, 0 ], 
+      [ 0, 0, 1, 0, -1, 0, 1, 0 ], [ 0, 0, 1, 1, 0, 0, 0, 0 ], [ 0, 0, 0, -1, 1, 0, 0, 0 ], [ 0, 0, 0, 0, 0, 0, 0, 1 ] ], 
+  [ [ -1, -1, -1, -1, -1, -1, 1, -1 ], [ 1, 0, 0, 0, 0, 0, 0, 0 ], [ 0, 1, 0, 0, 0, 0, 0, 0 ], [ 0, 0, 1, 0, 0, 0, 0, 0 ], 
+      [ 0, 0, 0, 1, 0, 0, 0, 0 ], [ 0, 0, 0, 0, 1, 0, 0, 0 ], [ 0, 0, 0, 0, 0, 1, 0, 0 ], [ 0, 0, 0, 0, 0, 0, 1, 1 ] ], 
+  [ [ -1, -1, 3, -1, -1, -1, -1, -1 ], [ 1, 0, 0, 0, 0, 0, 0, 0 ], [ 0, 1, 0, 0, 0, 0, 0, 0 ], [ 0, 0, 0, 1, 0, 0, 0, 0 ], 
+      [ 0, 0, 0, 0, 1, 0, 0, 0 ], [ 0, 0, 0, 0, 0, 1, 0, 0 ], [ 0, 0, 0, 0, 0, 0, 1, 0 ], [ 0, 0, 0, 0, 0, 0, 0, 1 ] ], 
+  [ [ -1, -1, -1, -1, -1, 0, 0, 0 ], [ 1, 0, 0, 0, 0, 0, 0, 0 ], [ 0, 1, 0, 0, 0, 0, 0, 0 ], [ 0, 0, 1, 0, 0, 0, 0, 0 ], 
+      [ 0, 0, 0, -1, 1, 0, 0, 0 ], [ 0, 0, 0, 0, 0, 1, 0, 0 ], [ 0, 0, 0, 0, 0, 0, 1, 1 ], [ 0, 0, 0, 1, 0, -1, 1, -1 ] ], 
+  [ [ -1, -1, -1, 0, 0, 0, -1, -1 ], [ 1, 0, 0, 0, 0, 0, 0, 0 ], [ 0, 1, 0, 0, 0, 0, 0, 0 ], [ 0, 0, 1, 0, 0, 0, 0, 0 ], 
+      [ 0, 0, 0, 1, 0, -1, 1, 0 ], [ 0, 0, 0, 1, 0, -1, 0, 1 ], [ 0, 0, 0, 1, 1, 0, 0, 0 ], [ 0, 0, 0, 0, -1, 1, 0, 0 ] ], 
+  [ [ 2, -2, -1, -1, -1, -1, -1, -1 ], [ 0, 0, 1, 0, 0, 0, 0, 0 ], [ 0, 0, 0, 1, 0, 0, 0, 0 ], [ 0, 0, 0, 0, 1, 0, 0, 0 ], 
+      [ 0, 0, 0, 0, 0, 1, 0, 0 ], [ 0, 0, 0, 0, 0, 0, 1, 0 ], [ 0, 0, 0, 0, 0, 0, 0, 1 ], [ 1, 1, 0, 0, 0, 0, 0, 0 ] ], 
+  [ [ 1, -1, -1, 0, -1, -1, 0, 0 ], [ 0, 1, 0, 0, 0, 0, 0, 0 ], [ 0, 0, 1, 0, 0, 0, 0, 0 ], [ 0, 0, 0, -1, 1, 0, 0, 0 ], 
+      [ 0, 0, 0, -1, 0, 1, 0, 0 ], [ 1, 0, 0, 0, 0, 0, 1, 0 ], [ 1, 0, 0, 0, 0, 0, 0, 1 ], [ 0, 0, 0, 1, 0, 0, -1, -1 ] ], 
+  [ [ -1, -1, 1, 0, 0, 0, 1, 0 ], [ 1, 0, 0, 0, 0, 0, 0, 0 ], [ 0, 1, 0, 0, 0, 0, 0, 0 ], [ 0, 0, 0, -1, 0, 0, -1, 0 ], 
+      [ 0, 0, 1, 1, 0, 0, 0, 0 ], [ 0, 0, 0, 0, 1, 0, 0, 0 ], [ 0, 0, 0, 0, 0, 1, 0, 1 ], [ 0, 0, 1, 0, -1, 1, 1, -1 ] ]
+];
+  RetListSHV:=[];
+  for eSHV in ListSHV
+  do
+    RecTest:=SHORT_TestRealizabilityCentralCone(eSHV);
+    if RecTest.reply then
+      Add(RetListSHV, eSHV);
+    fi;
+  od;
+  Print("|ListSHV|=", Length(ListSHV), " |RetListSHV|=", Length(RetListSHV), "\n");
+############################
+# You need the plangraph package for this example ....
+
+Read("BuildResolution.g");
+n:=4;
+TheRES:=GetEnumerationPerfectForm(n);
+IsInSmallGroup:=function(eBigMat)
+  local ePrevMat;
+  ePrevMat:=RevTRS_SymmRep(n, eBigMat);
+  return DeterminantMat(ePrevMat)=1;
+end;
+SplittingInfo:=rec(TheBigGroup:=TheRES.TheGroup, IsInSmallGroup:=IsInSmallGroup);
+
+DoGroupHomology:=true;
+
+Print("TheTessel1:\n");
+TheTessel1:=TheRES.TheTesselation;
+PrintOrbitwiseTesselationInformation(TheTessel1);
+Print("\n\n");
+#
+Print("TheTesselSL1:\n");
+TheTesselSL1:=MappingToSubgroupPolyhedralTesselation(TheTessel1,SplittingInfo);
+PrintOrbitwiseTesselationInformation(TheTesselSL1);
+Print("\n\n");
+#
+Print("TheTesselSL2:\n");
+TheTesselSL2:=DomainSplitting(TheTesselSL1, [1,2]);
+PrintOrbitwiseTesselationInformation(TheTesselSL2);
+CheckTilingFaceToFace(TheTesselSL2);
+Print("\n\n");
+#
+Print("TheTesselSL2bis:\n");
+ListFusion:=[[1, 1], [3,1], [2,1]];
+TheTesselSL2bis:=MergeFacetsOrbitwiseTesselation(TheTesselSL2, ListFusion);
+PrintOrbitwiseTesselationInformation(TheTesselSL2bis);
+CheckTilingFaceToFace(TheTesselSL2bis);
+Print("\n\n");
+
+GetResolutionHacked:=function(GRP, kLevel)
+  local phi, TheResolA5, TheResolS4, TheResol288, TheResolA4, TheResolS3, TheInfoS3, TheInfoC2, TheResolC2, ResolC2_S3_S3, ResolC2_C2, TheResolS3_S3;
+  phi:=IsomorphismGroups(GRP, AlternatingGroup(5));
+  if phi<>fail then
+    TheResolA5:=GetResolutionA5();
+    return TheResolutionMoveToOtherGroup(TheResolA5, GRP, kLevel);
+  fi;
+  phi:=IsomorphismGroups(GRP, SymmetricGroup(4));
+  if phi<>fail then
+    TheResolS4:=GetResolutionS4();
+    return TheResolutionMoveToOtherGroup(TheResolS4, GRP, kLevel);
+  fi;
+  phi:=IsomorphismGroups(GRP, AlternatingGroup(4));
+  if phi<>fail then
+    TheResolA4:=GetResolutionA4();
+    return TheResolutionMoveToOtherGroup(TheResolA4, GRP, kLevel);
+  fi;
+  phi:=IsomorphismGroups(GRP, SymmetricGroup(3));
+  if phi<>fail then
+    TheInfoS3:=GetPeriodicForS3();
+    TheResolS3:=ResolutionPeriodic(TheInfoS3);
+    return TheResolutionMoveToOtherGroup(TheResolS3, GRP, kLevel);
+  fi;
+  phi:=IsomorphismGroups(GRP, SmallGroup(72,46));
+  if phi<>fail then
+    TheInfoS3:=GetPeriodicForS3();
+    TheResolS3:=ResolutionPeriodic(TheInfoS3);
+    TheInfoC2:=InformationResolutionCyclic(2);
+    TheResolC2:=ResolutionPeriodic(TheInfoC2);
+    ResolC2_S3_S3:=ResolutionsDirectProduct([TheResolC2, TheResolS3, TheResolS3]);
+    return TheResolutionMoveToOtherGroup(ResolC2_S3_S3, GRP, kLevel);
+  fi;
+  phi:=IsomorphismGroups(GRP, SmallGroup(36,10));
+  if phi<>fail then
+    TheInfoS3:=GetPeriodicForS3();
+    TheResolS3:=ResolutionPeriodic(TheInfoS3);
+    TheResolS3_S3:=ResolutionsDirectProduct([TheResolS3, TheResolS3]);
+    return TheResolutionMoveToOtherGroup(TheResolS3_S3, GRP, kLevel);
+  fi;
+  phi:=IsomorphismGroups(GRP, SmallGroup(4,2));
+  if phi<>fail then
+    TheInfoC2:=InformationResolutionCyclic(2);
+    TheResolC2:=ResolutionPeriodic(TheInfoC2);
+    ResolC2_C2:=ResolutionsDirectProduct([TheResolC2, TheResolC2]);
+    return TheResolutionMoveToOtherGroup(ResolC2_C2, GRP, kLevel);
+  fi;
+  phi:=IsomorphismGroups(GRP, SmallGroup(288, 1026));
+  if phi<>fail then
+    TheResol288:=GetResolution288_1026();
+    return TheResolutionMoveToOtherGroup(TheResol288, GRP, kLevel);
+  fi;
+  return ResolutionComingFromHAP(GRP, kLevel);
+end;
+
+if DoGroupHomology=true then
+  #WorkingTesselation:=TheTesselSL1;
+  #WorkingTesselation:=TheTesselSL2;
+  WorkingTesselation:=TheTesselSL2bis;
+  #WorkingTesselation:=TheTesselSL3;
+  #WorkingTesselation:=TheTesselSL4;
+  #WorkingTesselation:=TheTesselSL5;
+  #
+  kHomology:=5;
+  kLevel:=kHomology+1;
+  RecOption:=rec(DoBound:=true, DoSign:=true, DoElt:=true, 
+                 DoRotationSubgroup:=true);
+  eRecIAI:="unset";
+  TheBoundDirect:=BoundaryOperatorsFromPolyhedralTesselation(WorkingTesselation, kLevel, TheRES.FuncDoRetraction, eRecIAI, RecOption);
+  TheBoundDirect.GetResolution:=GetResolutionHacked;
+  ListFuncResolution:=GroupHomologyByCellDecomposition(TheBoundDirect);
+  ListFuncResolution.Initialization(kLevel);
+  ListMatrices:=[];
+  for i in [1..kLevel]
+  do
+    Add(ListMatrices, ListFuncResolution.GetDifferentiation(i));
+  od;
+  TheHomologies:=GettingHomologies(ListMatrices);
+fi;
+
+
+############################
+TheResolutionMoveToOtherGroup:=function(TheResol, GRP, kLevel)
+  local phi, ListGens, ImageListGens, phiRev, IsInKernel, GetMatrix, DoHomotopy, GetDimension, kLevelEffect;
+  phi:=IsomorphismGroups(GRP, TheResol.GRP);
+  ListGens:=GeneratorsOfGroup(GRP);
+  ImageListGens:=List(ListGens, x->Image(phi, x));
+  phiRev:=GroupHomomorphismByImagesNC(TheResol.GRP, GRP, ImageListGens, ListGens);
+  kLevelEffect:=Maximum(kLevel, 1);
+  TheResol.Initialization(kLevelEffect);
+  IsInKernel:=function(jRank, TheVector)
+    local eVal, TheProd;
+    if jRank=0 then
+      eVal:=TheVector[1];
+      if Sum(eVal.ListVal)<>0 then
+        return false;
+      else
+        return true;
+      fi;
+    else
+      TheProd:=VectorMatrixGmoduleMultiplication(TheVector, GetMatrix(jRank));
+      return IsZeroGmoduleVector(TheProd);
+    fi;
+  end;
+  GetMatrix:=function(jRank)
+    local nbLine, nbCol, TheRetMat, eLine, eVect, eEnt, NewListElt, eRec, TheDiff;
+    TheDiff:=TheResol.GetDifferentiation(jRank);
+    nbLine:=TheDiff.nbLine;
+    nbCol:=TheDiff.nbCol;
+    TheRetMat:=[];
+    for eLine in TheDiff.TheMat
+    do
+      eVect:=[];
+      for eEnt in eLine
+      do
+        NewListElt:=List(eEnt.ListElt, x->Image(phiRev, x));
+        eRec:=rec(ListVal:=eEnt.ListVal, ListElt:=NewListElt);
+        Add(eVect, eRec);
+      od;
+      Add(TheRetMat, eVect);
+    od;
+    return rec(nbLine:=nbLine, nbCol:=nbCol, TheMat:=TheRetMat);
+  end;
+  DoHomotopy:=function(jRank, TheVector)
+    local TheNewVector, eEnt, NewListElt, eRec, ThePreImage, TheListReturn;
+    TheNewVector:=[];
+    for eEnt in TheVector
+    do
+      NewListElt:=List(eEnt.ListElt, x->Image(phi, x));
+      eRec:=rec(ListVal:=eEnt.ListVal, ListElt:=NewListElt);
+      Add(TheNewVector, eRec);
+    od;
+    ThePreImage:=TheResol.DoHomotopy(jRank, TheNewVector);
+    TheListReturn:=[];
+    for eEnt in ThePreImage
+    do
+      NewListElt:=List(eEnt.ListElt, x->Image(phiRev, x));
+      eRec:=rec(ListVal:=eEnt.ListVal, ListElt:=NewListElt);
+      Add(TheListReturn, eRec);
+    od;
+    return TheListReturn;
+  end;
+  GetDimension:=function(iRank)
+    if iRank=0 then
+      return Length(TheResol.GetDifferentiation(1).TheMat[1]);
+    fi;
+    return Length(TheResol.GetDifferentiation(iRank).TheMat);
+  end;
+  return rec(GRP:=GRP, 
+             GRPresol:=TheResol.GRP, 
+             GetMatrix:=GetMatrix,
+             GetDimension:=GetDimension, 
+             DoHomotopy:=DoHomotopy,
+             IsInKernel:=IsInKernel);
+end;
+
+
+
+TheResolutionMoveToOtherGroupTwisted:=function(TheResol, GRP, RotSubgroup, kLevel)
+  local phi, ListGens, ImageListGens, phiRev, IsInKernel, GetMatrix, DoHomotopy, GetDimension, kLevelEffect, TheSign;
+  phi:=IsomorphismGroups(GRP, TheResol.GRP);
+  ListGens:=GeneratorsOfGroup(GRP);
+  ImageListGens:=List(ListGens, x->Image(phi, x));
+  phiRev:=GroupHomomorphismByImagesNC(TheResol.GRP, GRP, ImageListGens, ListGens);
+  kLevelEffect:=Maximum(kLevel, 1);
+  TheResol.Initialization(kLevelEffect);
+  IsInKernel:=function(jRank, TheVector)
+    local eVal, TheProd;
+    if jRank=0 then
+      eVal:=TheVector[1];
+      if Sum(eVal.ListVal)<>0 then
+        return false;
+      else
+        return true;
+      fi;
+    else
+      TheProd:=VectorMatrixGmoduleMultiplication(TheVector, GetMatrix(jRank));
+      return IsZeroGmoduleVector(TheProd);
+    fi;
+  end;
+  TheSign:=function(eElt)
+    if eElt in RotSubgroup then
+      return 1;
+    else
+      return -1;
+    fi;
+  end;
+  GetMatrix:=function(jRank)
+    local nbLine, nbCol, TheRetMat, eLine, eVect, eEnt, NewListElt, eRec, TheDiff, NewListVal;
+    TheDiff:=TheResol.GetDifferentiation(jRank);
+    nbLine:=TheDiff.nbLine;
+    nbCol:=TheDiff.nbCol;
+    TheRetMat:=[];
+    for eLine in TheDiff.TheMat
+    do
+      eVect:=[];
+      for eEnt in eLine
+      do
+        NewListElt:=List(eEnt.ListElt, x->Image(phiRev, x));
+        NewListVal:=List([1..Length(eEnt.ListVal)], x->eEnt.ListVal[x]*TheSign(NewListElt[x]));
+        eRec:=rec(ListVal:=NewListVal, ListElt:=NewListElt);
+        Add(eVect, eRec);
+      od;
+      Add(TheRetMat, eVect);
+    od;
+    return rec(nbLine:=nbLine, nbCol:=nbCol, TheMat:=TheRetMat);
+  end;
+  DoHomotopy:=function(jRank, TheVector)
+    local TheNewVector, eEnt, NewListElt, eRec, ThePreImage, TheListReturn, NewListVal;
+    TheNewVector:=[];
+    for eEnt in TheVector
+    do
+      NewListElt:=List(eEnt.ListElt, x->Image(phi, x));
+      NewListVal:=List([1..Length(eEnt.ListElt)], x->eEnt.ListVal[x]*TheSign(eEnt.ListElt[x]));
+      eRec:=rec(ListVal:=NewListVal, ListElt:=NewListElt);
+      Add(TheNewVector, eRec);
+    od;
+    ThePreImage:=TheResol.DoHomotopy(jRank, TheNewVector);
+    TheListReturn:=[];
+    for eEnt in ThePreImage
+    do
+      NewListElt:=List(eEnt.ListElt, x->Image(phiRev, x));
+      NewListVal:=List([1..Length(eEnt.ListVal)], x->eEnt.ListVal[x]*TheSign(NewListElt[x]));
+      eRec:=rec(ListVal:=NewListVal, ListElt:=NewListElt);
+      Add(TheListReturn, eRec);
+    od;
+    return TheListReturn;
+  end;
+  GetDimension:=function(iRank)
+    if iRank=0 then
+      return Length(TheResol.GetDifferentiation(1).TheMat[1]);
+    fi;
+    return Length(TheResol.GetDifferentiation(iRank).TheMat);
+  end;
+  return rec(GRP:=GRP, 
+             GRPresol:=TheResol.GRP, 
+             GetMatrix:=GetMatrix,
+             GetDimension:=GetDimension, 
+             DoHomotopy:=DoHomotopy,
+             IsInKernel:=IsInKernel);
+end;
+
+
+
+
+
+GetPeriodicForS3:=function()
+  local GRP, TheMat1, TheMat2, TheMat3, TheMat4;
+  GRP:=SymmetricGroup(3);
+  TheMat1:=rec( nbLine := 2, nbCol := 1, 
+    TheMat := [ [ rec( ListVal := [ -1, 1 ], ListElt := [ (), (2,3) ] ) ], 
+                [ rec( ListVal := [ -1, 1 ], ListElt := [ (), (1,2) ] ) ] ] );
+  TheMat2:=rec( nbLine := 2, nbCol := 2, 
+  TheMat := [ [ rec( ListVal := [  ], ListElt := [  ] ), 
+          rec( ListVal := [ 1, 1 ], ListElt := [ (), (1,2) ] ) ], 
+      [ rec( ListVal := [ 1, -1, -1 ], ListElt := [ (2,3), (1,3,2), (1,2,3) ] 
+             ), 
+          rec( ListVal := [ 1, -1, 1 ], ListElt := [ (), (2,3), (1,2,3) ] ) ] 
+     ] );
+  TheMat3:=rec( nbLine := 1, nbCol := 2, 
+  TheMat := [ [ rec( ListVal := [ 1, 1, -1, -1 ], ListElt := 
+                [ (), (1,2), (1,3,2), (1,2,3) ] ), 
+          rec( ListVal := [ -1, 1, -1, 1 ], 
+              ListElt := [ (), (2,3), (1,2), (1,2,3) ] ) ] ] );
+  TheMat4:=rec( nbLine := 1, nbCol := 1, 
+    TheMat := [ [ rec( ListVal := [ 1, 1, 1, 1, 1, 1 ], 
+              ListElt := [ (), (2,3), (1,2), (1,3,2), (1,2,3), (1,3) ])]]);
+  return rec(GRP:=GRP, 
+             ListMatrix:=[TheMat1, TheMat2, TheMat3, TheMat4]);
+end;
+
+
+
+
+ResolutionPeriodic:=function(TheInfo)
+  local nbMatrix, GetDifferentiation, DoHomotopy, Initialization, GetDimension;
+  nbMatrix:=Length(TheInfo.ListMatrix);
+  GetDifferentiation:=function(iRank)
+    local TheRes;
+    TheRes:=iRank mod nbMatrix;
+    if TheRes=0 then
+      return TheInfo.ListMatrix[nbMatrix];
+    fi;
+    return TheInfo.ListMatrix[TheRes];
+  end;
+  Initialization:=function(kLevel)
+    # there is nothing to inialize here
+  end;
+  DoHomotopy:=function(kLevel, TheVect)
+    if kLevel>0 and IsZeroReducedGmoduleVector(VectorMatrixGmoduleMultiplication(TheVect, GetDifferentiation(kLevel)))=false then
+      Print("Error in homotopy calling for ResolutionPeriodic\n");
+      Print(NullMat(5));
+    fi;
+    return GMOD_SolutionMatrixMultiplication(TheVect, GetDifferentiation(kLevel+1), TheInfo.GRP);
+  end;
+  GetDimension:=function(kLevel)
+    if kLevel=0 then
+      return GetDifferentiation(1).nbCol;
+    fi;
+    return GetDifferentiation(kLevel).nbLine;
+  end;
+  return rec(GRP:=TheInfo.GRP, 
+             GetDifferentiation:=GetDifferentiation,
+             Initialization:=Initialization, 
+             GetDimension:=GetDimension, 
+             DoHomotopy:=DoHomotopy);
+end;
+
+
+InformationResolutionCyclic:=function(n)
+  local eGen, GRP, eElt, ListPower, i, TheMat1, TheMat2;
+  eGen:=PermList(Concatenation([2..n], [1]));
+  GRP:=Group([eGen]);
+  eElt:=();
+  ListPower:=[];
+  for i in [1..n]
+  do
+    Add(ListPower, eElt);
+    eElt:=eElt*eGen;
+  od;
+  TheMat1:=rec( nbLine := 1, nbCol := 1, 
+    TheMat := [[ rec(ListVal:=[1,-1], ListElt:=[(),eGen]) ]]);
+  TheMat2:=rec( nbLine := 1, nbCol := 1, 
+    TheMat := [[ rec(ListVal:=ListWithIdenticalEntries(n,1), ListElt:=ListPower)]]);
+  return rec(GRP:=GRP, 
+             ListMatrix:=[TheMat1, TheMat2]);
+end;
+
+
+
+
+
+#
+# this function is hand made for some special groups
+# acting on some planar graphs with following requirements:
+# --only one orbit of vertices, edge, face
+# --stabilizer of vertices, edge face are cyclic
+GetResolutionPlanGraph:=function(PL, TheCallG)
+  local GRA, kAvailable, ListFaces, ListFacesRed, LN, TheStabVert, TheStabEdge, TheStabFace, GetDifferentialZmatrix, GetImageGmodule, GetHomotopy, eAdj, ListEdgeMappings, ListVertMappings, ListFaceMappings, eRepr, eEdgeRed, GetDifferentiationDi, DoHomotopyD0, GetDifferentiationD0, GetDifferentiationD1, eVertCan, eEdgeCan, eFaceCan, eFaceRedCan, ListEdgesRed, ListEdgesSet, MatrixDifferentialEdgeVert, MatrixDifferentialVertFace, MatrixDifferentialFaceEdge, DoHomotopy, eDiffFace, eDiffVert, eDiffEdge, eRepr1, eGenVert, eGenEdge, eGenFace, eVect, GetDifferentiation, eMultiplicationVert1, eMultiplicationVert2, eMultiplicationEdge1, eMultiplicationEdge2, eMultiplicationFace1, eMultiplicationFace2, FuncSignature, nbFace, eEdge, nbVert, eRec, eDE, iVert, nbEdge, ListEltFace, ListValFace, GetIEdgeSign, ListEdges, eFaceRed, eFace, ListDifferentiation, ListStatus, Initialization, DoDifferentiationD0, ListElementStabVert, ListElementStabFace, eElt, DoDifferentiationDi, DoDifferentiation, IsInKernel, GetDimension;
+  GRA:=PlanGraphToGRAPE(PL);
+  nbVert:=Length(PL);
+  ListEdges:=__EdgeSet(PL);
+  ListEdgesRed:=List(ListEdges, x->[x[1][1], x[2][1]]);
+  ListEdgesSet:=List(ListEdgesRed, Set);
+  nbEdge:=Length(ListEdges);
+  ListFaces:=__FaceSet(PL);
+  ListFacesRed:=List(ListFaces, x->Set(List(x, y->y[1])));
+  nbFace:=Length(ListFaces);
+  eAdj:=Adjacency(GRA, 1)[1];
+  eVertCan:=1;
+  eEdgeCan:=[1,eAdj];
+  eFaceCan:=ListFaces[1];
+  eFaceRedCan:=ListFacesRed[1];
+  TheStabVert:=Stabilizer(TheCallG, eVertCan, OnPoints);
+  TheStabEdge:=Stabilizer(TheCallG, eEdgeCan, OnSets);
+  TheStabFace:=Stabilizer(TheCallG, eFaceRedCan, OnSets);
+  ListVertMappings:=[];
+  for iVert in [1..nbVert]
+  do
+    eRepr:=RepresentativeAction(TheCallG, eVertCan, iVert, OnPoints);
+    Add(ListVertMappings, eRepr);
+  od;
+  ListEdgeMappings:=[];
+  for eEdgeRed in ListEdgesRed
+  do
+    eRepr:=RepresentativeAction(TheCallG, eEdgeCan, eEdgeRed, OnTuples);
+    Add(ListEdgeMappings, eRepr);
+  od;
+  ListFaceMappings:=[];
+  for eFaceRed in ListFacesRed
+  do
+    eRepr:=RepresentativeAction(TheCallG, eFaceRedCan, eFaceRed, OnSets);
+    Add(ListFaceMappings, eRepr);
+  od;
+  eDiffVert:=rec(ListVal:=ListWithIdenticalEntries(nbFace,1), ListElt:=ListFaceMappings);
+  eRepr1:=RepresentativeAction(TheCallG, eVertCan, eAdj, OnPoints);
+  eDiffEdge:=rec(ListVal:=[1,-1],ListElt:=[(), eRepr1]);
+  GetIEdgeSign:=function(eDE)
+    local iEdge;
+    for iEdge in [1..nbEdge]
+    do
+      if ListEdges[iEdge][1]=eDE then
+        return rec(iEdge:=iEdge, eSign:=1);
+      fi;
+      if ListEdges[iEdge][2]=eDE then
+        return rec(iEdge:=iEdge, eSign:=-1);
+      fi;
+    od;
+    Print(NullMat(5));
+  end;
+  ListValFace:=[];
+  ListEltFace:=[];
+  for eDE in eFaceCan
+  do
+    eRec:=GetIEdgeSign(eDE);
+    Add(ListValFace, eRec.eSign);
+    Add(ListEltFace, ListEdgeMappings[eRec.iEdge]);
+  od;
+  eDiffFace:=rec(ListVal:=ListValFace, ListElt:=ListEltFace);
+  eGenVert:=GeneratorsOfGroup(TheStabVert)[1];
+  eGenEdge:=GeneratorsOfGroup(TheStabEdge)[1];
+  eGenFace:=GeneratorsOfGroup(TheStabFace)[1];
+  ListElementStabVert:=[];
+  for eElt in TheStabVert
+  do
+    Add(ListElementStabVert, eElt);
+  od;
+  ListElementStabFace:=[];
+  for eElt in TheStabFace
+  do
+    Add(ListElementStabFace, eElt);
+  od;
+  eMultiplicationVert1:=rec(ListVal:=[1,-1], ListElt:=[(), eGenVert]);
+  eMultiplicationVert2:=rec(ListVal:=ListWithIdenticalEntries(Length(ListElementStabVert), 1), ListElt:=ListElementStabVert);
+
+  eMultiplicationEdge1:=rec(ListVal:=[1,1], ListElt:=[(), eGenEdge]); # we apply the signature operation
+  eMultiplicationEdge2:=rec(ListVal:=[1,-1], ListElt:=[(), eGenEdge]);
+
+  eMultiplicationFace1:=rec(ListVal:=[1,-1], ListElt:=[(), eGenFace]);
+  eMultiplicationFace2:=rec(ListVal:=ListWithIdenticalEntries(Length(ListElementStabFace), 1), ListElt:=ListElementStabFace);
+  MatrixDifferentialFaceEdge:=[];
+  for eFace in ListFaces
+  do
+    eVect:=ListWithIdenticalEntries(nbEdge,0);
+    for eDE in eFace
+    do
+      eRec:=GetIEdgeSign(eDE);
+      eVect[eRec.iEdge]:=eRec.eSign;
+    od;
+    Add(MatrixDifferentialFaceEdge, eVect);
+  od;
+  MatrixDifferentialEdgeVert:=[];
+  for eEdge in ListEdges
+  do
+    eVect:=ListWithIdenticalEntries(nbVert,0);
+    eVect[eEdge[1][1]]:=1;
+    eVect[eEdge[2][1]]:=-1;
+    Add(MatrixDifferentialEdgeVert, eVect);
+  od;
+  MatrixDifferentialVertFace:=[];
+  for iVert in [1..nbVert]
+  do
+    eVect:=ListWithIdenticalEntries(nbFace,1);
+    Add(MatrixDifferentialVertFace, eVect);
+  od;
+  FuncSignature:=function(iRank, eElt)
+    local iRankMod;
+    iRankMod:=iRank mod 3;
+    if iRankMod=1 then
+      # edge case
+      if eElt=() then
+        return 1;
+      fi;
+      return -1;
+    else
+      return 1;
+    fi;
+  end;
+  Initialization:=function(kLevel)
+    local iRank, TheMat;
+    kAvailable:=kLevel;
+    ListDifferentiation:=[];
+    ListStatus:=[];
+    for iRank in [0..kLevel]
+    do
+      Add(ListStatus, NullMat(kLevel+1, kLevel+1));
+      Add(ListDifferentiation, GMOD_GetZeroMatrix(kLevel+1, kLevel+1).TheMat);
+    od;
+    for iRank in [1..kLevel]
+    do
+      TheMat:=GetDifferentiation(iRank);
+    od;
+  end;
+  GetDifferentiationD0:=function(iRank, iLevel)
+    local iRankMod, eMultiplication;
+    if iLevel=0 then
+      Print("Wrong call do GetDifferentiationD0, please retry\n");
+      Print(NullMat(5));
+    fi;
+    iRankMod:=iRank mod 3;
+    if iRankMod=0 then
+      if iLevel mod 2=1 then
+        return eMultiplicationVert1;
+      else
+        return eMultiplicationVert2;
+      fi;
+    else
+      if iRankMod=1 then
+        if iLevel mod 2=1 then
+          return eMultiplicationEdge1;
+        else
+          return eMultiplicationEdge2;
+        fi;
+      else
+        if iLevel mod 2=1 then
+          return eMultiplicationFace1;
+        else
+          return eMultiplicationFace2;
+        fi;
+      fi;
+    fi;
+  end;
+  DoDifferentiationD0:=function(iRank, iLevel, TheElt)
+    return GmoduleMultiplication(GetDifferentiationD0(iRank, iLevel), TheElt);
+  end;
+  DoHomotopyD0:=function(iRank, iLevel, TheElt)
+    local iRankMod, TheRelStab, eMultiplication, ReprRightCoset, ListNewVals, ListNewElts, nbCos, eCos, iCos, eSingElt, eSol, TheReturn;
+    if iLevel>0 and IsZeroReducedGmoduleElt(DoDifferentiationD0(iRank, iLevel, TheElt))=false then
+      Print("INCONSISTENCY IN CALL in call to DoHomotopyD0\n");
+      Print(NullMat(5));
+    fi;
+    iRankMod:=iRank mod 3;
+    if iRankMod=0 then
+      TheRelStab:=TheStabVert;
+      if iLevel mod 2=0 then
+        eMultiplication:=eMultiplicationVert1;
+      else
+        eMultiplication:=eMultiplicationVert2;
+      fi;
+    else
+      if iRankMod=1 then
+        TheRelStab:=TheStabEdge;
+        if iLevel mod 2=0 then
+          eMultiplication:=eMultiplicationEdge1;
+        else
+          eMultiplication:=eMultiplicationEdge2;
+        fi;
+      else
+        TheRelStab:=TheStabFace;
+        if iLevel mod 2=0 then
+          eMultiplication:=eMultiplicationFace1;
+        else
+          eMultiplication:=eMultiplicationFace2;
+        fi;
+      fi;
+    fi;
+    ReprRightCoset:=RightCosetExpression(TheRelStab, TheElt);
+    ListNewVals:=[];
+    ListNewElts:=[];
+    nbCos:=Length(ReprRightCoset);
+    for iCos in [1..nbCos]
+    do
+      eCos:=ReprRightCoset[iCos].eCos;
+      eSingElt:=rec(ListVal:=ReprRightCoset[iCos].ListVal, ListElt:=ReprRightCoset[iCos].ListElt);
+      eSol:=GMOD_SolutionMultiplication(eSingElt, eMultiplication, TheRelStab);
+      Append(ListNewVals, eSol.ListVal);
+      Append(ListNewElts, List(eSol.ListElt, x->x*eCos));
+    od;
+    TheReturn:=ReducedGmoduleForm(rec(ListVal:=ListNewVals, ListElt:=ListNewElts));
+    if IsEqualReducedGmoduleElt(TheElt, DoDifferentiationD0(iRank, iLevel+1, TheReturn))=false then
+      Print("The homotopy was NOT correct, please correct yourself\n");
+      Print(NullMat(5));
+    fi;
+    return TheReturn;
+  end;
+  GetDifferentiationD1:=function(iRank, iLevel)
+    local eMatElt1, eMatElt2, eProd, eImg3, iRankMod, TheResult;
+    if ListStatus[iRank+1][iLevel+1][2]=1 then
+      return ListDifferentiation[iRank+1][iLevel+1][2];
+    fi;
+    if iRank<=0 then
+      Print("Inconsistency at this stage\n");
+      Print("Wrong iRank call\n");
+      Print(NullMat(5));
+    fi;
+    if iLevel=0 then
+      iRankMod:=iRank mod 3;
+      if iRankMod=0 then
+        return eDiffVert;
+      else
+        if iRankMod=1 then
+          return eDiffEdge;
+        else
+          return eDiffFace;
+        fi;
+      fi;
+    fi;
+    eMatElt1:=GetDifferentiationD0(iRank, iLevel);
+    eMatElt2:=GetDifferentiationD1(iRank, iLevel-1);
+    eProd:=GmoduleMultiplication(eMatElt2, eMatElt1);
+    eImg3:=rec(ListElt:=eProd.ListElt, ListVal:=-eProd.ListVal);
+    TheResult:=DoHomotopyD0(iRank-1, iLevel-1, eImg3);
+    ListDifferentiation[iRank+1][iLevel+1][2]:=TheResult;
+    ListStatus[iRank+1][iLevel+1][2]:=1;
+    return TheResult;
+  end;
+  DoDifferentiationDi:=function(iRank, iLevel, i, eElt)
+    return GmoduleMultiplication(GetDifferentiationDi(iRank, iLevel, i), eElt);
+  end;
+  GetDifferentiationDi:=function(iRank, iLevel, i)
+    local eSum, iH, eImg1, eImg2, TheResult, eMatElt1, eMatElt2, eProd;
+    if ListStatus[iRank+1][iLevel+1][i+1]=1 then
+      return ListDifferentiation[iRank+1][iLevel+1][i+1];
+    fi;
+    if i > iRank then
+      Print("This cannot work\n");
+      Print(NullMat(5));
+    fi;
+    if i=0 then
+      return GetDifferentiationD0(iRank, iLevel);
+    fi;
+    if i=1 then
+      return GetDifferentiationD1(iRank, iLevel);
+    fi;
+    eSum:=GMOD_GetZero();
+    for iH in [0..i-1]
+    do
+      if i-iH>=0 and iLevel-1+iH >=0 then
+        eMatElt1:=GetDifferentiationDi(iRank, iLevel, iH);
+        eMatElt2:=GetDifferentiationDi(iRank-iH, iLevel-1+iH, i-iH);
+        eProd:=GmoduleMultiplication(eMatElt2, eMatElt1);
+        eSum:=GmoduleAddition(eSum, eProd);
+      fi;
+    od;
+    TheResult:=DoHomotopyD0(iRank-i, iLevel+i-2, rec(ListVal:=-eSum.ListVal, ListElt:=eSum.ListElt));
+    ListDifferentiation[iRank+1][iLevel+1][i+1]:=TheResult;
+    ListStatus[iRank+1][iLevel+1][i+1]:=1;
+    return TheResult;
+  end;
+  # The terms are R0, R1, R2, ....
+  # in the resolution
+  DoDifferentiation:=function(kLevel, TheVector)
+    return VectorMatrixGmoduleMultiplication(TheVector, GetDifferentiation(kLevel));
+  end;
+  IsInKernel:=function(kLevel, TheVector)
+    local eVal, TheProd;
+    if kLevel=0 then
+      eVal:=TheVector[1];
+      if Sum(eVal.ListVal)<>0 then
+        return false;
+      else
+        return true;
+      fi;
+    else
+      TheProd:=DoDifferentiation(kLevel, TheVector);
+      return IsZeroGmoduleVector(TheProd);
+    fi;
+  end;
+  GetDifferentiation:=function(kLevel)
+    local iComp, eMatElt, iH, TheMatrixReturn;
+    TheMatrixReturn:=GMOD_GetZeroMatrix(kLevel+1, kLevel);
+    if kLevel>kAvailable then
+      Print("GetResolutionPlanGraph, update of resolution to kLevel=", kLevel, "\n");
+      Initialization(kLevel);
+    fi;
+    for iComp in [0..kLevel]
+    do
+      for iH in [0..kLevel]
+      do
+        if (iComp + iH <= kLevel and iH>0) or (iComp > 0 and iH=0) then
+          eMatElt:=GetDifferentiationDi(kLevel-iComp, iComp, iH);
+          TheMatrixReturn.TheMat[iComp+1][iComp+iH]:=eMatElt;
+        fi;
+      od;
+    od;
+    return TheMatrixReturn;
+  end;
+  DoHomotopy:=function(kLevel, eModuleElt)
+    local kLevelMod, TheMatrix, WorkingModuleElt, TheReturn, nbTarget, nbSource, TheVect, nbEnt, iEnt, eElt, eVal, iVert, eEdgeSet, pos, eMapping, eQuot, eNewVal, eNewListVal, eNewListElt, eHomotopElt, iCol, iH, i, eFaceRed, eSol, eMatElt, DoCheck;
+    DoCheck:=false;
+    if DoCheck=true then
+      if Length(eModuleElt)<>kLevel+1 then
+        Print("Not correct, rework\n");
+        Print(NullMat(5));
+      fi;
+      if IsInKernel(kLevel, eModuleElt)=false then
+        Print("We cannot do homotopy for plangraph\n");
+        Print(NullMat(5));
+      fi;
+       if GMOD_IsItGmoduleVector(eModuleElt, TheCallG)=false then
+       Print("The vector is not in the right space, please correct\n");
+        Print(NullMat(5));
+      fi;
+    fi;
+    kLevelMod:=kLevel mod 3;
+    if kLevelMod=0 then
+      TheMatrix:=MatrixDifferentialEdgeVert;
+    else
+      if kLevelMod=1 then
+        TheMatrix:=MatrixDifferentialFaceEdge;
+      else
+        TheMatrix:=MatrixDifferentialVertFace;
+      fi;
+    fi;
+    WorkingModuleElt:=StructuralCopy(eModuleElt);
+    TheReturn:=GMOD_GetZeroVector(kLevel+2);
+    nbTarget:=Length(TheMatrix[1]);
+    nbSource:=Length(TheMatrix);
+    TheVect:=ListWithIdenticalEntries(nbTarget, 0);
+    nbEnt:=Length(eModuleElt[1].ListVal);
+    for iEnt in [1..nbEnt]
+    do
+      eElt:=eModuleElt[1].ListElt[iEnt];
+      eVal:=eModuleElt[1].ListVal[iEnt];
+      if kLevelMod=0 then
+        iVert:=OnPoints(eVertCan, eElt);
+        TheVect[iVert]:=TheVect[iVert]+eVal;
+      fi;
+      if kLevelMod=1 then
+        eEdgeSet:=OnSets(eEdgeCan, eElt);
+        pos:=Position(ListEdgesSet, eEdgeSet);
+        eMapping:=ListEdgeMappings[pos];
+        eQuot:=eElt*(eMapping^(-1));
+        if eQuot=() then
+          eNewVal:=eVal;
+        else
+          eNewVal:=-eVal;
+        fi;
+        TheVect[pos]:=TheVect[pos]+eNewVal;
+      fi;
+      if kLevelMod=2 then
+        eFaceRed:=OnSets(eFaceRedCan, eElt);
+        pos:=Position(ListFacesRed, eFaceRed);
+        TheVect[pos]:=TheVect[pos]+eVal;
+      fi;
+    od;
+    eSol:=SolutionIntMat(TheMatrix, TheVect);
+    if eSol=fail then
+      Print("Bug or wrong call to the function, you choose and debug\n");
+      Print(NullMat(5));
+    fi;
+    eNewListVal:=[];
+    eNewListElt:=[];
+    for i in [1..Length(eSol)]
+    do
+      if eSol[i]<>0 then
+        if kLevelMod=0 then
+          Add(eNewListVal, eSol[i]);
+          Add(eNewListElt, ListEdgeMappings[i]);
+        fi;
+        if kLevelMod=1 then
+          Add(eNewListVal, eSol[i]);
+          Add(eNewListElt, ListFaceMappings[i]);
+        fi;
+        if kLevelMod=2 then
+          Add(eNewListVal, eSol[i]);
+          Add(eNewListElt, ListVertMappings[i]);
+        fi;
+      fi;
+    od;
+    TheReturn[1]:=rec(ListVal:=eNewListVal, ListElt:=eNewListElt);
+    for iH in [1..kLevel+1]
+    do
+      eElt:=DoDifferentiationDi(kLevel+1, 0, iH, TheReturn[1]);
+      WorkingModuleElt[iH]:=GmoduleSoustraction(WorkingModuleElt[iH], eElt);
+    od;
+    for iCol in [1..kLevel+1]
+    do
+      eHomotopElt:=DoHomotopyD0(kLevel+1-iCol, iCol-1, WorkingModuleElt[iCol]);
+      TheReturn[iCol+1]:=eHomotopElt;
+      for iH in [0..kLevel]
+      do
+        if iCol+iH<=kLevel+1 and iCol+iH>=0 then
+          eElt:=DoDifferentiationDi(kLevel+1-iCol, iCol, iH, eHomotopElt);
+          WorkingModuleElt[iCol+iH]:=GmoduleSoustraction(WorkingModuleElt[iCol+iH], eElt);
+        fi;
+      od;
+    od;
+    if DoCheck=true then
+      if IsZeroReducedGmoduleVector(WorkingModuleElt)=false then
+        Print("We should panic, just maybe\n");
+        Print(NullMat(5));
+      fi;
+      if IsEqualGmoduleVector(DoDifferentiation(kLevel+1, TheReturn), eModuleElt)=false then
+        Print("Non correct homotopy computation, please panic 1\n");
+        Print(NullMat(5));
+      fi;
+    fi;
+    return TheReturn;
+  end;
+  GetDimension:=function(iRank)
+    return iRank+1;
+  end;
+  return rec(GRP:=TheCallG, 
+             GetDimension:=GetDimension, 
+             DoHomotopy:=DoHomotopy, 
+             Initialization:=Initialization, 
+             GetDifferentiation:=GetDifferentiation);
+end;
+
+
+GetResolutionA5:=function()
+  local PL, GRA, GRP, LN, TheA5;
+  PL:=ArchimedeanPolyhedra("Icosahedron");
+  GRA:=PlanGraphToGRAPE(PL);
+  GRP:=AutGroupGraph(GRA);
+  LN:=NormalSubgroups(GRP);
+  TheA5:=First(LN, x->Order(x)=60);
+  return GetResolutionPlanGraph(PL, TheA5);
+end;
+
+
+GetResolutionA4:=function()
+  local PL, GRA, GRP, LN, TheA4;
+  PL:=ArchimedeanPolyhedra("Tetrahedron");
+  GRA:=PlanGraphToGRAPE(PL);
+  GRP:=AutGroupGraph(GRA);
+  LN:=NormalSubgroups(GRP);
+  TheA4:=First(LN, x->Order(x)=12);
+  return GetResolutionPlanGraph(PL, TheA4);
+end;
+
+
+GetResolutionS4:=function()
+  local PL, GRA, GRP, eLN, LN, TheS4, O;
+  PL:=ArchimedeanPolyhedra("Cube");
+  GRA:=PlanGraphToGRAPE(PL);
+  GRP:=AutGroupGraph(GRA);
+  LN:=NormalSubgroups(GRP);
+  TheS4:=SymmetricGroup(4);
+  for eLN in LN
+  do
+    if Order(eLN)=24 and IsomorphismGroups(eLN, TheS4)<>fail then
+      O:=Orbits(eLN, [1..Length(PL)], OnPoints);
+      if Length(O)=1 then
+        return GetResolutionPlanGraph(PL, eLN);
+      fi;
+    fi;
+  od;
+end;
+
+
+
+
+GetResolutionFromNormalAndQuotient:=function(TheBigGroup, TheSubgroup, TheResolSubgroup, TheResolQuotient)
+  local kAvailable, QuotInfo, eQuot, TheQuotient, phi, ListGens, ImageListGens, phiRed, DoHomotopyD0, GetDifferentiation, DoHomotopy, ListStatus, ListDifferentiation, ListBeginDimension, ListEndDimension, ListMatricesQuotient, Initialization, GetDimension, ListMatricesSubgroup, DoDifferentiationDi, GetDifferentiationD0, GetDifferentiationD1, GetDifferentiationDi, PreHomotopyD1, GetMatricesQuotient, DoHomotopySubgroup, DoDifferentiationD0, FuncInsert, ResolSubgroupMapped, DoDifferentiation, ListDimResolSubgroup, ListDimResolQuotient;
+  QuotInfo:=QuotientPermutationGroup(TheBigGroup, TheSubgroup);
+  ListGens:=GeneratorsOfGroup(TheBigGroup);
+  eQuot:=QuotInfo.Quotient;
+  TheQuotient:=TheResolQuotient.GRP;
+  phi:=IsomorphismGroups(eQuot, TheQuotient);
+  ImageListGens:=List(ListGens, x->Image(phi, Image(QuotInfo.CanonicSurjection, x)));
+  phiRed:=GroupHomomorphismByImagesNC(TheBigGroup, TheQuotient, ListGens, ImageListGens);
+  DoHomotopySubgroup:=function(kLevel, TheVect)
+    local ListRightCoset, DimOutput, ListPreImage, nbCos, eCos, TheSingVect, PreImage1, iCol, iVal, iCos;
+    ListRightCoset:=RightCosetVectorExpression(TheSubgroup, TheVect);
+    DimOutput:=ListMatricesSubgroup[kLevel+1].nbLine;
+    ListPreImage:=GMOD_GetZeroVector(DimOutput);
+    nbCos:=Length(ListRightCoset);
+    for iCos in [1..nbCos]
+    do
+      eCos:=ListRightCoset[iCos].eCos;
+      TheSingVect:=ListRightCoset[iCos].TheVect;
+      PreImage1:=ResolSubgroupMapped.DoHomotopy(kLevel, TheSingVect);
+      for iCol in [1..DimOutput]
+      do
+        for iVal in [1..Length(PreImage1[iCol].ListElt)]
+        do
+          Add(ListPreImage[iCol].ListVal, PreImage1[iCol].ListVal[iVal]);
+          Add(ListPreImage[iCol].ListElt, PreImage1[iCol].ListElt[iVal]*eCos);
+        od;
+      od;
+    od;
+    return ListPreImage;
+  end;
+  GetDifferentiationD0:=function(iRank, iLevel)
+    local eBeginSource, eEndSource, eBeginTarget, eEndTarget, dimSource, dimTarget, TheMatRed, TheSoughtMat, TheBigMat, i, iLine, iCol, iLineBig, iColBig;
+    if iLevel<=0 then
+      Print("Wrong call to GetDifferentiationD0\n");
+      Print(NullMat(5));
+    fi;
+    eBeginSource:=ListBeginDimension[iRank+1][iLevel+1];
+    eEndSource:=ListEndDimension[iRank+1][iLevel+1];
+    eBeginTarget:=ListBeginDimension[iRank+1][iLevel];
+    eEndTarget:=ListEndDimension[iRank+1][iLevel];
+    dimSource:=1+eEndSource-eBeginSource;
+    dimTarget:=1+eEndTarget-eBeginTarget;
+    if ListStatus[iRank+1][iLevel+1][1]=1 then
+      TheMatRed:=List(ListDifferentiation[iRank+iLevel].TheMat{[eBeginSource..eEndSource]}, x->x{[eBeginTarget..eEndTarget]});
+      return rec(nbLine:=dimSource, nbCol:=dimTarget, TheMat:=TheMatRed);
+    fi;
+    TheSoughtMat:=ListMatricesSubgroup[iLevel];
+    TheBigMat:=GMOD_GetZeroMatrix(dimSource, dimTarget);
+    for i in [1..ListDimResolSubgroup[iRank+1]]
+    do
+      for iLine in [1..ListDimResolQuotient[iLevel+1]]
+      do
+        for iCol in [1..ListDimResolQuotient[iLevel]]
+        do
+          iLineBig:=iLine+ListDimResolQuotient[iLevel+1]*(i-1);
+          iColBig:=iCol+ListDimResolQuotient[iLevel]*(i-1);
+          TheBigMat.TheMat[iLineBig][iColBig]:=TheSoughtMat.TheMat[iLine][iCol];
+        od;
+      od;
+    od;
+    ListStatus[iRank+1][iLevel+1][1]:=1;
+    for iLine in [1..dimSource]
+    do
+      for iCol in [1..dimTarget]
+      do
+        ListDifferentiation[iRank+iLevel].TheMat[iLine+eBeginSource-1][iCol+eBeginTarget-1]:=TheBigMat.TheMat[iLine][iCol];
+      od;
+    od;
+    return TheBigMat;
+  end;
+  DoDifferentiationD0:=function(iRank, iLevel, TheVect)
+    return VectorMatrixGmoduleMultiplication(TheVect, GetDifferentiationD0(iRank, iLevel));
+  end;
+  DoHomotopyD0:=function(iRank, iLevel, eVect)
+    local eVectRet, p, eDimBegin, eDimEnd, eVectRed, ePreImage, TheDimQuot, TheDimSub;
+    if iLevel>0 and IsZeroReducedGmoduleVector(DoDifferentiationD0(iRank, iLevel, eVect))=false then
+      Print("INCONSISTENCY IN CALL in call to DoHomotopyD0\n");
+      Print(NullMat(5));
+    fi;
+    eVectRet:=[];
+    TheDimQuot:=ListDimResolQuotient[iLevel+1];
+    TheDimSub:=ListDimResolSubgroup[iRank+1];
+    for p in [1..TheDimSub]
+    do
+      eDimBegin:=1+(p-1)*TheDimQuot;
+      eDimEnd:=p*TheDimQuot;
+      eVectRed:=eVect{[eDimBegin..eDimEnd]};
+      ePreImage:=DoHomotopySubgroup(iLevel, eVectRed);
+      Append(eVectRet, ePreImage);
+    od;
+    if IsEqualReducedGmoduleVector(eVect, DoDifferentiationD0(iRank, iLevel+1, eVectRet))=false then
+      Print("The homotopy failed, sorry for that, please correct\n");
+      Print(NullMat(5));
+    fi;
+    return eVectRet;
+  end;
+  ListMatricesQuotient:=[];
+  GetMatricesQuotient:=function(kLevel)
+    local iK, eMat, nbSource, nbTarget, TheMatrix, iLine, iCol, NewListElt, eEnt, iRank;
+    TheResolQuotient.Initialization(kLevel);
+    ListDimResolQuotient:=[];
+    for iRank in [0..kLevel]
+    do
+      Add(ListDimResolQuotient, TheResolQuotient.GetDimension(iRank));
+    od;
+    if ListDimResolQuotient[1]<>1 then
+      Print("The dimension of the first space should be 1\n");
+      Print("If it is not 1 then it is easy to modify the resolution\n");
+      Print("So that the first dimension is 1\n");
+      Print(NullMat(5));
+    fi;
+    for iK in [1..kLevel]
+    do
+      eMat:=TheResolQuotient.GetDifferentiation(iK);
+      nbSource:=eMat.nbLine;
+      nbTarget:=eMat.nbCol;
+      TheMatrix:=GMOD_GetZeroMatrix(iK+1, iK);
+      for iLine in [1..nbSource]
+      do
+        for iCol in [1..nbTarget]
+        do
+          NewListElt:=List(eMat.TheMat[iLine][iCol].ListElt, x->PreImagesRepresentative(phiRed, x));
+          eEnt:=rec(ListVal:=eMat.TheMat[iLine][iCol].ListVal, ListElt:=NewListElt);
+          TheMatrix.TheMat[iLine][iCol]:=eEnt;
+        od;
+      od;
+      Add(ListMatricesQuotient, TheMatrix);
+    od;
+  end;
+  PreHomotopyD1:=function(iRank, eVect)
+    local ListReturn, ImageVect, eEnt, eRec, ThePreImage;
+    ImageVect:=[];
+    for eEnt in eVect
+    do
+      eRec:=rec(ListVal:=eEnt.ListVal, ListElt:=List(eEnt.ListElt, x->Image(phiRed, x)));
+      Add(ImageVect, ReducedGmoduleForm(eRec));
+    od;
+    ThePreImage:=TheResolQuotient.DoHomotopy(iRank, ImageVect);
+    ListReturn:=[];
+    for eEnt in ThePreImage
+    do
+      eRec:=rec(ListVal:=eEnt.ListVal, ListElt:=List(eEnt.ListElt, x->PreImagesRepresentative(phiRed, x)));
+      Add(ListReturn, eRec);
+    od;
+    return ListReturn;
+  end;
+  GetDimension:=function(kLevel)
+    local RetDim, q, p, TheDim;
+    if IsBound(ListEndDimension[1][1+kLevel]) then
+      return ListEndDimension[1][1+kLevel];
+    fi;
+    RetDim:=0;
+    for q in [0..kLevel]
+    do
+      p:=kLevel-q;
+      TheDim:=ResolSubgroupMapped.GetDimension(p)*TheResolQuotient.GetDimension(p);
+      RetDim:=RetDim+TheDim;
+    od;
+    return RetDim;
+  end;  
+  Initialization:=function(kLevel)
+    local iRank, p, q, ePrevEnd, TheDim, TheMat;
+    ResolSubgroupMapped:=TheResolutionMoveToOtherGroup(TheResolSubgroup, TheSubgroup, kLevel);
+    kAvailable:=kLevel;
+    ListDimResolSubgroup:=[];
+    for iRank in [0..kLevel]
+    do
+      Add(ListDimResolSubgroup, ResolSubgroupMapped.GetDimension(iRank));
+    od;
+    ListMatricesSubgroup:=List([1..kLevel], x->ResolSubgroupMapped.GetMatrix(x));
+    GetMatricesQuotient(kLevel);
+    ListStatus:=[];
+    ListDifferentiation:=[];
+    ListBeginDimension:=NullMat(kLevel+1, kLevel+1);
+    ListEndDimension:=NullMat(kLevel+1, kLevel+1);
+#    Print("SubgroupQuotient, kLevel=", kLevel, "\n");
+    for q in [0..kLevel]
+    do
+      for p in [0..kLevel-q]
+      do
+        if q=0 then
+          ePrevEnd:=0;
+        else
+          ePrevEnd:=ListEndDimension[1+p+1][1+q-1];
+        fi;
+        TheDim:=ListDimResolSubgroup[q+1]*ListDimResolQuotient[p+1];
+        ListBeginDimension[1+p][1+q]:=ePrevEnd+1;
+        ListEndDimension[1+p][1+q]:=ePrevEnd+TheDim;
+      od;
+    od;
+    for iRank in [0..kLevel]
+    do
+      Add(ListStatus, NullMat(kLevel+1, kLevel+1));
+    od;
+    for iRank in [1..kLevel]
+    do
+      Add(ListDifferentiation, GMOD_GetZeroMatrix(GetDimension(iRank), GetDimension(iRank-1)));
+    od;
+    for iRank in [1..kLevel]
+    do
+      TheMat:=GetDifferentiation(iRank);
+    od;
+  end;
+  GetDifferentiationD1:=function(iRank, iLevel)
+    local eBeginSource, eEndSource, eBeginTarget, eEndTarget, dimSource, dimTarget, TheBigMat, TheProd, TheOpp, NewMat, iLine, iCol, TheMatRed;
+    eBeginSource:=ListBeginDimension[iRank+1][iLevel+1];
+    eEndSource:=ListEndDimension[iRank+1][iLevel+1];
+    eBeginTarget:=ListBeginDimension[iRank][iLevel+1];
+    eEndTarget:=ListEndDimension[iRank][iLevel+1];
+    dimSource:=1+eEndSource-eBeginSource;
+    dimTarget:=1+eEndTarget-eBeginTarget;
+    if ListStatus[iRank+1][iLevel+1][2]=1 then
+      TheMatRed:=List(ListDifferentiation[iRank+iLevel].TheMat{[eBeginSource..eEndSource]}, x->x{[eBeginTarget..eEndTarget]});
+      return rec(nbLine:=dimSource, nbCol:=dimTarget, TheMat:=TheMatRed);
+    fi;
+    if iLevel=0 then
+      TheBigMat:=ListMatricesQuotient[iRank];
+    else
+      TheProd:=MatrixMatrixGmoduleMultiplication(GetDifferentiationD0(iRank, iLevel), GetDifferentiationD1(iRank, iLevel-1));
+      TheOpp:=MatrixGmoduleOpposite(TheProd);
+      NewMat:=List(TheOpp.TheMat, x->DoHomotopyD0(iRank-1,iLevel-1,x));
+      TheBigMat:=rec(nbLine:=dimSource, nbCol:=dimTarget, TheMat:=NewMat);
+    fi;
+    ListStatus[iRank+1][iLevel+1][2]:=1;
+    for iLine in [1..dimSource]
+    do
+      for iCol in [1..dimTarget]
+      do
+        ListDifferentiation[iRank+iLevel].TheMat[iLine+eBeginSource-1][iCol+eBeginTarget-1]:=TheBigMat.TheMat[iLine][iCol];
+      od;
+    od;
+    return TheBigMat;
+  end;
+  DoDifferentiationDi:=function(iRank, iLevel, i, TheVector)
+    return VectorMatrixGmoduleMultiplication(TheVector, GetDifferentiationDi(iRank, iLevel, i));
+  end;
+  GetDifferentiationDi:=function(iRank, iLevel, i)
+    local eBeginSource, eEndSource, eBeginTarget, eEndTarget, dimSource, dimTarget, TheMatRed, eBeginTargetPrev, eEndTargetPrev, dimTargetPrev, ThePrevBigMat, iH, eMat1, eMat2, eProd, TheOpp, NewMat, TheBigMat, iLine, iCol;
+    if i=0 then
+      return GetDifferentiationD0(iRank, iLevel);
+    fi;
+    if i=1 then
+      return GetDifferentiationD1(iRank, iLevel);
+    fi;
+    eBeginSource:=ListBeginDimension[iRank+1][iLevel+1];
+    eEndSource:=ListEndDimension[iRank+1][iLevel+1];
+    eBeginTarget:=ListBeginDimension[iRank+1-i][iLevel+i];
+    eEndTarget:=ListEndDimension[iRank+1-i][iLevel+i];
+    dimSource:=1+eEndSource-eBeginSource;
+    dimTarget:=1+eEndTarget-eBeginTarget;
+    if ListStatus[iRank+1][iLevel+1][i+1]=1 then
+      TheMatRed:=List(ListDifferentiation[iRank+iLevel].TheMat{[eBeginSource..eEndSource]}, x->x{[eBeginTarget..eEndTarget]});
+      return rec(nbLine:=dimSource, nbCol:=dimTarget, TheMat:=TheMatRed);
+    fi;
+    eBeginTargetPrev:=ListBeginDimension[iRank+1-i][iLevel+i-1];
+    eEndTargetPrev:=ListEndDimension[iRank+1-i][iLevel+i-1];
+    dimTargetPrev:=1+eEndTargetPrev-eBeginTargetPrev;
+    ThePrevBigMat:=GMOD_GetZeroMatrix(dimSource, dimTargetPrev);
+    for iH in [0..i-1]
+    do
+      if i-iH>=0 and iLevel-1+iH >=0 then
+        eMat1:=GetDifferentiationDi(iRank, iLevel, iH);
+        eMat2:=GetDifferentiationDi(iRank-iH, iLevel-1+iH, i-iH);
+        eProd:=MatrixMatrixGmoduleMultiplication(eMat1, eMat2);
+        ThePrevBigMat:=MatrixGmoduleAddition(ThePrevBigMat, eProd);
+      fi;
+    od;
+    TheOpp:=MatrixGmoduleOpposite(ThePrevBigMat);
+    NewMat:=List(TheOpp.TheMat, x->DoHomotopyD0(iRank-i,iLevel+i-2,x));
+    TheBigMat:=rec(nbLine:=dimSource, nbCol:=dimTarget, TheMat:=NewMat);
+    ListStatus[iRank+1][iLevel+1][i+1]:=1;
+    for iLine in [1..dimSource]
+    do
+      for iCol in [1..dimTarget]
+      do
+        ListDifferentiation[iRank+iLevel].TheMat[iLine+eBeginSource-1][iCol+eBeginTarget-1]:=TheBigMat.TheMat[iLine][iCol];
+      od;
+    od;
+    return TheBigMat;
+  end;
+  GetDifferentiation:=function(kLevel)
+    local iComp, eMat, iH;
+    if kLevel>kAvailable then
+      Print("GetResolutionNormalQuotient, update of resolution to kLevel=", kLevel, "\n");
+      Initialization(kLevel);
+    fi;
+    for iComp in [0..kLevel]
+    do
+      for iH in [0..kLevel]
+      do
+        if (iComp + iH <= kLevel and iH>0) or (iComp > 0 and iH=0) then
+          eMat:=GetDifferentiationDi(kLevel-iComp, iComp, iH);
+        fi;
+      od;
+    od;
+    return ListDifferentiation[kLevel];
+  end;
+  DoDifferentiation:=function(kLevel, TheVector)
+    return VectorMatrixGmoduleMultiplication(TheVector, GetDifferentiation(kLevel));
+  end;
+  DoHomotopy:=function(kLevel, TheVect)
+    local WorkingModuleElt, eBegin, eEnd, TheVectRed, ListReturn, iH, eVect, TheNew, iCol, eHomotopElt, WorkingModuleEltRed;
+    if kLevel>0 and IsZeroGmoduleVector(DoDifferentiation(kLevel, TheVect))=false then
+      Print("The vector has non zero differential, we cannot do homotopy\n");
+      Print(NullMat(5));
+    fi;
+    if Length(TheVect)<>GetDimension(kLevel) then
+      Print("Not correct, rework\n");
+      Print(NullMat(5));
+    fi;
+    WorkingModuleElt:=StructuralCopy(TheVect);
+    eBegin:=ListBeginDimension[kLevel+1][1];
+    eEnd:=ListEndDimension[kLevel+1][1];
+    TheVectRed:=WorkingModuleElt{[eBegin..eEnd]};
+    ListReturn:=PreHomotopyD1(kLevel, TheVectRed);
+    for iH in [1..kLevel+1]
+    do
+      eVect:=DoDifferentiationDi(kLevel+1, 0, iH, ListReturn);
+      eBegin:=ListBeginDimension[kLevel+2-iH][iH];
+      eEnd:=ListEndDimension[kLevel+2-iH][iH];
+      WorkingModuleEltRed:=WorkingModuleElt{[eBegin..eEnd]};
+      TheNew:=VectorGmoduleSoustraction(WorkingModuleEltRed, eVect);
+      WorkingModuleElt{[eBegin..eEnd]}:=TheNew;
+    od;
+    for iCol in [1..kLevel+1]
+    do
+      eBegin:=ListBeginDimension[kLevel+2-iCol][iCol];
+      eEnd:=ListEndDimension[kLevel+2-iCol][iCol];
+      TheVectRed:=WorkingModuleElt{[eBegin..eEnd]};
+      eHomotopElt:=DoHomotopyD0(kLevel+1-iCol, iCol-1, TheVectRed);
+      Append(ListReturn, eHomotopElt);
+      for iH in [0..kLevel]
+      do
+        if iCol+iH<=kLevel+1 and iCol+iH>=0 then
+          eVect:=DoDifferentiationDi(kLevel+1-iCol, iCol, iH, eHomotopElt);
+          eBegin:=ListBeginDimension[kLevel+2-iH-iCol][iH+iCol];
+          eEnd:=ListEndDimension[kLevel+2-iH-iCol][iH+iCol];
+          WorkingModuleEltRed:=WorkingModuleElt{[eBegin..eEnd]};
+          TheNew:=VectorGmoduleSoustraction(WorkingModuleEltRed, eVect);
+          WorkingModuleElt{[eBegin..eEnd]}:=TheNew;
+        fi;
+      od;
+    od;
+    if IsZeroReducedGmoduleVector(WorkingModuleElt)=false then
+      Print("We should panic, just maybe\n");
+      Print(NullMat(5));
+    fi;
+    if IsEqualGmoduleVector(DoDifferentiation(kLevel+1, ListReturn), TheVect)=false then
+      Print("Non correct homotopy computation for N-G-Q, please panic\n");
+      Print(NullMat(5));
+    fi;
+    return ListReturn;
+  end;
+  return rec(GRP:=TheBigGroup, 
+             Initialization:=Initialization, 
+             DoHomotopy:=DoHomotopy, 
+             GetDifferentiation:=GetDifferentiation);
+end;
+
+
+
+GetGroup288_1026:=function()
+  local EXT24, eVect, i, GRP_W4, NewListGens, TheSubgroup, FuncInsert, eElt, ListGen, GRP_576, GRPanti, O, FindPos, ListPermGens, eGen, eList, GRPperm, TheResolA4, TheResolS4, OneA4, LN;
+  EXT24:=[];
+  for eVect in BuildSet(4, [-1,1])
+  do
+    Add(EXT24, eVect);
+  od;
+  for i in [1..4]
+  do
+    eVect:=ListWithIdenticalEntries(4,0);
+    eVect[i]:=2;
+    Add(EXT24, ShallowCopy(eVect));
+    eVect[i]:=-2;
+    Add(EXT24, ShallowCopy(eVect));
+  od;
+  GRP_W4:=__VectorConfigurationFullDim_Automorphism(EXT24).MatrixGroup;
+  NewListGens:=[];
+  TheSubgroup:=Group([IdentityMat(4)]);
+  FuncInsert:=function(eElt)
+    if DeterminantMat(eElt)=1 then
+      if eElt in TheSubgroup then
+        return;
+      fi;
+      Add(NewListGens, eElt);
+      TheSubgroup:=Group(NewListGens);
+    fi;
+  end;
+  for eElt in GRP_W4
+  do
+    FuncInsert(eElt);
+  od;
+  #
+  ListGen:=SmallGeneratingSet(TheSubgroup);
+  GRP_576:=Group(ListGen);
+  GRPanti:=Group([-IdentityMat(4)]);
+  O:=Orbits(GRPanti, EXT24, OnPoints);
+  FindPos:=function(eVect)
+    local iO;
+    for iO in [1..Length(O)]
+    do
+      if Position(O[iO], eVect)<>fail then
+        return iO;
+      fi;
+    od;
+  end;
+  ListPermGens:=[];
+  for eGen in GeneratorsOfGroup(GRP_576)
+  do
+    eList:=List(O, x->FindPos(x[1]*eGen));
+    Add(ListPermGens, PermList(eList));
+  od;
+  return Group(ListPermGens);
+end;
+
+
+GetResolution288_1026:=function()
+  local GRPperm, TheResolA4, TheResolS4, OneA4, LN;
+  GRPperm:=GetGroup288_1026();
+  #
+  TheResolA4:=GetResolutionA4();
+  TheResolS4:=GetResolutionS4();
+  LN:=NormalSubgroups(GRPperm);
+  OneA4:=First(LN, x->IsomorphismGroups(x, AlternatingGroup(4))<>fail);
+  return GetResolutionFromNormalAndQuotient(GRPperm, OneA4, TheResolA4, TheResolS4);
+end;
+
+
+
+ResolutionsDirectProduct:=function(ListResol)
+  local kAvailable, nb, ListMaxNbMovedPoints, GetListKset, GetDifferentiation, Initialization, DoHomotopy, MapElementToList, MapListToElement, GetDifferentiationDi, DoHomotopyDi, GetDimensionDetails, GetDimensionEset, GetListSetPosition, ListListDim, PreGetListKset, GRP, i, eGen, ListElement, j, NewListGens, IreductionGrpElt, IreductionElt, IreductionVect;
+  nb:=Length(ListResol);
+  ListMaxNbMovedPoints:=List(ListResol, x->Maximum(MovedPoints(x.GRP)));
+  MapElementToList:=function(eElt)
+    local pos, ListElement, i, nbMax, TheOff, eList;
+    TheOff:=0;
+    ListElement:=[];
+    for i in [1..nb]
+    do
+      nbMax:=ListMaxNbMovedPoints[i];
+      eList:=List([1..nbMax], x->OnPoints(x+TheOff, eElt)-TheOff);
+      Add(ListElement, PermList(eList));
+      TheOff:=TheOff+nbMax;
+    od;
+    return ListElement;
+  end;
+  MapListToElement:=function(ListElement)
+    local TheOff, eList, i, nbMax;
+    TheOff:=0;
+    eList:=[];
+    for i in [1..nb]
+    do
+      nbMax:=ListMaxNbMovedPoints[i];
+      Append(eList, List([1..nbMax], x->OnPoints(x, ListElement[i])+TheOff));
+      TheOff:=TheOff+nbMax;
+    od;
+    return PermList(eList);
+  end;
+  NewListGens:=[];
+  for i in [1..nb]
+  do
+    for eGen in GeneratorsOfGroup(ListResol[i].GRP)
+    do
+      ListElement:=[];
+      for j in [1..nb]
+      do
+        if j=i then
+          Add(ListElement, eGen);
+        else
+          Add(ListElement, ());
+        fi;
+      od;
+      Add(NewListGens, MapListToElement(ListElement));
+    od;
+  od;
+  GRP:=Group(NewListGens);
+  PreGetListKset:=function(kLevel, hLev)
+    local iK, ReturnListKset;
+    if hLev=1 then
+      return [[kLevel]];
+    fi;
+    ReturnListKset:=[];
+    for iK in [0..kLevel]
+    do
+      Append(ReturnListKset, List(PreGetListKset(kLevel-iK, hLev-1), x->Concatenation(x, [iK])));
+    od;
+    return ReturnListKset;
+  end;
+  GetListKset:=function(kLevel)
+    return PreGetListKset(kLevel, nb);
+  end;
+  Initialization:=function(kLevel)
+    local i, ListDim, iLevel;
+    kAvailable:=kLevel;
+    ListListDim:=[];
+    for i in [1..nb]
+    do
+      ListResol[i].Initialization(kLevel);
+      ListDim:=[];
+      for iLevel in [0..kLevel]
+      do
+        Add(ListDim, ListResol[i].GetDimension(iLevel));
+      od;
+      Add(ListListDim, ListDim);
+    od;
+  end;
+  GetDimensionEset:=function(eSet)
+    local TheProd, i;
+    TheProd:=1;
+    for i in [1..nb]
+    do
+      TheProd:=TheProd*ListListDim[i][eSet[i]+1];
+    od;
+    return TheProd;
+  end;
+  GetDimensionDetails:=function(kLevel)
+    local ListKset, ListDimension, ListBeginDimension, ListEndDimension, pos, eSet, TheProd, i;
+    ListKset:=GetListKset(kLevel);
+    ListDimension:=[];
+    ListBeginDimension:=[];
+    ListEndDimension:=[];
+    pos:=0;
+    for eSet in ListKset
+    do
+      TheProd:=GetDimensionEset(eSet);
+      Add(ListDimension, TheProd);
+      Add(ListBeginDimension, pos+1);
+      pos:=pos+TheProd;
+      Add(ListEndDimension, pos);
+    od;
+    return rec(ListDimension:=ListDimension,
+               ListBeginDimension:=ListBeginDimension, 
+               ListEndDimension:=ListEndDimension, 
+               ListKset:=ListKset, 
+               TotalDim:=pos);
+  end;
+#  GetPosition:=function(eSet, valSet)
+#    local pos, TheProd, i;
+#    pos:=1;
+#    TheProd:=1;
+#    for i in [1..nb]
+#    do
+#      if valSet[i]<=0 or valSet[i]>ListListDim[i][eSet[i]+1] then
+#        Print("Inconsistency at its worst\n");
+#        Print(NullMat(5));
+#      fi;
+#      pos:=pos+(valSet[i]-1)*TheProd;
+#      TheProd:=TheProd*ListListDim[i][eSet[i]+1];
+#    od;
+#    return pos;
+#  end;
+  GetListSetPosition:=function(eSet)
+    local ListSets, i;
+    ListSets:=[];
+    for i in [1..nb]
+    do
+      Add(ListSets, [1..ListListDim[i][eSet[i]+1]]);
+    od;
+    return BuildSetMultiple(ListSets);
+  end;
+  GetDifferentiationDi:=function(eSet1, i)
+    local ListValSet1, ListValSet2, eSet2, dim1, dim2, RetMat, valSet, DiffI, eSign, eRec, ePos, iRow, iCol, ePosB, valSetB, MapElt, TheMat;
+    eSet2:=StructuralCopy(eSet1);
+    eSet2[i]:=eSet1[i]-1;
+    ListValSet1:=GetListSetPosition(eSet1);
+    ListValSet2:=GetListSetPosition(eSet2);
+    dim1:=GetDimensionEset(eSet1);
+    dim2:=GetDimensionEset(eSet2);
+    RetMat:=GMOD_GetZeroMatrix(dim1, dim2);
+    TheMat:=ListResol[i].GetDifferentiation(eSet1[i]);
+    DiffI:=Difference([1..nb], [i]);
+    eSign:=(-1)^(Sum(eSet1{[1..i-1]}));
+    MapElt:=function(eElt)
+      local ListElement, j;
+      ListElement:=[];
+      for j in [1..nb]
+      do
+        if j<>i then
+          Add(ListElement, ());
+        else
+          Add(ListElement, eElt);
+        fi;
+      od;
+      return MapListToElement(ListElement);
+    end;
+    for valSet in ListValSet1
+    do
+      ePos:=Position(ListValSet1, valSet);
+      iRow:=valSet[i];
+      for iCol in [1..TheMat.nbCol]
+      do
+        eRec:=rec(ListVal:=eSign*TheMat.TheMat[iRow][iCol].ListVal, ListElt:=List(TheMat.TheMat[iRow][iCol].ListElt, MapElt));
+        valSetB:=[];
+        valSetB{DiffI}:=valSet{DiffI};
+        valSetB[i]:=iCol;
+        ePosB:=Position(ListValSet2, valSetB);
+        RetMat.TheMat[ePos][ePosB]:=eRec;
+      od;
+    od;
+    return RetMat;
+  end;
+  GetDifferentiation:=function(kLevel)
+    local SourceDimDetails, TargetDimDetails, nbSource, nbTarget, dim1, dim2, RetMat, iSet, eSet, eSourceBegin, eSourceEnd, eSourceDim, i, eSet2, eMat, pos, eTargetBegin, eTargetEnd, eTargetDim, iRow, iCol;
+    if kLevel>kAvailable then
+      Print("GetResolutionDirectProduct, update of resolution to kLevel=", kLevel, "\n");
+      Initialization(kLevel);
+    fi;
+    SourceDimDetails:=GetDimensionDetails(kLevel);
+    TargetDimDetails:=GetDimensionDetails(kLevel-1);
+    nbSource:=Length(SourceDimDetails.ListKset);
+    nbTarget:=Length(TargetDimDetails.ListKset);
+    dim1:=SourceDimDetails.TotalDim;
+    dim2:=TargetDimDetails.TotalDim;
+    RetMat:=GMOD_GetZeroMatrix(dim1, dim2);
+    for iSet in [1..nbSource]
+    do
+      eSet:=SourceDimDetails.ListKset[iSet];
+      eSourceBegin:=SourceDimDetails.ListBeginDimension[iSet];
+      eSourceEnd:=SourceDimDetails.ListEndDimension[iSet];
+      eSourceDim:=SourceDimDetails.ListDimension[iSet];
+      for i in [1..nb]
+      do
+        if eSet[i]>0 then
+          eSet2:=StructuralCopy(eSet);
+          eSet2[i]:=eSet[i]-1;
+          eMat:=GetDifferentiationDi(eSet, i);
+          pos:=Position(TargetDimDetails.ListKset, eSet2);
+          eTargetBegin:=TargetDimDetails.ListBeginDimension[pos];
+          eTargetEnd:=TargetDimDetails.ListEndDimension[pos];
+          eTargetDim:=TargetDimDetails.ListDimension[pos];
+          for iRow in [1..eSourceDim]
+          do
+            for iCol in [1..eTargetDim]
+            do
+              RetMat.TheMat[iRow+eSourceBegin-1][iCol+eTargetBegin-1]:=GmoduleAddition(RetMat.TheMat[iRow+eSourceBegin-1][iCol+eTargetBegin-1], eMat.TheMat[iRow][iCol]);
+            od;
+          od;
+        fi;
+      od;
+    od;
+    return RetMat;
+  end;
+  IreductionGrpElt:=function(eGrpElt, i)
+    local ListElement, j;
+    ListElement:=MapElementToList(eGrpElt);
+    for j in [i+1..nb]
+    do
+      ListElement[j]:=();
+    od;
+    return MapListToElement(ListElement);
+  end;
+  IreductionElt:=function(eRec, i)
+    return ReducedGmoduleForm(rec(ListVal:=eRec.ListVal, ListElt:=List(eRec.ListElt, x->IreductionGrpElt(x,i))));
+  end;
+  IreductionVect:=function(eVect, i)
+    return List(eVect, x->IreductionElt(x,i));
+  end;
+  DoHomotopyDi:=function(eSet, i, TheVect)
+    local ListCoset, ListVect, FuncInsertEntry, iCol, nbEnt, iEnt, nbCos, eSet2, dimSource, dimTarget, TheReturn, iCos, eHomotop, MapElt, eSign, NewVect, eEnt, ListValSetTarget, ListValSetSource, eSetSource, eSetTarget, pos, TheReturnSmall, eSmallDimSource, eSmallDimTarget, ConcatFct, ListDiffI, eSetDiffI, TheImage, ListPos;
+    eSet2:=StructuralCopy(eSet);
+    eSet2[i]:=eSet[i]+1;
+    ListValSetTarget:=GetListSetPosition(eSet);
+    ListValSetSource:=GetListSetPosition(eSet2);
+    dimSource:=GetDimensionEset(eSet2);
+    dimTarget:=GetDimensionEset(eSet);
+    if Length(TheVect)<>dimTarget then
+      Print("Inconsistency here and there\n");
+      Print(NullMat(5));
+    fi;
+    if eSet[i]>0 then
+      TheImage:=VectorMatrixGmoduleMultiplication(TheVect, GetDifferentiationDi(eSet, i));
+      if IsZeroReducedGmoduleVector(IreductionVect(TheImage,i))=false then
+        Print("That is most likely an inconsistency in DoHomotopyDi\n");
+        Print(NullMat(5));
+      fi;
+    fi;
+    eSign:=(-1)^(Sum(eSet{[1..i-1]}));
+    TheReturn:=GMOD_GetZeroVector(dimSource);
+    ListDiffI:=Set(List(ListValSetTarget, x->x{Difference([1..nb], [i])}));
+    eSmallDimTarget:=ListListDim[i][eSet[i]+1];
+    eSmallDimSource:=ListListDim[i][eSet2[i]+1];
+    ConcatFct:=function(eSetRed, eVal)
+      return Concatenation(eSetRed{[1..i-1]}, [eVal], eSetRed{[i..nb-1]});
+    end;
+    for eSetDiffI in ListDiffI
+    do
+      TheReturnSmall:=GMOD_GetZeroVector(eSmallDimSource);
+      ListCoset:=[];
+      ListVect:=[];
+      FuncInsertEntry:=function(eVal, iCol, eElt)
+        local ListElement, eEltRed, eCos, posH, eVect;
+        ListElement:=MapElementToList(eElt);
+        eEltRed:=ListElement[i];
+        eCos:=ListElement{[1..i-1]};
+        posH:=Position(ListCoset, eCos);
+        if posH=fail then
+          eVect:=GMOD_GetZeroVector(eSmallDimTarget);
+          Add(eVect[iCol].ListVal, eVal);
+          Add(eVect[iCol].ListElt, eEltRed);
+          Add(ListCoset, eCos);
+          Add(ListVect, StructuralCopy(eVect));
+        else
+          Add(ListVect[posH][iCol].ListVal, eVal);
+          Add(ListVect[posH][iCol].ListElt, eEltRed);
+        fi;
+      end;
+      ListPos:=[];
+      for iCol in [1..eSmallDimTarget]
+      do
+        eSetTarget:=ConcatFct(eSetDiffI, iCol);
+        pos:=Position(ListValSetTarget, eSetTarget);
+        Add(ListPos, pos);
+        nbEnt:=Length(TheVect[pos].ListVal);
+        for iEnt in [1..nbEnt]
+        do
+          FuncInsertEntry(TheVect[pos].ListVal[iEnt], iCol, TheVect[pos].ListElt[iEnt]);
+        od;
+      od;
+      nbCos:=Length(ListCoset);
+      for iCos in [1..nbCos]
+      do
+        eHomotop:=ListResol[i].DoHomotopy(eSet[i], ReducedGmoduleVector(ListVect[iCos]));
+        MapElt:=function(eElt)
+          local ListElement, j;
+          ListElement:=Concatenation(ListCoset[iCos], [eElt]);
+          for j in [i+1..nb]
+          do
+            Add(ListElement, ());
+          od;
+          return MapListToElement(ListElement);
+        end;
+        NewVect:=[];
+        for eEnt in eHomotop
+        do
+          Add(NewVect, rec(ListVal:=eSign*eEnt.ListVal, ListElt:=List(eEnt.ListElt, MapElt)));
+        od;
+        TheReturnSmall:=VectorGmoduleAddition(TheReturnSmall, NewVect);
+      od;
+      for iCol in [1..eSmallDimSource]
+      do
+        eSetSource:=ConcatFct(eSetDiffI, iCol);
+        pos:=Position(ListValSetSource, eSetSource);
+        TheReturn[pos]:=TheReturnSmall[iCol];
+      od;
+    od;
+    TheImage:=VectorMatrixGmoduleMultiplication(TheReturn, GetDifferentiationDi(eSet2, i));
+    if IsEqualGmoduleVector(IreductionVect(TheImage,i), IreductionVect(TheVect,i))=false then
+      Print("We reached a likely inconsistency in DohomotopyDi\n");
+      Print(NullMat(5));
+    fi;
+    return TheReturn;
+  end;
+  DoHomotopy:=function(kLevel, TheVector)
+    local SourceDimDetails, TargetDimDetails, nbSource, nbTarget, ListStatusSource, ListOriginsTarget, i, eSet, eSet2, pos, WorkingModuleVector, TheReturn, IsFinished, eBeginTarget, eEndTarget, TheVect, eSet3, eBeginSource, eEndSource, eBegin3, eEnd3, pos3, eImage, j, eHomotopElt, iSet, DoCheck;
+    if kLevel> 0 and IsZeroReducedGmoduleVector(VectorMatrixGmoduleMultiplication(TheVector, GetDifferentiation(kLevel)))=false then
+      Print("You call wrongly the homotopy function of direct product construction\n");
+      Print(NullMat(5));
+    fi;
+    DoCheck:=true;
+    SourceDimDetails:=GetDimensionDetails(kLevel+1);
+    TargetDimDetails:=GetDimensionDetails(kLevel);
+    nbSource:=Length(SourceDimDetails.ListKset);
+    nbTarget:=Length(TargetDimDetails.ListKset);
+    ListOriginsTarget:=[];
+    for i in [1..nbTarget]
+    do
+      Add(ListOriginsTarget, []);
+    od;
+    ListStatusSource:=ListWithIdenticalEntries(nbSource, 1);
+    for iSet in [1..Length(SourceDimDetails.ListKset)]
+    do
+      eSet:=SourceDimDetails.ListKset[iSet];
+      for i in [1..nb]
+      do
+        if eSet[i]>0 then
+          eSet2:=StructuralCopy(eSet);
+          eSet2[i]:=eSet[i]-1;
+          pos:=Position(TargetDimDetails.ListKset, eSet2);
+          Add(ListOriginsTarget[pos], i);
+        fi;
+      od;
+    od;
+    WorkingModuleVector:=StructuralCopy(TheVector);
+    TheReturn:=GMOD_GetZeroVector(SourceDimDetails.TotalDim);
+    while(true)
+    do
+      IsFinished:=true;
+      for iSet in [1..nbTarget]
+      do
+        eSet:=TargetDimDetails.ListKset[iSet];
+        for i in [1..nb]
+        do
+          eSet2:=StructuralCopy(eSet);
+          eSet2[i]:=eSet[i]+1;
+          pos:=Position(SourceDimDetails.ListKset, eSet2);
+          if ListStatusSource[pos]=1 and i=Minimum(ListOriginsTarget[iSet]) then
+            IsFinished:=false;
+            ListStatusSource[pos]:=0;
+            eBeginTarget:=TargetDimDetails.ListBeginDimension[iSet];
+            eEndTarget:=TargetDimDetails.ListEndDimension[iSet];
+            TheVect:=WorkingModuleVector{[eBeginTarget..eEndTarget]};
+            eBeginSource:=SourceDimDetails.ListBeginDimension[pos];
+            eEndSource:=SourceDimDetails.ListEndDimension[pos];
+            eHomotopElt:=DoHomotopyDi(eSet, i, TheVect);
+            TheReturn{[eBeginSource..eEndSource]}:=eHomotopElt;
+            for j in [1..nb]
+            do
+              if eSet2[j]>0 then
+                eSet3:=StructuralCopy(eSet2);
+                eSet3[j]:=eSet2[j]-1;
+                eImage:=VectorMatrixGmoduleMultiplication(eHomotopElt, GetDifferentiationDi(eSet2, j));
+                pos3:=Position(TargetDimDetails.ListKset, eSet3);
+                eBegin3:=TargetDimDetails.ListBeginDimension[pos3];
+                eEnd3:=TargetDimDetails.ListEndDimension[pos3];
+                WorkingModuleVector{[eBegin3..eEnd3]}:=VectorGmoduleSoustraction(WorkingModuleVector{[eBegin3..eEnd3]}, eImage);
+                ListOriginsTarget[pos3]:=Difference(ListOriginsTarget[pos3], [j]);
+              fi;
+            od;
+          fi;
+        od;
+      od;
+      if IsFinished=true then
+        break;
+      fi;
+    od;
+    if DoCheck=true then
+      if IsZeroReducedGmoduleVector(WorkingModuleVector)=false then
+        Print("We should panic, just maybe\n");
+        Print(NullMat(5));
+      fi;
+      if IsEqualGmoduleVector(VectorMatrixGmoduleMultiplication(TheReturn, GetDifferentiation(kLevel+1)), TheVector)=false then
+        Print("Non correct homotopy computation for direct product, please panic\n");
+        Print(NullMat(5));
+      fi;
+    fi;
+    return TheReturn;
+  end;
+  return rec(GRP:=GRP, 
+             GetDifferentiation:=GetDifferentiation,
+             GetDifferentiationDi:=GetDifferentiationDi,
+             Initialization:=Initialization, 
+             DoHomotopy:=DoHomotopy);
+end;
+
+
+# the group is [96,227]
+# it is obtained as a subgroup of [288, 1026] so it acts on 12
+# points. It has a subgroup C2 x C2 with quotient S4 hence we can
+# get efficient resolutions from this.
+GetResolution96_227:=function()
+  local TheGRP96, LN, TheInfoCyc2, ResolC2, ResolC2_C2, OneC2C2, TheResolS4;
+  TheGRP96:=Group([ (1,8)(2,12)(5,7)(10,11), (1,8)(2,10)(3,6)(4,9)(5,7)(11,12), 
+      (1,8)(3,9)(4,6)(5,7), (1,7)(2,11)(5,8)(10,12), (1,7,5)(2,12,11)(3,9,6), 
+      (1,8,7,5)(2,3,10,9)(4,11,6,12) ]);
+  LN:=NormalSubgroups(TheGRP96);
+  TheInfoCyc2:=InformationResolutionCyclic(2);
+  ResolC2:=ResolutionPeriodic(TheInfoCyc2);
+  ResolC2_C2:=ResolutionsDirectProduct([ResolC2, ResolC2]);
+  OneC2C2:=First(LN, x->IsomorphismGroups(x, ResolC2_C2.GRP)<>fail);
+  TheResolS4:=GetResolutionS4();
+  return GetResolutionFromNormalAndQuotient(TheGRP96, OneC2C2, ResolC2_C2, TheResolS4);
+end;
+
+############################
+GramMat:=ClassicalSporadicLattices("E6");
+LFC:=DelaunayComputationStandardFunctions(GramMat);
+SHV:=ShortVectorDutourVersion(GramMat, 4);
+ListNorm:=List(SHV, x->x*GramMat*x);
+Lset:=[];
+for eNorm in Set(ListNorm)
+do
+  ListRel:=Filtered([1..Length(ListNorm)], x->ListNorm[x]=eNorm);
+  Add(Lset, SHV{ListRel});
+  Print("eNorm=", eNorm, " siz=", Length(ListRel), "\n");
+od;
+LRec:=LFC.GetDelaunayDescription();
+EXT:=LRec[1].EXT;
+
+eIso:=Isobarycenter(EXT);
+Mset:=List(EXT, x->x{[2..7]} - eIso{[2..7]});
+
+#TotalSet:=Concatenation(Mset, Lset[1]);
+TotalSet:=Concatenation(Lset[1], Lset[2]);
+GRP:=LinPolytope_Automorphism(TotalSet);
+
+ListOrb:=__RepresentativeOrbitTwoSet(GRP, [1..Length(TotalSet)]);
+ListFinal:=[];
+FuncInsert:=function(eSet)
+  local fSet, test;
+  for fSet in ListFinal
+  do
+    test:=RepresentativeAction(GRP, eSet, fSet, OnSets);
+    if test<>fail then
+      return;
+    fi;
+  od;
+  Add(ListFinal, eSet);
+end;
+for eOrb in ListOrb
+do
+  NSP:=NullspaceMat(TransposedMat(TotalSet{eOrb}));
+  Print("|NSP|=", Length(NSP), "\n");
+  if Length(NSP)=4 then
+    eSet:=[];
+    for i in [1..Length(TotalSet)]
+    do
+      test:=First(NSP, x->x*TotalSet[i]<>0);
+      if test=fail then
+        Add(eSet, i);
+      fi;
+    od;
+    FuncInsert(eSet);
+  fi;
+od;
+############################
+SolveOneCase:=function(GramMat, eName)
+  local LFC, ListBelt, eRecFree, LFC2, KillingFunctionLtype, KeepInKillBank, eRecMaximalMinimal, nbVect, eFileMaximalMinimal, eFileFree, IsSaving, ThePrefix, ThePrefixPartial, eFileSCV, ListRelevantVector, eRecRelevant1, eRecRelevant2, eFileRelevant, PreRecFree, eRecTransvers;
+  ThePrefix:=Concatenation(eName, "_freesearch/");
+  CreateDirectory(ThePrefix);
+  eFileFree:=Concatenation(ThePrefix, "eRecFree");
+  eFileMaximalMinimal:=Concatenation(ThePrefix, "eRecMaximalMinimal");
+  eFileSCV:=Concatenation(ThePrefix, "eRecSCV");
+  eFileRelevant:=Concatenation(ThePrefix, "ListRelevantVector");
+  if IsExistingFilePlusTouch(eFileFree)=true and IsExistingFilePlusTouch(eFileMaximalMinimal)=true then
+    return;
+  fi;
+  LFC:=DelaunayComputationStandardFunctions(GramMat);
+  eRecRelevant1:=LFC.GetOrbitDefiningVoronoiFacetInequalities();
+  eRecRelevant2:=eRecRelevant1.GetCompleteListFacetDefining();
+  ListRelevantVector:=eRecRelevant2.ListVectors;
+  SaveDataToFilePlusTouch(eFileRelevant, ListRelevantVector);
+  #
+  ListBelt:=LFC.GetFreeVectors();
+  PreRecFree:=ListBelt.FuncGetAllFreeVectors();
+  eRecFree:=rec(GramMat:=PreRecFree.GramMat,
+                ListMatrGens:=PreRecFree.ListMatrGens,
+                ListPermGens:=PreRecFree.ListPermGens,
+                ListFreeVect:=PreRecFree.ListFreeVect,
+                PermGRPfree:=PreRecFree.PermGRPfree);
+  SaveDataToFilePlusTouch(eFileFree, eRecFree);
+  #
+  LFC2:=ApplicationPOLYDEC_FreeStructure(PreRecFree);
+  GetCorrectIncorrectSets:=function(eSet)
+    local eCase, TheGramMat, LFC, eRec, eDiff, ListCorrect, ListIncorrect, idx, eVectOrig, eVectOrigB, eVectOrigC;
+    eCase:=LFC2.GetECase(eSet);
+    TheGramMat:=POLYDEC_GetSymmetricGramMat(eCase);
+    LFC:=DelaunayComputationStandardFunctions(TheGramMat);
+    eRec:=LFC.GetFreeVectors();
+    eDiff:=Difference([1..Length(eRecFree.ListFreeVect)], eSet);
+    ListCorrect:=[];
+    ListIncorrect:=[];
+    for idx in eDiff
+    do
+      eVectOrig:=eRecFree.ListFreeVect[idx];
+      eVectOrigB:=eVectOrig*eRecFree.GramMat;
+      eVectOrigC:=eVectOrigB*Inverse(TheGramMat);
+      if eRec.TestVectorFreeness(eVectOrigC) then
+        if eRec.TestVectorScalCondition(eVectOrigC) then
+          Print("We found a parallelotope not a Voronoi, allelujah!\n");
+          Print(NullMat(5));
+        fi;
+        Add(ListCorrect, idx);
+      else
+        Add(ListIncorrect, idx);
+      fi;
+    od;
+    return rec(ListCorrect:=ListCorrect, ListIncorrect:=ListIncorrect);
+  end;
+  nbVect:=Length(eRecFree.ListFreeVect);
+  IsSaving:=true;
+  ThePrefixPartial:=Concatenation(eName, "_freesearch/PartialEnum/");
+  CreateDirectory(ThePrefixPartial);
+  eRecMaximalMinimal:=MyEnumerationMaximalMinimalSpanning(IsSaving, ThePrefixPartial, nbVect, eRecFree.PermGRPfree, GetCorrectIncorrectSets);
+  SaveDataToFilePlusTouch(eFileMaximalMinimal, eRecMaximalMinimal);
+  #
+  eRecTransvers:=LFC.GetStronglyTransversal();
+  SaveDataToFilePlusTouch(eFileSCV, eRecTransvers.ReturnListListOrbit);
+end;
+
+
+ListCases:=[];
+DualPair:=function(eName)
+  local TheList, TheGramMat, test, DualGramMat, DualName;
+  Print("Inserting lattice ", eName, "\n");
+  TheList:=[];
+  TheGramMat:=ClassicalSporadicLattices(eName);
+  Add(TheList, rec(eName:=eName, GramMat:=TheGramMat));
+  test:=IsSelfDualLattice(TheGramMat);
+  if test=false then
+    DualGramMat:=RemoveFractionMatrix(Inverse(TheGramMat));
+    DualName:=Concatenation("Dual_", eName);
+    Add(TheList, rec(eName:=DualName, GramMat:=DualGramMat));
+  fi;
+  Append(ListCases, TheList);
+end;
+
+GetDual:=function(eName)
+  local TheGramMat, DualGramMat, DualName, TheList;
+  TheGramMat:=ClassicalSporadicLattices(eName);
+  DualGramMat:=RemoveFractionMatrix(Inverse(TheGramMat));
+  DualName:=Concatenation("Dual_", eName);
+  TheList:=[rec(eName:=DualName, GramMat:=DualGramMat)];
+  Append(ListCases);
+end;
+
+GetDirect:=function(eName)
+  local TheList, TheGramMat, test, DualGramMat, DualName;
+  Print("Inserting lattice ", eName, "\n");
+  TheList:=[];
+  TheGramMat:=ClassicalSporadicLattices(eName);
+  Add(ListCases, rec(eName:=eName, GramMat:=TheGramMat));
+end;
+#DualPair("E6");
+#DualPair("E7");
+DualPair("ER7");
+#DualPair("Kappa7");
+#DualPair("E8");
+#DualPair("Kappa8");
+#DualPair("Lambda9");
+#DualPair("Kappa9");
+#DualPair("Lambda10");
+#DualPair("O10");
+#DualPair("K12");
+#DualPair("Kappa10");
+#DualPair("Kappa11");
+#DualPair("Lambda11max");
+#DualPair("Lambda11min");
+#DualPair("Lambda12max");
+#DualPair("Lambda12mid");
+#DualPair("Lambda12min");
+#DualPair("Lambda13max");
+#DualPair("Lambda13mid");
+#DualPair("Lambda13min");
+
+for eCase in ListCases
+do
+  SolveOneCase(eCase.GramMat, eCase.eName);
+od;
+############################
+eInvMat:=[
+[0 ,0 ,0 ,1],
+[0 ,0 ,1 ,0],
+[0 ,-1,0 ,0],
+[-1, 0,0 ,0]];
+
+TheChoice:=2;
+if TheChoice=1 then
+  # Sp4Z
+  FuncTestBelong:=function(eMat)
+    if eMat*eInvMat*TransposedMat(eMat)=eInvMat and IsIntegralMat(eMat)=true then
+      return true;
+    fi;
+    return false;
+  end;
+elif TheChoice=2 then
+  # GSp4Z
+  FuncTestBelong:=function(eMat)
+    if Position([eInvMat, -eInvMat], eMat*eInvMat*TransposedMat(eMat))<>fail and IsIntegralMat(eMat)=true then
+      return true;
+    fi;
+    return false;
+  end;
+else
+  Print("Please put what you have in mind\n");
+  Print(NullMat(5));
+fi;
+
+
+
+eFace4:=IdentityMat(4);
+eFace4stab:=SymplecticStabilizer(eFace4, FuncTestBelong);
+
+eFace3_1:=Concatenation(IdentityMat(4), [[1,0,0,1]]);
+eFace3_2:=Concatenation(IdentityMat(4), [[1,0,1,0],[0,1,0,1]]);
+eFace3_3:=Concatenation(IdentityMat(4), 
+[[1,1,0,0],[0,1,0,1],[1,0,1,-1]]);
+
+eFace2_1:=Concatenation(IdentityMat(4), 
+[[1,0,0,1],[0,1,1,0]]);
+eFace2_2:=Concatenation(IdentityMat(4), 
+[[1,1,0,0],[1,0,0,-1],[0,1,0,1],[1,0,1,-1]]);
+eFace2_3:=Concatenation(IdentityMat(4),
+[[1,1,0,0],[1,0,1,0],[0,1,0,1],[1,0,1,-1]]);
+
+eFace1_1:=Concatenation(IdentityMat(4), 
+[[1,1,0,0],[1,0,1,0],[1,0,0,-1],[0,1,0,1],[1,0,1,-1]]);
+eFace1_2:=Concatenation(IdentityMat(4), 
+[[1,1,0,0],[0,1,0,-1],[0,0,1,-1],[1,1,-1,0],[1,0,-1,1]]);
+
+eFace0_1:=Concatenation(IdentityMat(4), 
+[[1,1,0,0],[1,0,1,0],[1,0,0,-1],[0,1,0,1],[1,1,1,0],[1,0,1,-1]]);
+eFace0_2:=Concatenation(IdentityMat(4), 
+[[1,1,0,0],[1,0,-1,0],[0,1,0,-1],[0,0,1,-1],[1,1,-1,0],[1,1,0,-1],[1,0,-1,1],[0,1,1,-1]]);
+
+ListListFaces:=[
+[eFace0_1,eFace0_2],
+[eFace1_1,eFace1_2],
+[eFace2_1,eFace2_2,eFace2_3],
+[eFace3_1,eFace3_2,eFace3_3],
+[eFace4]];
+
+
+
+TheBound:=GetComplexListSystems(ListListFaces, FuncTestBelong);
+DoHomology:=true;
+if DoHomology=true then
+  kLevel:=3;
+  for i in [1..kLevel]
+  do
+    Add(TheBound.ListOrbitByRank, []);
+  od;
+  ListFuncResolution:=GroupHomologyByCellDecomposition(TheBound);
+  kCall:=kLevel+1;
+  ListFuncResolution.Initialization(kCall);
+  ListMatrices:=[];
+  for i in [1..kCall]
+  do
+    Print("Getting differential Nr", i, "\n");
+    Add(ListMatrices, ListFuncResolution.GetDifferentiation(i));
+  od;
+  TheHomologies:=GettingHomologies(ListMatrices);
+fi;
+GetTheCharLinSystem:=function(ListListFaces, iRank, iOrbit, eElt)
+  local eSystSec;
+  eSystSec:=ListListFaces[iRank][iOrbit]*eElt;
+  return Set(Concatenation(eSystSec, -eSystSec));
+end;
+DoComplexTopDim:=true;
+if DoComplexTopDim=true then
+  MaxDim:=Length(TheBound.ListOrbitByRank)-1;
+  nbTopDim:=Length(TheBound.ListOrbitByRank[MaxDim+1]);
+  for iTop in [1..nbTopDim]
+  do
+    ListListCell:=[];
+    ListListMat:=[];
+    ListListIOrbit:=[];
+    for i in [1..MaxDim]
+    do
+      Add(ListListCell, []);
+      Add(ListListMat, []);
+      Add(ListListIOrbit, []);
+    od;
+    
+    ListListCell[MaxDim]:=[GetTheCharLinSystem(ListListFaces, MaxDim, iTop, IdentityMat(4))];
+    ListListMat[MaxDim]:=[IdentityMat(4)];
+    ListListIOrbit[MaxDim]:=[iTop];
+    for jRank in Reversed([1..MaxDim-1])
+    do
+      nbCell:=Length(ListListCell[jRank+1]);
+      for iCell in [1..nbCell]
+      do
+        iOrbitB:=ListListIOrbit[jRank+1][iCell];
+        eMatB:=ListListMat[jRank+1][iCell];
+        BoundImg:=TheBound.ListOrbitByRank[jRank+2][iOrbitB].BoundaryImage;
+        len:=Length(BoundImg.ListSign);
+        Print("len=", len, "\n");
+        for i in [1..len]
+        do
+          iOrbit:=BoundImg.ListIFace[i];
+          eElt:=BoundImg.ListElt[i];
+          eProdElt:=eElt*eMatB;
+          eSystSec:=ListListFaces[jRank][iOrbit]*eProdElt;
+          eSystTot:=Set(Concatenation(eSystSec, -eSystSec));
+          pos:=Position(ListListCell[jRank], eSystTot);
+          if pos=fail then
+            Add(ListListCell[jRank], eSystTot);
+            Add(ListListMat[jRank], eProdElt);
+            Add(ListListIOrbit[jRank], iOrbit);
+          fi;
+        od;
+      od;
+      Print("|ListListCell[", jRank, "]|=", Length(ListListCell[jRank]), "\n");
+    od;
+    nbVert:=Length(ListListCell[1]);
+    ListListSets:=[];
+    for jRank in [1..MaxDim]
+    do
+      nbCell:=Length(ListListCell[jRank]);
+      ListSets:=[];
+      for iCell in [1..nbCell]
+      do
+        eSet:=[];
+        for iVert in [1..nbVert]
+        do
+          if IsSubset(ListListCell[1][iVert], ListListCell[jRank][iCell])=true then
+            Add(eSet, iVert);
+          fi;
+        od;
+        Add(ListSets, eSet);
+      od;
+      Add(ListListSets, ListSets);
+    od;
+  od;
+fi;
+
+
+############################
+eInvMat:=[
+[0,0,0,1],
+[0,0,1,0],
+[0,-1,0,0],
+[-1,0,0,0]];
+
+TheChoice:=1;
+if TheChoice=1 then
+  # Sp4Z
+  FuncTestBelong:=function(eMat)
+    if eMat*eInvMat*TransposedMat(eMat)=eInvMat and IsIntegralMat(eMat)=true then
+      return true;
+    fi;
+    return false;
+  end;
+elif TheChoice=2 then
+  # GSp4Z
+  FuncTestBelong:=function(eMat)
+    if Position([eInvMat, -eInvMat], eMat*eInvMat*TransposedMat(eMat))<>fail and IsIntegralMat(eMat)=true then
+      return true;
+    fi;
+    return false;
+  end;
+else
+  Print("Please put what you have in mind\n");
+  Print(NullMat(5));
+fi;
+
+
+eFace4:=IdentityMat(4);
+eFace4stab:=SymplecticStabilizer(eFace4, FuncTestBelong);
+
+eFace3_1:=Concatenation(IdentityMat(4), [[1,0,0,1]]);
+eFace3_2:=Concatenation(IdentityMat(4), [[0,1,0,1], [1,0,1,0]]);
+eFace3_3:=Concatenation(IdentityMat(4), [[0,0,1,1], [1,0,1,0], [-1,1,0,1]]);
+eFace3_1stab:=SymplecticStabilizer(eFace3_1, FuncTestBelong);
+eFace3_2stab:=SymplecticStabilizer(eFace3_2, FuncTestBelong);
+eFace3_3stab:=SymplecticStabilizer(eFace3_3, FuncTestBelong);
+
+
+
+eFace2_1:=Concatenation(IdentityMat(4), [[1,0,0,1],[0,1,1,0]]);
+eFace2_2:=Concatenation(IdentityMat(4), [[0,0,1,1],[1,0,0,1],[1,0,1,0],[1,1,0,1]]);
+eFace2_3:=Concatenation(IdentityMat(4), [[0,0,1,1],[0,1,0,1],[1,0,1,0],[1,1,0,1]]);
+eFace2_1stab:=SymplecticStabilizer(eFace2_1, FuncTestBelong);
+eFace2_2stab:=SymplecticStabilizer(eFace2_2, FuncTestBelong);
+eFace2_3stab:=SymplecticStabilizer(eFace2_3, FuncTestBelong);
+
+eFace1_1:=Concatenation(IdentityMat(4), 
+[[0,0,1,1],[0,1,0,1],[1,0,0,1],[1,0,1,0],[1,1,0,1]]);
+eFace1_2:=Concatenation(IdentityMat(4), 
+[[0,0,1,1],[1,0,1,0],[-1,1,0,0],[0,1,1,1],[1,1,0,1]]);
+eFace1_1stab:=SymplecticStabilizer(eFace1_1, FuncTestBelong);
+eFace1_2stab:=SymplecticStabilizer(eFace1_2, FuncTestBelong);
+
+eFace0_1:=Concatenation(IdentityMat(4), 
+[[1,1,0,0],[1,0,1,0],[1,0,0,-1],[0,1,0,1],[1,1,1,0],[1,0,1,-1]]);
+eFace0_2:=Concatenation(IdentityMat(4), 
+[[1,1,0,0],[1,0,-1,0],[0,1,0,-1],[0,0,1,-1],[1,1,-1,0],[1,1,0,-1],[1,0,-1,1],[0,1,1,1]]);
+eFace0_1stab:=SymplecticStabilizer(eFace0_1, FuncTestBelong);
+eFace0_2stab:=SymplecticStabilizer(eFace0_2, FuncTestBelong);
+
+eFaceDesargues:=Concatenation(IdentityMat(4), 
+[[1,1,0,0],[1,0,1,0],[0,0,1,1],[1,1,1,0],[1,0,1,1],[1,1,1,1]]);
+eFaceDesarguesStab:=SymplecticStabilizer(eFaceDesargues, FuncTestBelong);
+eFaceReye:=Concatenation(IdentityMat(4), 
+[[1,1,0,0],[1,0,1,0],[0,1,0,1],[0,0,1,1],[1,1,1,1],[1,1,1,0],
+ [0,1,1,1],[1,0,0,-1]]);
+eFaceReyeStab:=SymplecticStabilizer(eFaceReye, FuncTestBelong);
+############################
+#EXT:=ClassicalExtremeDelaunayPolytopes("G6");
+#EXT:=ClassicalExtremeDelaunayPolytopes("G7");
+EXT:=ClassicalExtremeDelaunayPolytopes([7,1]);
+
+GRP:=__TheCore_Automorphism(EXT);
+
+
+DDA:=DualDescriptionAdjacencies(EXT);
+Print("|FAC|=", Length(DDA.FAC), "\n");
+nbVert:=DDA.SkeletonGraph.order;
+Print("nbVert=", nbVert, "\n");
+ListDeg:=Collected(List([1..nbVert], x->Length(Adjacency(DDA.SkeletonGraph, x))));
+Print("ListDeg=", ListDeg, "\n");
+TheDegDual:=DDA.RidgeGraph.order;
+ListDegDual:=Collected(List([1..TheDegDual], x->Length(Adjacency(DDA.RidgeGraph, x))));
+Print("ListDegDual=", ListDegDual, "\n");
+
+############################
+n:=3;
+DoGroupHomologyComp:=true;
+
+Imultiplication:=NullMat(2*n,2*n);
+TheSuperMat:=NullMat(2*n,2*n);
+for i in [1..n]
+do
+  Imultiplication[2*i-1][2*i]:=-1;
+  Imultiplication[2*i][2*i-1]:=1;
+  Imultiplication[2*i][2*i]:=1;
+  #
+  TheSuperMat[2*i-1][2*i-1]:=2;
+  TheSuperMat[2*i-1][2*i]:=-1;
+  TheSuperMat[2*i][2*i-1]:=-1;
+  TheSuperMat[2*i][2*i]:=2;
+od;
+
+ListGen:=[Imultiplication];
+eCasePrev:=rec(TheGroup:=Group(ListGen), SuperMat:=TheSuperMat);
+TheRES:=GetEnumerationPerfectFormGspace(eCasePrev);
+
+Print("TheTessel1\n");
+TheTessel1:=TheRES.TheTesselation;
+PrintOrbitwiseTesselationInformation(TheTessel1);
+Print("\n\n");
+
+
+Print("TheTessel2\n");
+TheTessel2:=DomainSplitting(TheTessel1, [1,2]);
+PrintOrbitwiseTesselationInformation(TheTessel2);
+CheckTilingFaceToFace(TheTessel2);
+Print("\n\n");
+
+
+Print("TheTessel3\n");
+TheRay1:=GetTotalInvariantRay(TheTessel2, 2);
+TheTessel3:=DomainSplittingGeneralized(TheTessel2, 2, TheRay1);
+PrintOrbitwiseTesselationInformation(TheTessel3);
+CheckTilingFaceToFace(TheTessel3);
+Print("\n\n");
+
+
+if DoGroupHomologyComp=true then
+  Print("Doing group homology computation\n");
+  #WorkingTesselation:=TheTessel1;
+  #WorkingTesselation:=TheTessel2;
+  WorkingTesselation:=TheTessel3;
+  kLevel:=5;
+  eRecIAI:="unset";
+  RecOption:=rec(DoBound:=true, DoSign:=true, DoElt:=true, 
+                 DoRotationSubgroup:=true);
+  TheBound:=BoundaryOperatorsFromPolyhedralTesselation(WorkingTesselation, kLevel, TheRES.FuncDoRetractionDual, eRecIAI, RecOption);
+  ListFuncResolution:=GroupHomologyByCellDecomposition(TheBound);
+  kCall:=kLevel+1;
+  ListFuncResolution.Initialization(kCall);
+  ListMatrices:=[];
+  for i in [1..kCall]
+  do
+    eMatrix:=ListFuncResolution.GetDifferentiation(i);
+    Add(ListMatrices, eMatrix);
+    eFileSave:=Concatenation("DATA/PGL3_EisInt", String(i));
+    SaveDataToFile(eFileSave, eMatrix);
+  od;
+  HomologyPGL3:=GettingHomologies(ListMatrices);
+fi;
+############################
+n:=3;
+DoGroupHomologyComp:=true;
+Imultiplication:=NullMat(2*n,2*n);
+for i in [1..n]
+do
+  Imultiplication[2*i][2*i-1]:=1;
+  Imultiplication[2*i-1][2*i]:=-1;
+od;
+
+ListGen:=[Imultiplication];
+eCasePrev:=rec(TheGroup:=Group(ListGen), SuperMat:=IdentityMat(2*n));
+TheINFO:=GetEnumerationPerfectFormGspace(eCasePrev);
+
+Print("TheTessel1\n");
+TheTessel1:=TheINFO.TheTesselation;
+PrintOrbitwiseTesselationInformation(TheTessel1);
+Print("\n\n");
+
+
+Print("TheTessel2\n");
+TheTessel2:=DomainSplitting(TheTessel1, [1]);
+PrintOrbitwiseTesselationInformation(TheTessel2);
+CheckTilingFaceToFace(TheTessel2);
+Print("\n\n");
+
+
+if DoGroupHomologyComp=true then
+  #WorkingTesselation:=TheTessel1;
+  WorkingTesselation:=TheTessel2;
+  kLevel:=5;
+  eRecIAI:="unset";
+  RecOption:=rec(DoBound:=true, DoSign:=true, DoElt:=true, 
+                 DoRotationSubgroup:=true);
+  TheBound:=BoundaryOperatorsFromPolyhedralTesselation(WorkingTesselation, kLevel, TheINFO.FuncDoRetraction);
+  ListFuncResolution:=GroupHomologyByCellDecomposition(TheBound);
+  kCall:=kLevel+1;
+  ListFuncResolution.Initialization(kCall);
+  ListMatrices:=[];
+  for i in [1..kCall]
+  do
+    Add(ListMatrices, ListFuncResolution.GetDifferentiation(i));
+  od;
+  HomologyPGL3:=GettingHomologies(ListMatrices);
+fi;
+############################
+DoTest:=function(n,k)
+  local EXT1, EXT2, GRP1, GRP2, ListTrig;
+  EXT1:=Filtered(BuildSet(n, [0,1]), x->Sum(x)=k);
+  EXT2:=List(EXT1, x->Concatenation([1], x{[1..n-1]}));
+  GRP1:=LinPolytope_Automorphism(EXT1);
+  GRP2:=LinPolytope_Automorphism(EXT2);
+  ListTrig:=GetAllTriangulations(EXT2, GRP2);
+  return rec(ListTrig:=ListTrig,
+             EXT:=EXT2, GRP:=GRP2);
+end;
+
+eRec:=DoTest(5,2);
+############################
+n:=3;
+EXT1:=BuildSet(n, [0,1]);
+
+EXT:=List(EXT1, x->Concatenation([1],x));
+
+GRP:=LinPolytope_Automorphism(EXT);
+
+ListTrig:=GetAllTriangulations(EXT, GRP);
+
+############################
+TheLatt:="A";
+#TheLatt:="D";
+TheNorm:="L1";
+#TheNorm:="Li";
+nMin:=2;
+nMax:=6;
+
+for n in [nMin..nMax]
+do
+  Print("n=", n, " TheLatt=", TheLatt, " TheNorm=", TheNorm, "\n");
+  if TheLatt="A" then
+    Print("Case A\n");
+    eRecLatt:=Vor_Linfinity_L1_An(n);
+  else
+    Print("Case D\n");
+    eRecLatt:=Vor_Linfinity_L1_Dn(n);
+  fi;
+  if TheNorm="L1" then
+    eRecL1:=eRecLatt.eRec_L1;
+  else
+    eRecL1:=eRecLatt.eRec_Li;
+  fi;
+  FileSave:=Concatenation("DATA/B_ListRecCompCell", TheNorm, "_", TheLatt, String(n));
+  if IsExistingFilePlusTouch(FileSave)=false then
+    ListRecCompCell:=VOR_L1_FullEnumerationCell(eRecL1);
+    SaveDataToFilePlusTouch(FileSave, rec(ListRecCompCell:=ListRecCompCell));
+  else
+    eRecSave:=ReadAsFunction(FileSave)();
+    ListRecCompCell:=eRecSave.ListRecCompCell;
+  fi;
+  FileSave:=Concatenation("DATA/B_ListRecCompEquiPlane", TheNorm, "_", TheLatt, String(n));
+  if IsExistingFilePlusTouch(FileSave)=false then
+    ListEXTinc:=VOR_L1_FullEnumerationFacet(eRecL1, ListRecCompCell);
+    SaveDataToFilePlusTouch(FileSave, ListEXTinc);
+  else
+    ListEXTinc:=ReadAsFunction(FileSave)();
+  fi;
+  #
+  FileData:=Concatenation("DATA/B_ListRecCompData", TheNorm, "_", TheLatt, String(n));
+  RemoveFileIfExist(FileData);
+  output:=OutputTextFile(FileData, true);
+  nbRecCompCell:=Length(ListRecCompCell);
+  Print("nbRecCompCell=", nbRecCompCell, "\n");
+  AppendTo(output, "nbRecCompCell=", nbRecCompCell, "\n");
+  VolCheck:=false;
+#  VolCheck:=true;
+  if VolCheck then
+    SumVol:=0;
+    ListVol:=[];
+    ListStabSize:=[];
+    NbCell:=0;
+    for iRecCompCell in [1..nbRecCompCell]
+    do
+      eRecCompCell:=ListRecCompCell[iRecCompCell];
+      eR:=VOR_L1_GetVertices(eRecL1, eRecCompCell);
+      TheVol:=VolumeComputationPolytope(eR.EXText);
+      Add(ListVol, TheVol);
+      eRstab:=VOR_L1_AutomorphismCompFacet(eRecL1, eRecCompCell);
+      eStabSize:=Order(eRstab.GRPaff);
+      Add(ListStabSize, eStabSize);
+      OrbSize:=Order(eRecL1.PointGRP)/eStabSize;
+      SumVol:=SumVol + TheVol* OrbSize;
+      NbCell:=NbCell + OrbSize;
+      Print("iRecCompCell=", iRecCompCell, " / ", nbRecCompCell, " |EXT|=", Length(eR.EXText), " |stab|=", eStabSize, "\n");
+      AppendTo(output, "iRecCompCell=", iRecCompCell, " / ", nbRecCompCell, " |EXT|=", Length(eR.EXText), " |stab|=", eStabSize, "\n");
+    od;
+    Print("SumVol=", SumVol, " NbCell=", NbCell, "\n");
+    AppendTo(output, "SumVol=", SumVol, " NbCell=", NbCell, "\n");
+  fi;
+  #
+  # Now Voronoi vertices
+  #
+  FileSave:=Concatenation("DATA/B_ListRecVoronoi", TheNorm, "_", TheLatt, String(n));
+  if IsExistingFilePlusTouch(FileSave)=false then
+    eRecVoronoi:=VOR_L1_GetOrbitVertexVoronoi(eRecL1, ListRecCompCell);
+    SaveDataToFilePlusTouch(FileSave, eRecVoronoi);
+  else
+    eRecVoronoi:=ReadAsFunction(FileSave)();
+  fi;
+  #
+  nbOrb:=Length(eRecVoronoi.ListOrbitSize);
+  AppendTo(output, "Representatives of orbits of Voronoi vertices\n");
+  for iOrb in [1..nbOrb]
+  do
+    AppendTo(output, iOrb, "/", nbOrb, " |O|=", eRecVoronoi.ListOrbitSize[iOrb], " eRepr=");
+    WriteVector(output, eRecVoronoi.ListOrbitRepr[iOrb]*eRecL1.ListVect);
+  od;
+  #
+  #
+  AppendTo(output, "Representatives of orbits of Equi planes\n");
+  nbOrb:=Length(ListEXTinc);
+  for iOrb in [1..nbOrb]
+  do
+    AppendTo(output, iOrb, "/", nbOrb, "\n");
+    WriteMatrix(output, ListEXTinc[iOrb]);
+  od;
+  #
+  CheckListEqui:=false;
+  if CheckListEqui then
+    Print("Before ChecListEqui\n");
+    for eRecCompCell in ListRecCompCell
+    do
+      eRecEXT:=VOR_L1_GetVertices(eRecL1, eRecCompCell);
+      eIso:=Isobarycenter(eRecEXT.EXT);
+      ListClos:=VOR_L1_FindClosest(eRecL1, eIso);
+      ListEquiPt:=List(eRecCompCell.ListEqui, x->x.ePt);
+      if Set(ListClos)<>Set(ListEquiPt) then
+        Print("We have a clear error\n");
+        Print(NullMat(5));
+      fi;
+    od;
+  fi;
+  #
+  FileSave:=Concatenation("DATA/B_ListDvertices", TheNorm, "_", TheLatt, String(n));
+  if IsExistingFilePlusTouch(FileSave)=false then
+    Drec:=VOR_L1_Get_Dvertices(eRecL1, ListRecCompCell);
+    SaveDataToFilePlusTouch(FileSave, Drec);
+  else
+    Drec:=ReadAsFunction(FileSave)();
+  fi;
+  Print("|Drec|=", Length(Drec.ListVertices), "\n");
+  #
+  # Now the real Voronoi vertices
+  #
+  FileTex:=Concatenation("DATA/B_table", TheNorm, "_", TheLatt, String(n), ".tex");
+  RemoveFileIfExist(FileTex);
+  outputTex:=OutputTextFile(FileTex, true);
+  AppendTo(outputTex, "LocalMaxDim=", Drec.LocalMaxDim, "\n");
+  TheSel:=Filtered(Drec, x->x.IsTrueVertex=true);
+  nbSel:=Length(TheSel);
+  Print("|TheSel|=", nbSel, "\n");
+  for iSel in [1..nbSel]
+  do
+    hRec:=TheSel[iSel];
+    eVert1:=(hRec.eVert2 - hRec.eVert1)*eRecL1.ListVect;
+    ePerm:=SortingPerm(eVert1);
+    eVert:=Permuted(eVert1, ePerm);
+    AppendTo(outputTex, "(");
+    len:=Length(eVert);
+    for iCol in [1..len]
+    do
+      if iCol>1 then
+        AppendTo(outputTex, ",");
+      fi;
+      AppendTo(outputTex, eVert[iCol]);
+    od;
+    AppendTo(outputTex, ")");
+    AppendTo(outputTex, " & ");
+    AppendTo(outputTex, hRec.IsMax);
+    AppendTo(outputTex, "\\\\\n");
+  od;
+  CloseStream(outputTex);
+  #
+  CloseStream(output);
+od;
+
+############################
+n:=6;
+EXT:=[];
+for eEXT in BuildSet(n, [0,1])
+do
+  Add(EXT, Concatenation([1], eEXT));
+od;
+ListTrigs:=TriangulationRecursiveDelaunay(EXT);
+############################
+ListEXT:=ReadAsFunction("List24_EXT")();
+#ListEXT:=ReadAsFunction("List8_EXT")();
+
+
+ListEquiv:=[];
+for EXT in ListEXT
+do
+  len:=Length(EXT[1]);
+  eMat:=RandomIntegralGLnZmatrix(len);
+  EXT1:=Set(EXT);
+  EXT2:=Set(EXT*eMat);
+  eEquiv:=LinPolytopeIntegral_Isomorphism(EXT1, EXT2);
+  Add(ListEquiv, eEquiv);
+od;
+
+############################
+ListEXT:=ReadAsFunction("List24_EXT")();
+#ListEXT:=ReadAsFunction("List8_EXT")();
+
+
+ListGRP:=[];
+for EXT in ListEXT
+do
+  eRecGRP:=LinPolytopeIntegral_Automorphism(EXT);
+  Add(ListGRP, eRecGRP);
+od;
+
+############################
+#EXT:=ClassicalExtremeDelaunayPolytopes("G6");
+#EXT:=ClassicalExtremeDelaunayPolytopes("G7");
+#EXT:=ClassicalExtremeDelaunayPolytopes([7,1]);
+
+ListTwoFaces:=[];
+for i in [1..27]
+do
+  EXT:=ClassicalExtremeDelaunayPolytopes([8,i]);
+  GRP:=LinPolytope_Automorphism(EXT);
+  LevSearch:=3;
+  TheIncomp:=IncompleteSkeletonSearch(GRP, EXT, [], LevSearch);
+  ListRep:=TheIncomp[3].ListRepresentent;
+  ListSizes:=List(ListRep, Length);
+  if Position(ListSizes, 4)<>fail then
+    Print("We find one\n");
+    Print(NullMat(5));
+  fi;
+od;
+############################
+EXT:=ClassicalExtremeDelaunayPolytopes("G6");
+
+nbVert:=Length(EXT);
+GRP:=SymmetricGroup([1..nbVert]);
+
+ListCan:=[];
+nbIter:=100;
+for iter in [1..nbIter]
+do
+  Print("iter=", iter, " / ", nbIter, " |ListCan|=", Length(Set(ListCan)), "\n");
+  g:=Random(GRP);
+  EXTperm:=Permuted(EXT, g);
+  eRec:=LinPolytopeIntegral_CanonicalForm(EXTperm);
+#  eRand:=RandomIntegralGLnZmatrix(4);
+  Add(ListCan, eRec.EXT);
+
+od;############################
+GetCone:=function(n)
+  local GRP, ListChar, eSet, i, GetElementImage, ListNewPermGens, eGen, eList, H, GetVector, FAC, fSet, GRPret;
+  GRP:=SymmetricGroup(n);
+  ListChar:=[];
+  for eSet in Combinations([1..n],3)
+  do
+    for i in eSet
+    do
+      fSet:=Difference(eSet, [i]);
+      Add(ListChar, [i, fSet]);
+    od;
+  od;
+  GetElementImage:=function(eChar, g)
+    return [OnPoints(eChar[1], g), OnSets(eChar[2], g)];
+  end;
+  ListNewPermGens:=[];
+  for eGen in GeneratorsOfGroup(GRP)
+  do
+    eList:=List(ListChar, x->Position(ListChar, GetElementImage(x, eGen)));
+    Add(ListNewPermGens, PermList(eList));
+  od;
+  H:=Combinations([1..n], 2);
+  GetVector:=function(eChar)
+    local eVect, u, eSet, pos;
+    eVect:=ListWithIdenticalEntries(Length(H)+1, 0);
+    for u in eChar[2]
+    do
+      eSet:=Set([u, eChar[1]]);
+      pos:=Position(H, eSet);
+      eVect[pos+1]:=-1;
+    od;
+    pos:=Position(H, eChar[2]);
+    eVect[pos+1]:=1;
+    return eVect;
+  end;
+  FAC:=List(ListChar, GetVector);
+  GRPret:=Group(ListNewPermGens);
+  return rec(FAC:=FAC, GRP:=GRPret);
+end;
+
+n:=7;
+
+eRec:=GetCone(n);
+
+ePre:=Concatenation("Metric", String(n));
+eFileEXT:=Concatenation(ePre, ".ext");
+eFileGRP:=Concatenation(ePre, ".grp");
+SYMPOL_PrintMatrix(eFileEXT, eRec.FAC);
+SYMPOL_PrintGroup(eFileGRP, Length(eRec.FAC), eRec.GRP);
+############################
+ListCases:=[
+rec(name:="K4", ListVect:=[
+[1,0,0],
+[0,1,0],
+[0,0,1],
+[1,-1,0],
+[1,0,-1],
+[0,1,-1]],
+TheSum:="(1+t^3 +t^4+t^5+t^6+t^9)/((1-t)*(1-t^2)^2*(1-t^3)^2*(1-t^4))"),
+rec(name:="C222", ListVect:=[
+[1,0,0,0],
+[0,1,0,0],
+[0,0,1,0],
+[1,0,0,-1],
+[0,1,0,-1],
+[0,0,1,-1]],
+TheSum:="(1+t^4+t^5-t^7-t^8-t^12)/((1-t)*(1-t^2)^2*(1-t^3)^2*(1-t^4)*(1-t^6))"),
+rec(name:="C2221", ListVect:=[
+[1,0,0,0],
+[0,1,0,0],
+[0,0,1,0],
+[0,0,0,1],
+[1,0,0,-1],
+[0,1,0,-1],
+[0,0,1,-1]],
+TheSum:="(1+t^4+t^5-t^7-t^8-t^12)/((1-t)^2*(1-t^2)^2*(1-t^3)^2*(1-t^4)*(1-t^6))"),
+rec(name:="C321", ListVect:=[
+[1,0,0,0],
+[0,1,0,0],
+[0,0,0,1],
+[1,0,0,-1],
+[0,1,0,-1],
+[0,0,1,-1]],
+TheSum:="1/((1-t)^3*(1-t^2)^2*(1-t^3))"),
+rec(name:="K5-3", ListVect:=[
+[1,0,0,0],
+[0,1,0,0],
+[0,0,1,0],
+[1,0,-1,0],
+[1,0,0,-1],
+[0,1,-1,0],
+[0,1,0,-1]],
+TheSum:="(1-t+2*t^2)/((1-t)^4 * (1-t^2)^2 * (1-t^4))"),
+rec(name:="K5-2-1", ListVect:=[
+[1,0,0,0],
+[0,1,0,0],
+[0,0,0,1],
+[1,-1,0,0],
+[1,0,0,-1],
+[0,1,-1,0],
+[0,0,1,-1]],
+TheSum:="(1-t+2*t^2)/((1-t)^4 * (1-t^2)^2 * (1-t^4))"),
+rec(name:="C421", ListVect:=[
+[1,0,0,0,0],
+[0,1,0,0,0],
+[0,0,1,0,0],
+[1,0,0,0,-1],
+[0,1,-1,0,0],
+[0,0,1,-1,0],
+[0,0,0,1,-1]],
+TheSum:="1/((1-t)^3 * (1-t^2)^2 * (1-t^3) * (1-t^4))"),
+rec(name:="C331", ListVect:=[
+[1,0,0,0,0],
+[0,1,0,0,0],
+[0,0,0,1,0],
+[1,0,0,0,-1],
+[0,1,-1,0,0],
+[0,0,1,-1,0],
+[0,0,0,1,-1]],
+TheSum:="(1-t+t^2+t^4)/((1-t)^3 * (1-t^2) * (1-t^3) * (1-t^4) * (1-t^6))"),
+rec(name:="K4-1", ListVect:=[
+[1,0,0],
+[0,1,0],
+[0,0,1],
+[1,0,-1],
+[0,1,-1]],
+TheSum:="(1-t+t^2)/((1-t)^3 * (1-t^2) * (1-t^4))")];
+
+
+#ChoiceProg:="sage";
+ChoiceProg:="pari";
+
+
+
+for eCase in ListCases
+do
+  InputFile:=Concatenation("specificsum_", eCase.name, ".", ChoiceProg);
+  RemoveFileIfExist(InputFile);
+  eSHV:=eCase.ListVect;
+  RecGRPcone:=SHORT_GetStabilizerCone(eSHV);
+  #
+  output:=OutputTextFile(InputFile, true);
+  if ChoiceProg = "sage" then
+    AppendTo(output, "t = var('t')\n");
+    SHORT_SAGE_PrintPsigmaSum(output, eSHV, RecGRPcone);
+  fi;
+  if ChoiceProg = "pari" then
+    SHORT_PARI_PrintPsigmaSum(output, eSHV, RecGRPcone);
+  fi;
+  AppendTo(output, "TheSum = ", eCase.TheSum, "\n");
+  AppendTo(output, "control = PsigmaSum - TheSum\n");
+  CloseStream(output);
+od;
+
+############################
+#eG:=ClassicalSporadicLattices("E8");
+eG:=ClassicalSporadicLattices("E6");
+LFC:=DelaunayComputationStandardFunctions(eG);
+ListOrbitByDim:=LFC.GetOrbitCells();
+############################
+#EXT:=ClassicalExtremeDelaunayPolytopes("G6"); #The Schlafli polytope
+EXT:=ClassicalExtremeDelaunayPolytopes("G7"); #The Gosset polytope
+
+GRP:=__VectorConfiguration_Automorphism(EXT);
+FAC:=DualDescription(EXT);
+
+
+Print("|EXT|=", Length(EXT), "  |FAC|=", Length(FAC), "  |GRP|=", Order(GRP), "\n");
+
+LorbFlag:=ListFlagOrbit(GRP, EXT, FAC);
+
+############################
+EXT:=[[0,0,1,0,0,1,0,0,0,-1,1,0,0,0,1,0,0,0,0,0,-1,0,0,1],
+[0,0,1,0,1,1,-1,0,-1,0,1,-1,0,0,0,0,0,-1,-1,0,-1,0,0,1],
+[0,0,1,0,0,1,-1,0,0,0,0,0,-1,0,0,0,0,0,0,1,-1,0,0,1],
+[0,1,1,0,0,0,0,0,0,0,-1,0,0,-1,0,1,0,0,0,1,0,1,1,1],
+[0,0,1,0,1,0,0,0,-1,0,0,0,0,0,0,0,1,-1,0,0,-1,1,0,1],
+[-1,0,1,1,1,1,0,0,-1,0,0,0,-1,-1,0,1,-1,-1,0,0,0,1,1,1],
+[1,1,0,0,0,0,0,1,0,0,0,0,0,-1,0,1,0,0,0,1,0,1,0,1],
+[1,0,0,0,0,0,-1,1,-1,0,0,0,0,-1,0,0,0,0,-1,1,-1,0,-1,1],
+[0,-1,1,1,1,0,0,0,-1,0,0,0,-1,0,-1,0,1,0,0,-1,-1,0,-1,1],
+[0,0,0,0,1,1,0,1,0,0,0,0,0,1,0,0,0,0,-1,0,0,0,0,1],
+[0,-1,1,0,1,1,-1,1,-1,0,1,0,-1,0,0,0,0,-1,0,0,-1,0,0,1],
+[0,1,1,1,1,0,0,-1,-1,-1,0,0,-1,-1,0,1,0,0,0,0,-1,1,1,1],
+[0,0,1,0,1,1,0,0,0,0,-1,0,0,0,0,0,0,0,-1,0,0,0,0,1],
+[1,1,1,1,0,1,0,0,0,0,0,-1,0,0,0,1,0,0,-1,1,0,1,1,1],
+[0,0,1,1,1,0,0,0,-1,-1,0,-1,0,0,-1,1,0,-1,0,0,0,1,0,1],
+[0,0,1,0,1,0,-1,-1,0,0,0,-1,0,0,0,0,1,0,0,0,-1,1,0,1],
+[0,0,1,1,1,1,0,0,-1,0,0,0,-1,0,0,0,0,0,-1,0,-1,0,1,1],
+[0,0,1,0,0,1,0,1,0,0,0,1,-1,0,0,1,0,0,0,0,0,0,0,1],
+[0,0,1,1,1,1,0,0,0,0,0,0,-1,0,0,0,0,0,0,0,0,1,1,1],
+[0,0,1,1,1,0,1,0,-1,-1,0,0,-1,0,0,1,0,0,0,0,-1,1,1,1],
+[-1,0,1,0,1,1,-1,0,-1,0,0,0,-1,0,0,0,-1,-1,-1,1,-1,1,1,1],
+[1,0,1,1,1,1,0,0,-1,-1,1,-1,0,1,0,0,1,0,-1,-1,-1,0,0,1],
+[1,0,1,0,1,0,0,0,0,-1,0,0,0,0,0,1,1,0,0,0,-1,0,0,1],
+[1,1,0,0,0,0,0,0,0,0,-1,0,0,0,0,0,1,1,-1,1,-1,1,0,1],
+[0,0,1,0,0,1,0,1,0,1,0,0,0,0,0,0,0,0,-1,0,0,0,0,1],
+[0,0,1,0,1,0,0,0,-1,-1,0,0,0,-1,0,1,0,-1,0,0,-1,1,0,1],
+[0,1,1,0,0,1,0,0,0,-1,1,0,0,0,1,1,0,0,0,0,-1,0,1,1],
+[0,0,1,0,0,0,-1,0,0,0,1,0,0,0,0,0,1,0,0,0,-1,0,0,1],
+[1,0,1,0,0,1,0,1,-1,0,0,0,-1,0,0,0,0,0,-1,1,-1,0,0,1],
+[0,0,1,0,1,1,0,1,0,-1,1,1,0,-1,1,1,-1,-1,0,0,0,0,1,1],
+[0,1,1,1,1,1,1,0,-1,0,-1,-1,-1,1,-1,1,0,0,-1,0,0,1,1,1],
+[0,0,1,1,1,0,-1,0,0,0,0,0,0,-1,-1,1,0,-1,0,0,0,1,0,1],
+[1,0,1,1,0,1,1,1,0,-1,0,0,0,0,0,1,0,0,0,0,0,0,0,1],
+[0,0,1,0,1,0,0,0,0,-1,0,0,0,0,0,0,0,0,0,0,-1,0,0,1],
+[0,-1,1,0,1,0,-1,0,0,0,0,0,0,-1,0,0,0,-1,0,1,-1,1,0,1],
+[0,0,1,0,0,1,0,0,-1,0,0,-1,0,1,0,0,1,0,-1,0,-1,0,0,1],
+[0,1,1,1,1,0,1,-1,0,-1,0,-1,1,0,0,1,1,0,0,-1,0,1,1,1],
+[-1,0,1,-1,1,1,0,0,0,0,0,1,-1,0,1,0,0,0,0,0,-1,0,1,1],
+[1,1,0,0,1,1,0,0,-1,-1,0,-1,0,0,1,0,0,0,-1,1,-1,1,1,1],
+[0,0,1,1,1,1,0,0,-1,-1,1,0,-1,0,0,1,0,-1,0,0,-1,1,1,1],
+[0,0,1,1,1,1,0,0,0,-1,0,0,-1,0,1,0,0,1,-1,0,-1,0,1,1],
+[0,1,0,0,0,1,0,1,-1,0,0,0,0,0,0,0,0,0,-1,0,0,0,0,1],
+[1,0,1,0,0,1,-1,0,0,0,1,0,0,-1,1,0,1,0,0,0,-1,0,0,1],
+[-1,-1,3,1,1,1,0,-1,0,-1,1,0,-1,0,0,1,0,-1,1,-1,-1,0,1,1]];
+GRP:=Group([(3,27)(6,39)(7,14)(8,43)(9,22)(10,40)(11,17)(12,16)(13,26)
+(15,37)(18,24)(19,20)(21,38)(23,32)(25,29)(30,35)(34,44)(36,42),
+(3,34,27,44)(6,13,39,26)(7,25,14,29)(8,30,43,35)(9,10,22,40)
+(11,32,17,23)(12,38,16,21)(15,42,37,36)(18,19,24,20),
+(2,6)(3,27)(4,23)(7,8)(9,25)(10,42)(12,14)(13,37)(15,30)(16,43)
+(17,31)(18,28)(19,22)(20,29)(21,40)(26,35)(33,34)(36,38),
+(1,2)(3,7)(8,12)(10,40)(11,19)(13,26)(14,27)(15,42)(16,43)(17,20)
+(18,32)(21,30)(23,24)(25,44)(29,34)(31,33)(35,38)(36,37),(5,41)]);
+
+
+# computation of the orbits of facets of a polytope
+# with 44 vertices and 945144 extreme facets
+# running time is 31 minute with the program IsomorphismReduction
+# taking 52M in memory on a Dell Latitude D510
+# number of orbit is 218
+
+TheDate1:=GetDate();
+TmpDir:=Filename(POLYHEDRAL_tmpdir, "");
+ORB:=__DualDescriptionLRS_Reduction(EXT, GRP, TmpDir);
+TheDate2:=GetDate();
+Print("Running time is ", TheDate2-TheDate1, " seconds\n");
+
+############################
+GRP:=MathieuGroup(24);
+
+eSetSet1:=[[1..8]];
+eStab1:=OnSetsSetsStabilizer(GRP, eSetSet1);
+#
+#O:=Orbits(eStab1, [9..24], OnPoints);
+#ListSet:=List(O, x->Set(x));
+#eSetSet2:=Concatenation(eSetSet1, Set(ListSet));
+
+eSetSet2:=[[1,2,3,4,5,6,7,8],[9,11,13,17,18,19,22,23],
+[10,12,14,15,16,20,21,24]];
+eStab2:=OnSetsSetsStabilizer(GRP, eSetSet2);
+
+
+eSetSet3:=[[1..6]];
+eStab3:=OnSetsSetsStabilizer(GRP, eSetSet3);
+
+eSetSet4:=[[1..6], [7..12]];
+eStab4:=OnSetsSetsStabilizer(GRP, eSetSet4);
+
+eSetSet5:=[[1..5]];
+eStab5:=OnSetsSetsStabilizer(GRP, eSetSet5);
+
+eSetSet6:=[[1..5], [6,7,8,11,13]];
+eStab6:=OnSetsSetsStabilizer(GRP, eSetSet6);
+
+
+DoTests:=function(GRP, eSetSet)
+  local g, fSetSet, g2;
+  g:=Random(GRP);
+  fSetSet:=OnSetsSets(eSetSet, g);
+  Print("g=", g, "\n");
+  g2:=OnSetsSetsRepresentativeAction(GRP, eSetSet, fSetSet);
+  if OnSetsSets(eSetSet, g2)<>fSetSet then
+    Print("We have a bug to find out\n");
+    Print(NullMat(5));
+  fi;
+end;
+DoTestsSec:=function(GRP, eSetSet)
+  local g, eStab, fSetSet, fStab, phi, eStabConj;
+  g:=Random(GRP);
+  Print("g=", g, "\n");
+  eStab:=OnSetsSetsStabilizer(GRP, eSetSet);
+  fSetSet:=OnSetsSets(eSetSet, g);
+  fStab:=OnSetsSetsStabilizer(GRP, fSetSet);
+  phi:=ConjugatorIsomorphism(GRP, g);
+  eStabConj:=Image(phi, eStab);
+  if eStabConj<>fStab then
+    Print("We have a bug to find out\n");
+    Print(NullMat(5));
+  fi;
+end;
+
+
+
+g:=(1,11,21,12,4,5,7,9,17,22)(2,18,6,8,16,23,10,14,19,20)(3,13)(15,24);
+#g:=( 1,11, 2,20, 6, 7,19, 9,14, 5,23,18)( 3, 8,10,24, 4,17,21,16,15,12,22,13);
+fSetSet6:=OnSetsSets(eSetSet6, g);
+g2:=OnSetsSetsRepresentativeAction(GRP, eSetSet6, fSetSet6);
+fSetSet6_2:=OnSetsSets(eSetSet6, g2);
+if fSetSet6<>fSetSet6_2 then
+  Print("We have debugging to do\n");
+  Print(NullMat(5));
+fi;############################
+DualPair:=function(eName)
+  local TheList, TheGramMat, test, DualGramMat, DualName;
+  Print("Inserting lattice ", eName, "\n");
+  TheList:=[];
+  TheGramMat:=ClassicalSporadicLattices(eName);
+  Add(TheList, rec(eName:=eName, GramMat:=TheGramMat));
+  test:=IsSelfDualLattice(TheGramMat);
+  if test=false then
+    DualGramMat:=RemoveFractionMatrix(Inverse(TheGramMat));
+    DualName:=Concatenation("Dual_", eName);
+    Add(TheList, rec(eName:=DualName, GramMat:=DualGramMat));
+  fi;
+  return TheList;
+end;
+
+ListCases:=[];
+Append(ListCases, DualPair("E6"));
+Append(ListCases, DualPair("E7"));
+Append(ListCases, DualPair("ER7"));
+Append(ListCases, DualPair("E8"));
+Append(ListCases, DualPair("Lambda9"));
+Append(ListCases, DualPair("Lambda10"));
+Append(ListCases, DualPair("O10"));
+Append(ListCases, DualPair("Kappa7"));
+Append(ListCases, DualPair("Kappa8"));
+Append(ListCases, DualPair("Kappa9"));
+
+# Slower cases. Not included
+
+#Append(ListCases, DualPair("K12"));
+#Append(ListCases, DualPair("Lambda11max"));
+#Append(ListCases, DualPair("Lambda11min"));
+#Append(ListCases, DualPair("Lambda12max"));
+#Append(ListCases, DualPair("Lambda12mid"));
+#Append(ListCases, DualPair("Lambda12min"));
+#Append(ListCases, DualPair("Lambda13max"));
+#Append(ListCases, DualPair("Lambda13mid"));
+#Append(ListCases, DualPair("Lambda13min"));
+
+TheFile:="RESULT_FreeVectorComputations";
+RemoveFileIfExist(TheFile);
+output:=OutputTextFile(TheFile, true);
+for eCase in ListCases
+do
+  AppendTo(output, "Lattice name=", eCase.eName, "\n");
+  n:=Length(eCase.GramMat);
+  AppendTo(output, "GramMat = \n");
+  for eLine in eCase.GramMat
+  do
+    AppendTo(output, POL_VectorString(eLine), "\n");
+  od;
+  ListFunc:=DelaunayComputationStandardFunctions(eCase.GramMat);
+  TheRigid:=ListFunc.GetRigidityDegree();
+  AppendTo(output, "  Rigidity degree = ", TheRigid, "\n");
+  ListBelt:=ListFunc.GetFreeVectors();
+  ListBelt.FuncPrintBeltInformation(output);
+od;
+CloseStream(output);
+############################
+ListNames:=[];
+Add(ListNames, "E6");
+Add(ListNames, "E7");
+Add(ListNames, "ER7");
+Add(ListNames, "E8");
+Add(ListNames, "Lambda9");
+
+TheFile:="RESULT_QuantizationConstant";
+RemoveFileIfExist(TheFile);
+output:=OutputTextFile(TheFile, true);
+for eName in ListNames
+do
+  eGram:=ClassicalSporadicLattices(eName);
+  AppendTo(output, "name=", eName, "\n");
+  AppendTo(output, "GramMat = \n");
+  for eLine in eGram
+  do
+    AppendTo(output, POL_VectorString(eLine), "\n");
+  od;
+  ListFunc:=DelaunayComputationStandardFunctions(eGram);
+  TheIntegral:=ListFunc.GetQuantization();
+  AppendTo(output, "TheIntegral=", TheIntegral, "\n");
+od;
+############################
+Read("CubeTiling.g");
+
+n:=4;
+
+VE:=SymmetryGroup(n);
+BasicSpann:=BuildSet(n, [0,1]);
+
+SpanSet:=function(eVert)
+  local NewSpan, eVect, fVert, eVal, i;
+  NewSpan:=[];
+  for eVect in BasicSpann
+  do
+    fVert:=[];
+    for i in [1..4]
+    do
+      eVal:=eVert[i] + eVect[i];
+      if eVal = 4 then
+        Add(fVert, 0);
+      else
+        Add(fVert, eVal);
+      fi;
+    od;
+    Add(NewSpan, fVert);
+  od;
+  return NewSpan;
+end;
+
+ListSet:=[];
+for eVert in VE.VertexSet
+do
+  eListVert:=SpanSet(eVert);
+  eSet:=Set(List(eListVert, x->Position(VE.VertexSet, x)));
+  Add(ListSet, eSet);
+od;
+
+FuncRespawn:=function(n, nbSet, sizGRP)
+  if n<225 then
+    return false;
+  fi;
+  if sizGRP<200 then
+    return false;
+  fi;
+  return true;
+end;
+
+FuncAddiSymm:=function(n, nbSet, sizGRP)
+  return true;
+end;
+
+RecFunc:=rec(FuncRespawn:=FuncRespawn, FuncAddiSymm:=FuncAddiSymm);
+
+FileSave:="DATA/ListOrbitPartition";
+if IsExistingFilePlusTouch(FileSave)=false then
+  O:=PARTITION_EnumerateEquivariant_NextGen(4^n, ListSet, VE.SymmetryGroup, RecFunc);
+  SaveDataToFilePlusTouch(FileSave, O);
+else
+  O:=ReadAsFunction(FileSave)();
+fi;
+
+IsDirectAdjacent:=function(eVert, fVert)
+  local nbEqualCoord, i;
+  nbEqualCoord:=0;
+  for i in [1..n]
+  do
+    if eVert[i]=fVert[i] then
+      nbEqualCoord:=nbEqualCoord+1;
+    fi;
+  od;
+  if nbEqualCoord=n-1 then
+    return true;
+  fi;
+  return false;
+end;
+
+
+IsZAdjacent:=function(eVert, fVert)
+  local nbDiff1, eDiff, i;
+  nbDiff1:=0;
+  for i in [1..n]
+  do
+    eDiff:=AbsInt(eVert[i] - fVert[i]);
+    if eDiff=3 then
+      eDiff:=1;
+    fi;
+    if eDiff=1 then
+      nbDiff1:=nbDiff1 + 1;
+    fi;
+  od;
+  if nbDiff1=0 then
+    return true;
+  fi;
+  return false;
+end;
+
+
+
+GetSignatureInfo:=function(ListVert)
+  local IsLayered, i, ListVal, nbTwinPair, nbVert, iVert, jVert, GRA, LConn, eConn, nbSimpleComponent;
+  IsLayered:=false;
+  for i in [1..n]
+  do
+    ListVal:=List(ListVert, x->x[i]);
+    if Length(Set(ListVal))=2 then
+      IsLayered:=true;
+    fi;
+  od;
+  #
+  nbTwinPair:=0;
+  nbVert:=Length(ListVert);
+  for iVert in [1..nbVert]
+  do
+    for jVert in [iVert+1..nbVert]
+    do
+      if IsDirectAdjacent(ListVert[iVert], ListVert[jVert]) then
+        nbTwinPair:=nbTwinPair+1;
+      fi;
+    od;
+  od;
+  #
+  GRA:=NullGraph(Group(()), nbVert);
+  for iVert in [1..nbVert]
+  do
+    for jVert in [iVert+1..nbVert]
+    do
+      if IsZAdjacent(ListVert[iVert], ListVert[jVert]) then
+        AddEdgeOrbit(GRA, [iVert, jVert]);
+        AddEdgeOrbit(GRA, [jVert, iVert]);
+      fi;
+    od;
+  od;
+  LConn:=ConnectedComponents(GRA);
+  nbSimpleComponent:=Length(LConn);
+  #
+  return rec(IsLayered:=IsLayered, nbTwinPair:=nbTwinPair, nbSimpleComponent:=nbSimpleComponent);
+end;
+
+
+PrintSignatureInfo:=function(ListVert)
+  local ListVal, nbVert, iVert, jVert, GRA, LConn, eConn, eVert, fVert;
+  #
+  nbVert:=Length(ListVert);
+  for iVert in [1..nbVert]
+  do
+    for jVert in [iVert+1..nbVert]
+    do
+      eVert:=ListVert[iVert];
+      fVert:=ListVert[jVert];
+      if IsDirectAdjacent(eVert, fVert) then
+        Print("Twin pair eVert=", eVert, " fVert=", fVert, "\n");
+      fi;
+    od;
+  od;
+  #
+  GRA:=NullGraph(Group(()), nbVert);
+  for iVert in [1..nbVert]
+  do
+    for jVert in [iVert+1..nbVert]
+    do
+      if IsZAdjacent(ListVert[iVert], ListVert[jVert]) then
+        AddEdgeOrbit(GRA, [iVert, jVert]);
+        AddEdgeOrbit(GRA, [jVert, iVert]);
+      fi;
+    od;
+  od;
+  LConn:=ConnectedComponents(GRA);
+  for eConn in LConn
+  do
+    Print("Simple Component eComp=", ListVert{eConn}, "\n");
+  od;
+end;
+
+
+
+
+
+ListInv:=[];
+ListInvNonLay:=[];
+ListListVert:=[];
+FileSave:="List183.txt";
+RemoveFileIfExist(FileSave);
+output:=OutputTextFile(FileSave, true);
+idx:=0;
+ListSet183:=[];
+ListListVert183:=[];
+for eO in O
+do
+  TheListVert:=VE.VertexSet{eO};
+  Add(ListListVert, TheListVert);
+  eInv:=GetSignatureInfo(TheListVert);
+  Add(ListInv, eInv);
+  if eInv.IsLayered=false then
+    Add(ListSet183, eO);
+    Add(ListInvNonLay, eInv);
+    Add(ListListVert183, TheListVert);
+    idx:=idx+1;
+    AppendTo(output, idx, " // nbTwinPair=", eInv.nbTwinPair, " nbSimpleComponent=", eInv.nbSimpleComponent, "\n");
+    for eVert in TheListVert
+    do
+      for eVal in eVert
+      do
+        AppendTo(output, " ", eVal);
+      od;
+      AppendTo(output, "\n");
+    od;
+  fi;
+od;
+CloseStream(output);
+
+FindNumber:=function(nbTwinPair, nbSimpleComponent)
+  local nb, eInv;
+  nb:=0;
+  for eInv in ListInvNonLay
+  do
+    if eInv.nbTwinPair=nbTwinPair and eInv.nbSimpleComponent=nbSimpleComponent then
+      nb:=nb+1;
+    fi;
+  od;
+  return nb;
+end;
+
+
+
+
+IsCorrectConfiguration:=function(ListVert)
+  local nbVert, iVert, jVert, nbDiff, i, eDiff, eVert, fVert;
+  nbVert:=Length(ListVert);
+  for iVert in [1..nbVert]
+  do
+    for jVert in [iVert+1..nbVert]
+    do
+      eVert:=ListVert[iVert];
+      fVert:=ListVert[jVert];
+      nbDiff:=0;
+      for i in [1..n]
+      do
+        eDiff:=AbsInt(eVert[i] - fVert[i]);
+	if eDiff=2 then
+	  nbDiff:=nbDiff+1;
+	fi;
+      od;
+      if nbDiff=0 then
+        Print("Collision for eVert=", eVert, " fVert=", fVert, "\n");
+        return false;
+      fi;
+    od;
+  od;
+  return true;
+end;
+
+
+ListVert65:=[
+[1,1,1,1],
+[1,1,1,3],
+[1,3,3,1],
+[1,3,3,3],
+[2,1,3,2],
+[2,3,1,2],
+[0,1,3,2],
+[0,3,1,2],
+[3,2,2,0],
+[3,0,2,0],
+[1,1,3,0],
+[1,3,1,0],
+[3,1,1,2],
+[3,3,3,2],
+[3,1,0,0],
+[3,3,0,0]];
+
+test65:=IsCorrectConfiguration(ListVert65);
+
+PrintSignatureInfo(ListVert65);
+
+CheckConformance:=function(OtherList)
+  local nbOther, ListOrbitOth, ListSetOth, ListTestCorr, i, eList, testCorr, eSet, j, eSet1, eSet2, ListMatched;
+  Print("Begin of CheckConformance\n");
+  nbOther:=Length(OtherList);
+  ListOrbitOth:=[];
+  ListSetOth:=[];
+  ListTestCorr:=[];
+  for i in [1..nbOther]
+  do
+    Print("i=", i, "\n");
+    eList:=OtherList[i];
+    testCorr:=IsCorrectConfiguration(eList);
+    eSet:=Set(List(eList, x->Position(VE.VertexSet, x)));
+    Add(ListOrbitOth, eList);
+    Add(ListTestCorr, testCorr);
+    Add(ListSetOth, eSet);
+  od;
+  Print("Arrays created\n");
+  #
+  for i in [1..nbOther]
+  do
+    for j in [i+1..nbOther]
+    do
+      eSet1:=ListSetOth[i];
+      eSet2:=ListSetOth[j];
+      test:=RepresentativeAction(VE.SymmetryGroup, eSet1, eSet2, OnSets);
+      if test<>fail then
+        Print("Find isomorphism between other-packing i=", i, " and other-packing j=", j, "\n");
+      fi;
+    od;
+  od;
+  Print("Isomorphism checks done\n");
+  #
+  ListMatched:=[];
+  for i in [1..183]
+  do
+    Add(ListMatched, []);
+  od;
+  for i in [1..nbOther]
+  do
+    for j in [1..183]
+    do
+      eSet1:=ListSetOth[i];
+      eSet2:=ListSet183[j];
+      test:=RepresentativeAction(VE.SymmetryGroup, eSet1, eSet2, OnSets);
+      if test<>fail then
+        Add(ListMatched[j], i);
+      fi;
+    od;
+  od;
+  for i in [1..183]
+  do
+    if Length(ListMatched[i])=0 then
+      Print("Orbit i=", i, " is unmatched\n");
+    fi;
+  od;
+end;
+
+
+PrintPaperInvariant:=function(ListListVert)
+  local nbList, iList, eListVert, eSignInfo;
+  nbList:=Length(ListListVert);
+  for iList in [1..nbList]
+  do
+    eListVert:=ListListVert[iList];
+    eSignInfo:=GetSignatureInfo(eListVert);
+    Print("iList=", iList, " nbTwinPair=", eSignInfo.nbTwinPair, " nbSimpleComponent=", eSignInfo.nbSimpleComponent, "\n");
+  od;
+end;
+
+
+
+
+
+
+
+TreatList187:=false;
+if TreatList187 then
+  U:=ReadVectorFile("structureD4_B.txt");
+  Ufilt:=Filtered(U, x->Length(x)=4);
+
+  ListOrbit187:=[];
+  for i in [1..187]
+  do
+    Print("i=", i, "\n");
+    iBegin:=16*(i-1) + 1;
+    iEnd  :=16*(i-1) + 16;
+    eList:=Ufilt{[iBegin..iEnd]};
+    Add(ListOrbit187, eList);
+  od;
+  CheckConformance(ListOrbit187);
+fi;
+
+TreatList183_v9:=false;
+if TreatList183_v9 then
+  U:=ReadVectorFile("ListStruct183_v9.txt");
+  ListOrbit183_v9:=[];
+  for i in [1..183]
+  do
+    Print("i=", i, "\n");
+    iBegin:=16*(i-1) + 1;
+    iEnd  :=16*(i-1) + 16;
+    eList:=U{[iBegin..iEnd]};
+    Add(ListOrbit183_v9, eList);
+  od;
+  CheckConformance(ListOrbit183_v9);
+fi;
+
+TreatList183_v11:=false;
+if TreatList183_v11 then
+  U:=ReadVectorFile("ListStruct183_v11.txt");
+  ListOrbit183_v11:=[];
+  for i in [1..183]
+  do
+    Print("i=", i, "\n");
+    iBegin:=16*(i-1) + 1;
+    iEnd  :=16*(i-1) + 16;
+    eList:=U{[iBegin..iEnd]};
+    Add(ListOrbit183_v11, eList);
+  od;
+#  CheckConformance(ListOrbit183_v11);
+  PrintPaperInvariant(ListOrbit183_v11);
+fi;
+
+
+
+TreatList183_v12:=true;
+if TreatList183_v12 then
+  U:=ReadVectorFile("ListStruct183_v12.txt");
+  ListOrbit183_v12:=[];
+  for i in [1..183]
+  do
+    Print("i=", i, "\n");
+    iBegin:=16*(i-1) + 1;
+    iEnd  :=16*(i-1) + 16;
+    eList:=U{[iBegin..iEnd]};
+    Add(ListOrbit183_v12, eList);
+  od;
+  CheckConformance(ListOrbit183_v12);
+#  PrintPaperInvariant(ListOrbit183_v12);
+fi;
+
+
+############################
+# we search for a counter example to Keller conjecture:
+# every cube tiling of R^n has two cubes with two facets
+# in common
+# we use the formalism of Lagarias Shor using cliques.
+
+
+
+
+
+
+SymmetryGroup:=function(n)
+  local VertexSet, ListGen, ListMat, TheMat, ListV, i, eV, iP, g, j, GrpPerm, GrpMat, phi;
+  VertexSet:=BuildSet(n, [0,1,2,3]);
+  Print("VertexSet Generated\n");
+
+  ListGen:=[];
+  ListMat:=[];
+  #
+  ListV:=[];
+  for i in [1..Length(VertexSet)]
+  do
+    eV:=ShallowCopy(VertexSet[i]);
+    eV[1]:=(eV[1]+1) mod 4;
+    Add(ListV, Position(VertexSet, eV));
+  od;
+  TheMat:=IdentityMat(n+1);
+  TheMat[n+1][1]:=1/4;
+  Add(ListGen, PermList(ListV));
+  Add(ListMat, TheMat);
+  #
+  ListV:=[];
+  for i in [1..Length(VertexSet)]
+  do
+    eV:=ShallowCopy(VertexSet[i]);
+    eV[1]:=3-eV[1];
+    Add(ListV, Position(VertexSet, eV));
+  od;
+  TheMat:=IdentityMat(n+1);
+  TheMat[1][1]:=-1;
+  TheMat[n+1][1]:=1;
+  Add(ListGen, PermList(ListV));
+  Add(ListMat, TheMat);
+  #
+  for iP in [1..n-1]
+  do
+    g:=(iP, iP+1);
+    ListV:=[];
+    for i in [1..Length(VertexSet)]
+    do
+      ListV[i]:=Position(VertexSet, Permuted(VertexSet[i], g));
+    od;
+    TheMat:=NullMat(n+1, n+1);
+    TheMat[n+1][n+1]:=1;
+    for i in [1..n]
+    do
+      TheMat[i][OnPoints(i, g)]:=1;
+    od;
+    Add(ListGen, PermList(ListV));
+    Add(ListMat, TheMat);
+  od;
+  GrpPerm:=Group(ListGen);
+  GrpMat:=Group(ListMat);
+  phi:=GroupHomomorphismByImages(GrpPerm, GrpMat, ListGen, ListMat);
+  Print("Symmetry group created\n");
+  return rec(VertexSet:=VertexSet, SymmetryGroup:=GrpPerm, phi:=phi, GrpMat:=GrpMat, ListGen:=ListGen, ListMat:=ListMat);
+end;
+
+
+
+IsAdjacentStarGraph:=function(m1, m2)
+  local nbDiff, i, testM;
+  nbDiff:=0;
+  testM:=false;
+  for i in [1..Length(m1)]
+  do
+    if m1[i]<>m2[i] then
+      nbDiff:=nbDiff+1;
+    fi;
+    if AbsInt(m1[i]-m2[i])=2 then
+      testM:=true;
+    fi;
+  od;
+  if testM=true and nbDiff>=2 then
+    return true;
+  else
+    return false;
+  fi;
+end;
+
+
+
+
+IsAdjacent:=function(m1, m2)
+  local i;
+  for i in [1..Length(m1)]
+  do
+    if AbsInt(m1[i]-m2[i])=2 then
+      return true;
+    fi;
+  od;
+  return false;
+end;
+
+
+
+BuildUnextendible:=function(EXMP, p)
+  local NewClique, eV, fV, V, VSET;
+  NewClique:=[];
+  VSET:=BuildSet(p, [0,2]);
+  for eV in EXMP
+  do
+    for fV in VSET
+    do
+      V:=ShallowCopy(eV);
+      Append(V, fV);
+      Add(NewClique, V);
+    od;
+  od;
+  return NewClique;
+end;
+
+
+
+FuncListMatching:=function(LS)
+  local n, iCol, ListMatch, eV, val;
+  n:=Length(LS[1]);
+  for iCol in [1..n]
+  do
+    ListMatch:=[0,0,0,0];
+    for eV in LS
+    do
+      val:=eV[iCol];
+      ListMatch[val+1]:=ListMatch[val+1]+1;
+    od;
+  od;
+  Print("0:", ListMatch[1],"  1:", ListMatch[2],"  2:", ListMatch[3],"  3:", ListMatch[4], "\n");
+end;
+
+
+NzFunctionBis:=function(Clique, z)
+  local n, Nz, eVect, eDiff, test, iCol;
+  n:=Length(Clique[1]);
+  Nz:=0;
+  for eVect in Clique
+  do
+    eDiff:=List(eVect-z, x-> x mod 4);
+    test:=1;
+    for iCol in [1..n]
+    do
+      if eDiff[iCol]=3 then
+        test:=0;
+      fi;
+    od;
+    if test=1 then
+      Nz:=Nz+1;
+    fi;
+  od;
+  return Nz;
+end;
+
+
+
+
+
+
+Is2ZnPeriodic:=function(eClique)
+  local eSet, ListVal, eVect, z, eVal, n;
+  n:=Length(eClique[1]);
+  for eSet in BuildSet(n, [0,1])
+  do
+    ListVal:=[];
+    for eVect in BuildSet(n, [0,2])
+    do
+      z:=eSet+eVect;
+      eVal:=NzFunctionBis(eClique, z);
+      AddSet(ListVal, eVal);
+      if Length(ListVal) > 1 then
+        return false;
+      fi;
+    od;
+  od;
+  return true;
+end;
+
+
+
+RigidityQuestion:=function(eClique)
+  local n, nbCube, ListPairByDiff, k, ListEquations, ListIndexDiff2, TheEquality, IsTrivialStructure, i, j, nb, ListByOrd, NoSplitting, FullCaseSplitting;
+  n:=Length(eClique[1]);
+  nbCube:=Length(eClique);
+  ListPairByDiff:=[];
+  for k in [1..n]
+  do
+    Add(ListPairByDiff, []);
+  od;
+  ListIndexDiff2:=function(eVect1, eVect2)
+    local k, LER;
+    LER:=[];
+    for k in [1..n]
+    do
+      if AbsInt(eVect1[k]-eVect2[k])=2 then
+        Add(LER, k);
+      fi;
+    od;
+    return LER;
+  end;
+  TheEquality:=function(idxVect1, idxVect2, k0)
+    local idx1, idx2, H, TheDiff;
+    idx1:=n*(idxVect1-1)+k0;
+    idx2:=n*(idxVect2-1)+k0;
+    H:=ListWithIdenticalEntries(1+nbCube*n, 0);
+    TheDiff:=eClique[idxVect2][k0]-eClique[idxVect1][k0];
+    H[1]:=TheDiff;
+    H[idx2]:=1;
+    H[idx1]:=-1;
+    return H;
+  end;
+  IsTrivialStructure:=function(ListEquation)
+    local NSP;
+    NSP:=NullspaceMat(TransposedMat(ListEquation));
+    if Length(NSP)=n+1 then
+      return true;
+    fi;
+    return false;
+  end;
+
+  for i in [1..Length(eClique)-1]
+  do
+    for j in [i+1..Length(eClique)]
+    do
+      nb:=Length(ListIndexDiff2(eClique[i], eClique[j]));
+      Add(ListPairByDiff[nb], [i,j]);
+    od;
+  od;
+  ListByOrd:=[];
+  for k in [1..n]
+  do
+    Append(ListByOrd, ListPairByDiff[k]);
+  od;
+  FullCaseSplitting:=function()
+    local ListCases, iME, ListNewCases, k0, TheEq, ePair, eCase, NewC;
+    ListCases:=[[]];
+    for iME in [1..Length(ListByOrd)]
+    do
+      ListNewCases:=[];
+      ePair:=ListByOrd[iME];
+      for k0 in ListIndexDiff2(eClique[ePair[1]], eClique[ePair[2]])
+      do
+        TheEq:=TheEquality(ePair[1], ePair[2], k0);
+        for eCase in ListCases
+        do
+          NewC:=ShallowCopy(eCase);
+          Add(NewC, TheEq);
+          if IsTrivialStructure(NewC)=false then
+            Add(ListNewCases, NewC);
+          fi;
+        od;
+      od;
+      ListCases:=ShallowCopy(ListNewCases);
+    od;
+  end;
+  NoSplitting:=function()
+    local ListEquation, iME, ePair, k0, TheEq;
+    ListEquation:=[];
+    for iME in [1..Length(ListByOrd)]
+    do
+      ePair:=ListByOrd[iME];
+      for k0 in ListIndexDiff2(eClique[ePair[1]], eClique[ePair[2]])
+      do
+        TheEq:=TheEquality(ePair[1], ePair[2], k0);
+        Add(ListEquation, TheEq);
+      od;
+    od;
+    return ListEquation;
+  end;
+  return rec(NoSplitting:=NoSplitting, FullCaseSplitting:=FullCaseSplitting);
+end;
+
+
+
+PossibilityOfExtension:=function(Clique, VSET)
+  local n, FuncTest, eV, ListMatch;
+  n:=Length(Clique[1]);
+  FuncTest:=function(eV)
+    local eC;
+    for eC in Clique
+    do
+      if IsAdjacent(eV, eC)=false then
+        return false;
+      fi;
+    od;
+    return true;
+  end;
+  ListMatch:=[];
+  for eV in BuildSet(n, VSET)
+  do
+    if FuncTest(eV)=true then
+      Add(ListMatch, eV);
+    fi;
+  od;
+  return ListMatch;
+end;
+
+
+IsCubePackingDetermining:=function(Clique, VSET)
+  local n, ListPoss, nbPoss, iV, jV;
+  n:=Length(Clique[1]);
+  ListPoss:=PossibilityOfExtension(Clique, VSET);
+  nbPoss:=Length(ListPoss);
+  for iV in [1..nbPoss-1]
+  do
+    for jV in [iV+1..nbPoss]
+    do
+      if IsAdjacent(ListPoss[iV], ListPoss[jV])=false then
+        return false;
+      fi;
+    od;
+  od;
+  return true;
+end;
+
+
+
+
+IsExtendible:=function(Clique)
+  local ListExt;
+  ListExt:=PossibilityOfExtension(Clique, [0,1,2,3]);
+  if Length(ListExt)=0 then
+    return false;
+  else
+    return true;
+  fi;
+end;
+
+
+
+SearchPossibilityExtension:=function(Clique, VSET)
+  local n, eV, FuncTest;
+  n:=Length(Clique[1]);
+  FuncTest:=function(eV)
+    local eC;
+    for eC in Clique
+    do
+      if IsAdjacent(eV, eC)=false then
+        return false;
+      fi;
+    od;
+    return true;
+  end;
+  for eV in BuildSet(n, VSET)
+  do
+    if FuncTest(eV)=true then
+      Print("eV=", eV, "\n");
+      return true;
+    fi;
+  od;
+  return false;
+end;
+
+
+
+
+
+RandomElement:=function(n, VSET)
+  local eV, i;
+  eV:=[];
+  for i in [1..n]
+  do
+    Add(eV, Random(VSET));
+  od;
+  return eV;
+end;
+
+
+TestTilingNess:=function(Clique)
+  local n, i, j;
+  n:=Length(Clique[1]);
+  if Length(Clique)<>2^n then
+    return false;
+  fi;
+  for i in [1..Length(Clique)-1]
+  do
+    for j in [i+1..Length(Clique)]
+    do
+      if IsAdjacent(Clique[i], Clique[j])=false then
+        return false;
+      fi;
+    od;
+  od;
+  return true;
+end;
+
+
+
+MaxSearch:=2000;
+RandomSearch:=function(n, AskedSize)
+  local Clique, iter, nbIter, SUC, RND, iPos, test;
+  Clique:=[ShallowCopy(ListWithIdenticalEntries(n, 0))];
+  for iter in [1..AskedSize]
+  do
+    nbIter:=1;
+    SUC:=false;
+    while(nbIter<MaxSearch)
+    do
+      RND:=RandomElement(n, [0,1,2,3]);
+      iPos:=1;
+      test:=true;
+      while(iPos<=Length(Clique))
+      do
+        if IsAdjacentStarGraph(RND, Clique[iPos])=false then
+          test:=false;
+          break;
+        fi;
+        iPos:=iPos+1;
+      od;
+      if test=true then
+        Add(Clique, RND);
+        SUC:=true;
+        break;
+      fi;
+      nbIter:=nbIter+1;
+    od;
+#    Print("We have ", Length(Clique), " elements\n");
+    if SUC=false then
+      return Clique;
+    fi;
+  od;
+  return Clique;
+end;
+
+
+
+
+
+
+
+
+#
+#
+# if VSET=[0,1,2,3] then we do random tiling
+# while if VSET=[0,1,2] we do random packing.
+RandomPackingTiling:=function(n, VSET)
+  local Clique, iter, SUC, RND, iPos, test;
+  Clique:=[ShallowCopy(ListWithIdenticalEntries(n, 0))];
+  while(true)
+  do
+    if SearchPossibilityExtension(Clique, VSET)=false then
+      break;
+    fi;
+    while(true)
+    do
+      RND:=RandomElement(n, VSET);
+      iPos:=1;
+      test:=true;
+      while(iPos<=Length(Clique))
+      do
+        if IsAdjacent(RND, Clique[iPos])=false then
+          test:=false;
+          break;
+        fi;
+        iPos:=iPos+1;
+      od;
+      if test=true then
+        Add(Clique, RND);
+        break;
+      fi;
+    od;
+#    Print("We have ", Length(Clique), " elements\n");
+  od;
+  return Clique;
+end;
+
+
+
+
+
+FindNumberTiles:=function(Clique, ListC)
+  local nbr, eTile, Match, ePos;
+  nbr:=0;
+  for eTile in Clique
+  do
+    Match:=true;
+    for ePos in ListC
+    do
+      if not(eTile[ePos] in [0,1]) then
+        Match:=false;
+      fi;
+    od;
+    if Match=true then
+      nbr:=nbr+1;
+    fi;
+  od;
+  return nbr;
+end;
+
+
+#
+# useful only for partial cliques
+ReducedSymbol:=function(Clique, z)
+  local n, u, FuncCompute, ListMatch, val;
+  n:=Length(Clique[1]);
+  FuncCompute:=function(eV)
+    local h;
+    for h in BuildSet(n, [0,1])
+    do
+      if Position(Clique, (h+eV) mod 4)<>fail then
+        return 1;
+      fi;
+    od;
+    return 0;
+  end;
+  ListMatch:=[];
+  for u in BuildSet(n, [0,2])
+  do
+    val:=FuncCompute(z+u);
+    if val=1 then
+      Add(ListMatch, z+u);
+    fi;
+  od;
+  return ListMatch;
+end;
+
+
+IsAffineSet:=function(ListVect)
+  local NewSet, eV, u, v;
+  NewSet:=[];
+  for eV in ListVect
+  do
+    Add(NewSet, (eV-ListVect[1]) mod 4);
+  od;
+  for u in NewSet
+  do
+    for v in NewSet
+    do
+      if Position(NewSet, (u+v) mod 4)=fail then
+        return false;
+      fi;
+    od;
+  od;
+  return true;
+end;
+
+
+
+AssociatedWithAffineSet:=function(Clique)
+  local n, ListMatch, h, ERL, test;
+  n:=Length(Clique[1]);
+  ListMatch:=[];
+  for h in BuildSet(n, [0,1])
+  do
+    ERL:=ReducedSymbol(Clique, h);
+    test:=IsAffineSet(ERL);
+    if test=true then
+      Add(ListMatch, h);
+    fi;
+  od;
+  return ListMatch;
+end;
+
+
+
+
+RandomEquivalenceOfClique:=function(Clique)
+  local n, ePerm, eSign, eAdd, i, eTile, fTile, gTile, NewClique;
+  n:=Length(Clique[1]);
+  ePerm:=Random(SymmetricGroup(n));
+  eSign:=[];
+  for i in [1..n]
+  do
+    eSign[i]:=Random([0,1]);
+  od;
+  eAdd:=[];
+  for i in [1..n]
+  do
+    eAdd[i]:=Random([0,1,2,3]);
+  od;
+  NewClique:=[];
+  for eTile in Clique
+  do
+    fTile:=Permuted(eTile, ePerm);
+    gTile:=[];
+    for i in [1..n]
+    do
+      if eSign[i]=0 then
+        gTile[i]:=(fTile[i]+eAdd[i]) mod 4;
+      else
+        gTile[i]:=((3-fTile[i])+eAdd[i]) mod 4;
+      fi;
+    od;
+    Add(NewClique, gTile);
+  od;  
+  return NewClique;
+end;
+
+
+
+TwiceSymGrp:=function(n)
+  local ListGen, i;
+  ListGen:=[];
+  for i in [1..n]
+  do
+    Add(ListGen, (2*i-1, 2*i));
+  od;
+  for i in [1..n-1]
+  do
+    Add(ListGen, (2*i-1, 2*i+1)(2*i, 2*i+2));
+  od;
+  return Group(ListGen);
+end;
+
+TwiceRepresentation:=function(eV)
+  local NewV, i, h;
+  NewV:=[];
+  for i in [1..Length(eV)]
+  do
+    Append(NewV, [eV[i],(4-eV[i]) mod 4]);
+  od;
+  return NewV;
+end;
+
+BackFromTwiceRepresentation:=function(eV)
+  local n, i, NewV;
+  n:=Length(eV)/2;
+  NewV:=[];
+  for i in [1..n]
+  do
+    NewV[i]:=eV[2*i-1];
+  od;
+  return NewV;
+end;
+
+
+CreateVectorSet:=function(Clique, idx)
+  local ListVect, iTile, NewV;
+  ListVect:=[];
+  for iTile in [1..Length(Clique)]
+  do
+    if iTile<>idx then
+      NewV:=TwiceRepresentation(Clique[iTile]-Clique[idx]);
+      AddSet(ListVect, NewV);
+    fi;
+  od;
+  return ListVect;
+end;
+
+
+ActionOnVectSet:=function(ListVect, g)
+  local NewSet, eV;
+  NewSet:=[];
+  for eV in ListVect
+  do
+    AddSet(NewSet, Permuted(eV, g));
+  od;
+  return NewSet;
+end;
+
+
+
+IsEquivalentClique:=function(Clique1, Clique2)
+  local n, SYM, idx, ListVect1, ListVect2, g;
+  n:=Length(Clique1[1]);
+  SYM:=TwiceSymGrp(n);
+  ListVect1:=CreateVectorSet(Clique1, 1);
+  for idx in [1..Length(Clique2)]
+  do
+    ListVect2:=CreateVectorSet(Clique2, idx);
+    g:=RepresentativeAction(SYM, ListVect1, ListVect2, ActionOnVectSet);
+    if g<>fail then
+      return true;
+    fi;
+  od;
+  return false;
+end;
+
+
+
+
+StabilizerOfPointInClique:=function(Clique, idx)
+  local n, ListGen, ListV, iTile, SYM, ListVect, Stab, eGen, NewPerm, fV;
+  n:=Length(Clique[1]);
+  ListV:=[];
+  for iTile in [1..Length(Clique)]
+  do
+    Add(ListV, TwiceRepresentation(Clique[iTile]-Clique[idx]));
+  od;
+  SYM:=TwiceSymGrp(n);
+  ListVect:=CreateVectorSet(Clique, 1);
+  Stab:=Stabilizer(SYM, ListVect, ActionOnVectSet);
+  ListGen:=[];
+  for eGen in GeneratorsOfGroup(Stab)
+  do
+    NewPerm:=[];
+    for iTile in [1..Length(Clique)]
+    do
+      fV:=Permuted(ListV[iTile], eGen);
+      NewPerm[iTile]:=Position(ListV, fV);
+    od;
+    Add(ListGen, PermList(NewPerm));
+  od;
+  return ListGen;
+end;
+
+
+InvariantOfClique:=function(Clique)
+  local n, ListInv, i, j, V, iCol;
+  n:=Length(Clique[1]);
+  ListInv:=[];
+  for i in [1..Length(Clique)-1]
+  do
+    for j in [i+1..Length(Clique)]
+    do
+      V:=(Clique[i]-Clique[j]) mod 4;
+      for iCol in [1..n]
+      do
+        if V[iCol]=3 then
+          V[iCol]:=1;
+        fi;
+      od;
+      Sort(V);
+      Add(ListInv, ShallowCopy(V));
+    od;
+  od;
+  return Collected(ListInv);
+end;
+
+
+
+
+
+
+
+SymmetryOfTiling:=function(Clique)
+  local GRA, i, j, n, SymGrp, MatDist, ListCase, CHR, eCol, DE, eCase;
+  n:=Length(Clique[1]);
+  GRA:=NullGraph(Group(()), Length(Clique));
+  for i in [1..Length(Clique)-1]
+  do
+    for j in [i+1..Length(Clique)]
+    do
+      if IsAdjacentStarGraph(Clique[i], Clique[j])=true then
+        AddEdgeOrbit(GRA, [i,j]);
+        AddEdgeOrbit(GRA, [j,i]);
+      fi;
+    od;
+  od;
+  SymGrp:=AutGroupGraph(GRA);
+  MatDist:=NullMat(Length(Clique), Length(Clique));
+  ListCase:=[];
+  for i in [1..Length(Clique)-1]
+  do
+    for j in [i+1..Length(Clique)]
+    do
+      CHR:=[];
+      for eCol in [1..n]
+      do
+        DE:=Clique[i][eCol]-Clique[j][eCol];
+        if DE>=3 then 
+          DE:=DE-4;
+        fi;
+        if DE<=-3 then 
+          DE:=DE+4;
+        fi;
+        Add(CHR, AbsInt(DE));
+      od;
+      Sort(CHR);
+      MatDist[i][j]:=ShallowCopy(CHR);
+      MatDist[j][i]:=ShallowCopy(CHR);
+      AddSet(ListCase, ShallowCopy(CHR));
+    od;
+  od;
+  for eCase in ListCase
+  do
+    GRA:=NullGraph(Group(()), Length(Clique));
+    for i in [1..Length(Clique)-1]
+    do
+      for j in [i+1..Length(Clique)]
+      do
+        if MatDist[i][j]=eCase then
+          AddEdgeOrbit(GRA, [i,j]);
+          AddEdgeOrbit(GRA, [j,i]);
+        fi;
+      od;
+    od;
+    SymGrp:=Intersection(SymGrp, AutGroupGraph(GRA));
+  od;
+  return SymGrp;
+end;
+
+
+
+RegularTiling:=function(n)
+  return BuildSet(n, [0,2]);
+end;
+
+MergeTiling:=function(Clique1, Clique2)
+  local NewClique, eV, h;
+  NewClique:=[];
+  for eV in Clique1
+  do
+    h:=ShallowCopy(eV);
+    Add(h, 0);
+    Add(NewClique, h);
+  od;
+  for eV in Clique2
+  do
+    h:=ShallowCopy(eV);
+    Add(h, 2);
+    Add(NewClique, h);
+  od;
+  return NewClique;
+end;
+
+
+
+
+
+FacetMovements:=function(Clique)
+  local n, nbElt, ListNewClique, i, j, eTile, fTile, ListDiff, iCol, eCol, NewClique, u;
+  n:=Length(Clique[1]);
+  nbElt:=2^n;
+  ListNewClique:=[];
+  for i in [1..nbElt-1]
+  do
+    for j in [i+1..nbElt]
+    do
+      eTile:=Clique[i];
+      fTile:=Clique[j];
+      ListDiff:=[];
+      for iCol in [1..n]
+      do
+        if eTile[iCol]<>fTile[iCol] then
+          Add(ListDiff, iCol);
+        fi;
+      od;
+      if Length(ListDiff)=1 then
+        eCol:=ListDiff[1];
+        NewClique:=[];
+        for u in [1..nbElt]
+        do
+          if u<>i and u<>j then
+            Add(NewClique, Clique[u]);
+          else
+            eTile:=[];
+            for iCol in [1..n]
+            do
+              if iCol<>eCol then
+                Add(eTile, Clique[u][iCol]);
+              else
+                Add(eTile, (Clique[u][iCol]+1) mod 4);
+              fi;
+            od;
+            Add(NewClique, eTile);
+          fi;
+        od;
+        Add(ListNewClique, NewClique);
+      fi;
+    od;
+  od;
+  return ListNewClique;
+end;
+
+
+
+
+
+SearchColumnsOfColumns:=function(Clique)
+  local n, FuncTestMatch, FuncTestDetermineColumn, eTile, fTile, ListOfMaximalColumn, eSet, ListCoord, MatchedSet, iSize, reply, i, j;
+  n:=Length(Clique[1]);
+  FuncTestMatch:=function(ListSet, eSet)
+    local eV;
+    for eV in ListSet
+    do
+      if IsSubset(eV, eSet)=true then
+        return true;
+      fi;
+    od;
+    return false;
+  end;
+
+  FuncTestDetermineColumn:=function(ListC, eTile)
+    local eSet, fTile, i, ListTile;
+    ListTile:=[];
+    for eSet in Combinations(ListC)
+    do
+      fTile:=[];
+      for i in [1..n]
+      do
+        if i in eSet then
+          Add(fTile, (eTile[i]+2) mod 4);
+        else
+          Add(fTile, eTile[i]);
+        fi;
+      od;
+      if Position(Clique, fTile)=fail then
+        return false;
+      else
+        AddSet(ListTile, fTile);
+      fi;
+    od;
+    return ListTile;
+  end;
+  ListOfMaximalColumn:=[];
+  for eTile in Clique
+  do
+    ListCoord:=[];
+    for i in [1..n]
+    do
+      fTile:=[];
+      for j in [1..n]
+      do
+        if j<>i then
+          Add(fTile, eTile[j]);
+        else
+          Add(fTile, (eTile[i]+2) mod 4);
+        fi;
+      od;
+      if Position(Clique, fTile)<>fail then
+        Add(ListCoord, i);
+      fi;
+    od;
+    MatchedSet:=[];
+    for iSize in Reversed([1..Length(ListCoord)])
+    do
+      for eSet in Combinations(ListCoord, iSize)
+      do
+        if FuncTestMatch(MatchedSet, eSet)=false then
+          reply:=FuncTestDetermineColumn(eSet, eTile);
+          if reply<>false then
+            Add(MatchedSet, eSet);
+            AddSet(ListOfMaximalColumn, reply);
+          fi;
+        fi;
+      od;
+    od;
+  od;
+  return ListOfMaximalColumn;
+end;
+
+
+
+
+SearchLayers:=function(Clique, level)
+  local n, TestLayerness, ListLayer, eSet;
+  n:=Length(Clique[1]);
+  TestLayerness:=function(eSet)
+    local ListProj, FuncInsert, eTile, TileProj, reply;
+    ListProj:=[];
+    FuncInsert:=function(eP)
+      local eC;
+      if Position(ListProj, eP)<>fail then
+        return true;
+      fi;
+      for eC in ListProj
+      do
+        if IsAdjacent(eC, eP)=false then
+          return false;
+        fi;
+      od;
+      AddSet(ListProj, eP);
+      return true;
+    end;
+    for eTile in Clique
+    do
+      TileProj:=eTile{eSet};
+      reply:=FuncInsert(TileProj);
+      if reply=false then
+        return false;
+      fi;      
+    od;
+    return true;
+  end;
+
+  ListLayer:=[];
+  for eSet in Combinations([1..n], level)
+  do
+    if TestLayerness(eSet)=true then
+      Add(ListLayer, eSet);
+    fi;
+  od;
+  return ListLayer;
+end;
+
+
+
+
+
+
+NzFunction:=function(Clique, z, m)
+  local n, ListXminimal, ListXmaximal, i, NSum, Prod, eV, u, v;
+  n:=Length(Clique[1]);
+  ListXminimal:=[];
+  ListXmaximal:=[];
+  for i in [1..n]
+  do
+    ListXminimal[i]:=z[i];
+    ListXmaximal[i]:=z[i]+m;
+  od;
+  NSum:=0;
+  for eV in Clique
+  do
+    Prod:=1;
+    for i in [1..n]
+    do
+      u:=LowerInteger((ListXminimal[i]-eV[i])/4);
+      v:=UpperInteger((ListXmaximal[i]-2-eV[i])/4);
+      Prod:=Prod*(1+v-u);
+    od;
+    NSum:=NSum+Prod;
+  od;
+  return NSum;
+end;
+
+
+
+
+ComputeMoment:=function(Clique, m, k)
+  local n, NSum, z, h;
+  n:=Length(Clique[1]);
+  NSum:=0;
+  for z in BuildSet(n, [0,1,2,3])
+  do
+    h:=NzFunction(Clique, z, m);
+#    Print("h=", h, "\n");
+    NSum:=NSum+h^k;
+  od;
+  return NSum/(4^n);
+end;
+
+
+
+
+
+CTOrbitGroupFormalism:=function(nbE, GroupExt, ListOrbit)
+  local Odisc, O, FuncInvariant, FuncInsert;
+  Odisc:=[];
+  O:=Orbits(GroupExt, Combinations([1..nbE], 1), OnSets);
+  Append(Odisc, O);
+  if Length(Odisc)<10 then
+    O:=Orbits(GroupExt, Combinations([1..nbE], 2), OnSets);
+    Append(Odisc, O);
+  fi;
+  if Length(Odisc)<10 then
+    O:=Orbits(GroupExt, Combinations([1..nbE], 3), OnSets);
+    Append(Odisc, O);
+  fi;
+
+
+  FuncInvariant:=function(ListInc)
+    local eInv, eO, nb, eSet;
+    eInv:=[];
+    for eO in Odisc
+    do
+      nb:=0;
+      for eSet in eO
+      do
+        if IsSubset(ListInc, eSet)=true then
+          nb:=nb+1;
+        fi;
+      od;
+      Add(eInv, nb);
+    od;
+    return eInv;
+  end;
+
+
+  FuncInsert:=function(Linc)
+    local Stab, iOrb, TheInv, TheStab, iExt;
+    TheInv:=FuncInvariant(Linc);
+    for iOrb in [1..Length(ListOrbit)]
+    do
+      if TheInv=ListOrbit[iOrb].TheInv then
+        if RepresentativeAction(GroupExt, Linc, ListOrbit[iOrb].Inc, OnSets)<>fail then
+          return;
+        fi;
+      fi;
+    od;
+    Stab:=Stabilizer(GroupExt, Linc, OnSets);
+    Add(ListOrbit, rec(Inc:=Linc, TheInv:=TheInv, Status:="NO", OrdStab:=Order(Stab)));
+  end;
+  return rec(FuncInsert:=FuncInsert);
+end;
+
+
+AddOneLevelOfSearch:=function(eCand, GRP, VertexSet, FuncAdj, FuncStor)
+  local Cand, eOrb, Stab, eVert, AcceptedSet, FuncTest, fCand, ListCand, ListStor;
+  FuncTest:=function(eVert)
+    local fVert;
+    for fVert in eCand
+    do
+      if FuncAdj(VertexSet[eVert], VertexSet[fVert])=false then
+        return false;
+      fi;
+    od;
+    return true;
+  end;
+
+  AcceptedSet:=[];
+  for eVert in [1..Length(VertexSet)]
+  do
+    if Position(eCand, eVert)=fail then
+      if FuncTest(eVert)=true then
+        Add(AcceptedSet, eVert);
+      fi;
+    fi;
+  od;
+  Stab:=Stabilizer(GRP, eCand, OnSets);
+  ListCand:=[];
+  ListStor:=[];
+  for eOrb in Orbits(Stab, AcceptedSet, OnPoints)
+  do
+    fCand:=Union(eCand, [eOrb[1]]);
+    Add(ListCand, fCand);
+    if FuncStor(VertexSet{fCand})=true then
+      Add(ListStor, fCand);
+    fi;
+  od;
+  return rec(ListCand:=ListCand, ListStor:=ListStor);
+end;
+
+
+
+OneStepEnumeration:=function(n, FuncAdj, ListInput, FuncStor)
+  local VE, VertexSet, SymGrp, i, NewList, RPLcand, RPLstor, ListBlock, eCand, EVC, ListRed, U, eC, ListStor, ListStorRed;
+  VE:=SymmetryGroup(n);
+  VertexSet:=VE.VertexSet;
+  SymGrp:=VE.SymmetryGroup;
+  NewList:=[];
+  ListBlock:=[];
+  ListStor:=[];
+  RPLcand:=CTOrbitGroupFormalism(Length(VertexSet), SymGrp, NewList);
+  RPLstor:=CTOrbitGroupFormalism(Length(VertexSet), SymGrp, ListStor);
+  for eCand in ListInput
+  do
+    EVC:=AddOneLevelOfSearch(eCand, SymGrp, VertexSet, FuncAdj, FuncStor);
+    if Length(EVC.ListCand)=0 then
+      Add(ListBlock, eCand);
+    else
+      for eC in EVC.ListCand
+      do
+        RPLcand.FuncInsert(eC);
+      od;
+    fi;
+    for eC in EVC.ListStor
+    do
+      RPLstor.FuncInsert(eC);
+    od;
+  od;
+  ListRed:=List(NewList, x->x.Inc);
+  ListStorRed:=List(ListStor, x->x.Inc);
+  return rec(ListRed:=ListRed, ListBlock:=ListBlock, ListStor:=ListStorRed);
+end;
+
+
+
+
+ExhaustiveEnumeration:=function(n, FuncAdj, FuncKill)
+  local VE, VertexSet, SymGrp, i, Reord, LM, ListCand, eCand;
+  VE:=SymmetryGroup(n);
+  VertexSet:=VE.VertexSet;
+  SymGrp:=VE.SymmetryGroup;
+  ListCand:=[[1]];
+  Print("We have one clique at step 1\n");
+  for i in [2..2^n]
+  do
+    ListCand:=AddOneLevelOfSearch(ListCand, SymGrp, VertexSet, FuncAdj, FuncKill);
+    Print("We have ", Length(ListCand), " cliques at step ", i, "\n");
+  od;
+  Reord:=[];
+  for eCand in ListCand
+  do
+    LM:=[];
+    for i in eCand
+    do
+      Add(LM, VertexSet[i]);
+    od;
+    Add(Reord, LM);
+  od;
+  return Reord;
+end;
+
+
+
+AdjacencyMethodTiling:=function(n)
+  local VE, VertexSet, SymGrp, nbC, ListClique, ListDone, iCliq, fCliq, eCand, eV, eMin, fCand, FindUndone;
+  VE:=SymmetryGroup(n);
+  VertexSet:=VE.VertexSet;
+  SymGrp:=VE.SymmetryGroup;
+  ListClique:=[RegularTiling(n)];
+  ListDone:=[0];
+  while(true)
+  do
+    nbC:=Length(ListClique);
+    for iCliq in [1..nbC]
+    do
+      if ListDone[iCliq]=0 then
+        ListDone[iCliq]:=1;
+        for fCliq in FacetMovements(ListClique[iCliq])
+        do
+          eCand:=[];
+          for eV in fCliq
+          do
+            AddSet(eCand, Position(VertexSet, eV));
+          od;
+          eMin:=Minimum(Orbit(SymGrp, eCand, OnSets));
+          fCand:=[];
+          for eV in eMin
+          do
+            AddSet(fCand, VertexSet[eV]);
+          od;
+          if Position(ListClique, fCand)=fail then
+            Add(ListClique, fCand);
+            Add(ListDone, 0);
+          fi;
+        od;
+      fi;
+    od;
+    Print("we have now ", Length(ListClique), " orbits of cliques\n");
+    FindUndone:=false;
+    for iCliq in [1..Length(ListDone)]
+    do
+      if ListDone[iCliq]=0 then
+        FindUndone:=true;
+      fi;
+    od;
+    if FindUndone=false then
+      return ListClique;
+    fi;
+  od;
+end;
+
+
+
+MinimizeSecondMoment:=function(Clique)
+  local n, TheClique, TheMoment, FindLower, fCliq, Mom;
+  TheClique:=ShallowCopy(Clique);
+  TheMoment:=ComputeMoment(TheClique, 4, 2);
+  while(true)
+  do
+    FindLower:=false;
+    Print("Beginning a new round\n");
+    for fCliq in FacetMovements(TheClique)
+    do
+      Mom:=ComputeMoment(fCliq, 4, 2);
+      if Mom<TheMoment then
+        TheClique:=fCliq;
+        TheMoment:=Mom;
+        FindLower:=true;
+        Print("Find a moment of ", TheMoment, "\n");
+      fi;
+    od;
+    if FindLower=false then
+      break;
+    fi;
+  od;
+  return TheClique;
+end;
+
+
+DetectLocalizeHole:=function(Clique)
+  local n, i, LS;
+  n:=Length(Clique[1]);
+  for i in [1..n]
+  do
+    LS:=Set(List(Clique, x->x[i]));
+    if Length(LS)=2 then
+      return true;
+    fi;
+  od;
+  return false;
+end;
+
+
+
+ListVerticesUncovered:=function(Clique)
+  local n, ListVert, IsCovered, eVert;
+  n:=Length(Clique[1]);
+  ListVert:=[];
+  IsCovered:=function(eVect)
+    local fVect, test, iCol, val;
+    for fVect in Clique
+    do
+      test:=1;
+      for iCol in [1..n]
+      do
+        val:=(eVect[iCol]-fVect[iCol]) mod 4;
+        if val=2 then
+          test:=0;
+        fi;
+        if val=3 then
+          test:=0;
+        fi;
+      od;
+      if test=1 then
+        return true;
+      fi;
+    od;
+    return false;
+  end;
+
+
+  for eVert in BuildSet(n, [0,1,2,3])
+  do
+    if IsCovered(eVert)=false then
+      Add(ListVert, eVert);
+    fi;
+  od;
+  return ListVert;
+end;
+############################
+TheChoice:=1;
+if TheChoice=1 then
+  GramMat:=LatticeDn(4).TheGram;
+  TheDim:=2;
+  TheDet:=4;
+elif TheChoice=2 then
+  GramMat:=ClassicalSporadicLattices("E6");
+  TheDim:=2;
+  TheDet:=3;
+elif TheChoice=3 then
+  GramMat:=ClassicalSporadicLattices("L81");
+  TheDim:=2;
+  TheDet:=4;
+elif TheChoice=4 then
+  Print("Please put what you have in mind\n");
+  Print(NullMat(5));
+fi;
+
+
+
+ProcEnum:=ProcEnum_SublatticeEnumeration();
+ListLatt:=ProcEnum.EnumerateSublattices(GramMat, TheDim, TheDet);
+
+############################
+EXT:=[
+[ 
+1,1,1/10,1/10,1/10,-1/2,1/10,1/10,1/10,1/10,1/10,1/10,1/10,-1/5,-1/5,-1/2,1/10,-1/5,1/10,-1/5,1/10,1/10,1/10,1/10,-1/2,1/10,1/10,-1/5,1/10,1/10,1/10,1/10,1/10,1/10,-1/2,1/10,1/10,1/10,-1/2,-1/2,1/10,1/10,1/10],
+[ 
+1,1/10,1,1/10,1/10,1/10,1/10,1/10,-1/2,1/10,1/10,1/10,1/10,1/10,1/10,1/10,-1/2,1/10,-1/2,1/10,1/10,-1/5,1/10,1/10,-1/2,1/10,1/10,-1/2,1/10,-1/5,1/10,1/10,-1/5,-1/5,-1/5,1/10,1/10,-1/2,1/10,1/10,1/10,1/10,1/10],
+[ 
+1,1/10,1/10,1,-1/2,1/10,1/10,1/10,-1/2,-1/2,1/10,-1/5,1/10,-1/2,1/10,1/10,-1/5,1/10,1/10,1/10,1/10,1/10,1/10,-1/5,1/10,1/10,1/10,1/10,1/10,1/10,-1/2,-1/5,1/10,1/10,-1/2,1/10,1/10,1/10,-1/5,1/10,1/10,1/10,1/10],
+[ 
+1,1/10,1/10,-1/2,1,-1/2,-1/5,1/10,1/10,1/10,1/10,1/10,1/10,1/10,1/10,-1/5,1/10,1/10,-1/5,1/10,-1/2,-1/2,-1/5,1/10,1/10,-1/5,1/10,-1/2,1/10,1/10,1/10,1/10,1/10,1/10,1/10,1/10,1/10,1/10,1/10,1/10,1/10,1/10,-1/2],
+[ 
+1,-1/2,1/10,1/10,-1/2,1,1/10,-1/2,1/10,1/10,1/10,1/10,1/10,1/10,1/10,1/10,-1/2,1/10,1/10,1/10,1/10,1/10,1/10,1/10,1/10,1/10,-1/5,1/10,-1/5,1/10,-1/5,1/10,-1/2,1/10,1/10,-1/5,1/10,-1/5,1/10,1/10,-1/2,1/10,1/10],
+[ 
+1,1/10,1/10,1/10,-1/5,1/10,1,1/10,1/10,1/10,1/10,1/10,1/10,1/10,1/10,-1/5,1/10,1/10,-1/5,-1/2,1/10,1/10,-1/5,1/10,1/10,-1/5,1/10,1/10,1/10,1/10,1/10,-1/2,1/10,1/10,-1/2,1/10,-1/2,-1/2,1/10,1/10,-1/2,1/10,1/10],
+[ 
+1,1/10,1/10,1/10,1/10,-1/2,1/10,1,-1/5,1/10,-1/5,1/10,1/10,-1/2,1/10,1/10,1/10,1/10,-1/2,1/10,-1/5,1/10,1/10,1/10,1/10,1/10,1/10,1/10,1/10,-1/2,1/10,-1/2,1/10,1/10,1/10,1/10,-1/5,1/10,1/10,-1/5,1/10,-1/2,1/10],
+[ 
+1,1/10,-1/2,-1/2,1/10,1/10,1/10,-1/5,1,1/10,-1/5,1/10,1/10,1/10,1/10,-1/2,1/10,-1/2,1/10,1/10,-1/5,1/10,1/10,1/10,1/10,1/10,1/10,1/10,-1/2,1/10,1/10,1/10,1/10,1/10,1/10,1/10,-1/5,1/10,1/10,-1/5,-1/2,1/10,1/10],
+[ 
+1,1/10,1/10,-1/2,1/10,1/10,1/10,1/10,1/10,1,1/10,1/10,-1/5,1/10,1/10,1/10,1/10,1/10,-1/2,-1/2,1/10,1/10,1/10,1/10,-1/5,1/10,1/10,1/10,1/10,1/10,1/10,1/10,-1/2,1/10,1/10,-1/2,1/10,1/10,1/10,-1/2,-1/5,-1/5,-1/5],
+[ 
+1,1/10,1/10,1/10,1/10,1/10,1/10,-1/5,-1/5,1/10,1,1/10,1/10,1/10,-1/2,1/10,-1/2,1/10,1/10,1/10,-1/5,1/10,1/10,1/10,1/10,-1/2,1/10,1/10,1/10,1/10,1/10,1/10,1/10,1/10,-1/2,-1/2,-1/5,1/10,1/10,-1/5,1/10,1/10,-1/2],
+[ 
+1,1/10,1/10,-1/5,1/10,1/10,1/10,1/10,1/10,1/10,1/10,1,1/10,1/10,-1/2,-1/2,-1/5,1/10,1/10,1/10,-1/2,1/10,1/10,-1/5,1/10,1/10,1/10,1/10,1/10,1/10,1/10,-1/5,-1/2,1/10,1/10,1/10,1/10,-1/2,-1/5,1/10,1/10,-1/2,1/10],
+[ 
+1,1/10,1/10,1/10,1/10,1/10,1/10,1/10,1/10,-1/5,1/10,1/10,1,-1/2,1/10,-1/2,-1/2,1/10,1/10,1/10,1/10,-1/2,1/10,1/10,-1/5,1/10,-1/2,1/10,1/10,1/10,1/10,1/10,1/10,1/10,1/10,1/10,-1/2,1/10,1/10,1/10,-1/5,-1/5,-1/5],
+[ 
+1,-1/5,1/10,-1/2,1/10,1/10,1/10,-1/2,1/10,1/10,1/10,1/10,-1/2,1,-1/5,1/10,1/10,-1/5,1/10,-1/5,1/10,1/10,1/10,1/10,1/10,-1/2,1/10,-1/5,1/10,1/10,1/10,1/10,1/10,-1/2,1/10,1/10,1/10,-1/2,1/10,1/10,1/10,1/10,1/10],
+[ 
+1,-1/5,1/10,1/10,1/10,1/10,1/10,1/10,1/10,1/10,-1/2,-1/2,1/10,-1/5,1,1/10,1/10,-1/5,-1/2,-1/5,1/10,-1/2,1/10,1/10,1/10,1/10,1/10,-1/5,1/10,1/10,-1/2,1/10,1/10,1/10,1/10,1/10,1/10,1/10,1/10,1/10,-1/2,1/10,1/10],
+[ 
+1,-1/2,1/10,1/10,-1/5,1/10,-1/5,1/10,-1/2,1/10,1/10,-1/2,-1/2,1/10,1/10,1,1/10,1/10,-1/5,1/10,1/10,1/10,-1/5,1/10,1/10,-1/5,1/10,1/10,1/10,-1/2,1/10,1/10,1/10,1/10,1/10,-1/2,1/10,1/10,1/10,1/10,1/10,1/10,1/10],
+[ 
+1,1/10,-1/2,-1/5,1/10,-1/2,1/10,1/10,1/10,1/10,-1/2,-1/5,-1/2,1/10,1/10,1/10,1,1/10,1/10,-1/2,1/10,1/10,-1/2,-1/5,1/10,1/10,1/10,1/10,1/10,1/10,1/10,-1/5,1/10,1/10,1/10,1/10,1/10,1/10,-1/5,1/10,1/10,1/10,1/10],
+[ 
+1,-1/5,1/10,1/10,1/10,1/10,1/10,1/10,-1/2,1/10,1/10,1/10,1/10,-1/5,-1/5,1/10,1/10,1,1/10,-1/5,1/10,1/10,-1/2,1/10,1/10,1/10,-1/2,-1/5,1/10,1/10,1/10,-1/2,-1/2,1/10,1/10,1/10,1/10,1/10,1/10,1/10,1/10,1/10,-1/2],
+[ 
+1,1/10,-1/2,1/10,-1/5,1/10,-1/5,-1/2,1/10,-1/2,1/10,1/10,1/10,1/10,-1/2,-1/5,1/10,1/10,1,1/10,1/10,1/10,-1/5,1/10,1/10,-1/5,-1/2,1/10,1/10,1/10,1/10,1/10,1/10,1/10,1/10,1/10,1/10,1/10,-1/2,1/10,1/10,1/10,1/10],
+[ 
+1,-1/5,1/10,1/10,1/10,1/10,-1/2,1/10,1/10,-1/2,1/10,1/10,1/10,-1/5,-1/5,1/10,-1/2,-1/5,1/10,1,-1/2,1/10,1/10,1/10,1/10,1/10,1/10,-1/5,-1/2,-1/2,1/10,1/10,1/10,1/10,1/10,1/10,1/10,1/10,1/10,1/10,1/10,1/10,1/10],
+[ 
+1,1/10,1/10,1/10,-1/2,1/10,1/10,-1/5,-1/5,1/10,-1/5,-1/2,1/10,1/10,1/10,1/10,1/10,1/10,1/10,-1/2,1,1/10,1/10,1/10,-1/2,1/10,-1/2,1/10,1/10,1/10,1/10,1/10,1/10,-1/2,1/10,1/10,-1/5,1/10,1/10,-1/5,1/10,1/10,1/10],
+[ 
+1,1/10,-1/5,1/10,-1/2,1/10,1/10,1/10,1/10,1/10,1/10,1/10,-1/2,1/10,-1/2,1/10,1/10,1/10,1/10,1/10,1/10,1,1/10,1/10,1/10,1/10,1/10,1/10,-1/2,-1/5,1/10,-1/2,-1/5,-1/5,-1/5,1/10,1/10,1/10,1/10,-1/2,1/10,1/10,1/10],
+[ 
+1,1/10,1/10,1/10,-1/5,1/10,-1/5,1/10,1/10,1/10,1/10,1/10,1/10,1/10,1/10,-1/5,-1/2,-1/2,-1/5,1/10,1/10,1/10,1,1/10,1/10,-1/5,1/10,1/10,1/10,1/10,-1/2,1/10,1/10,-1/2,1/10,1/10,1/10,1/10,1/10,-1/2,1/10,-1/2,1/10],
+[ 
+1,1/10,1/10,-1/5,1/10,1/10,1/10,1/10,1/10,1/10,1/10,-1/5,1/10,1/10,1/10,1/10,-1/5,1/10,1/10,1/10,1/10,1/10,1/10,1,1/10,-1/2,-1/2,-1/2,1/10,-1/2,1/10,-1/5,1/10,1/10,1/10,1/10,1/10,1/10,-1/5,-1/2,-1/2,1/10,1/10],
+[ 
+1,-1/2,-1/2,1/10,1/10,1/10,1/10,1/10,1/10,-1/5,1/10,1/10,-1/5,1/10,1/10,1/10,1/10,1/10,1/10,1/10,-1/2,1/10,1/10,1/10,1,-1/2,1/10,1/10,1/10,1/10,-1/2,-1/2,1/10,1/10,1/10,1/10,1/10,1/10,1/10,1/10,-1/5,-1/5,-1/5],
+[ 
+1,1/10,1/10,1/10,-1/5,1/10,-1/5,1/10,1/10,1/10,-1/2,1/10,1/10,-1/2,1/10,-1/5,1/10,1/10,-1/5,1/10,1/10,1/10,-1/5,-1/2,-1/2,1,1/10,1/10,-1/2,1/10,1/10,1/10,-1/2,1/10,1/10,1/10,1/10,1/10,1/10,1/10,1/10,1/10,1/10],
+[ 
+1,1/10,1/10,1/10,1/10,-1/5,1/10,1/10,1/10,1/10,1/10,1/10,-1/2,1/10,1/10,1/10,1/10,-1/2,-1/2,1/10,-1/2,1/10,1/10,-1/2,1/10,1/10,1,1/10,-1/5,1/10,-1/5,1/10,1/10,1/10,-1/2,-1/5,1/10,-1/5,1/10,1/10,1/10,1/10,1/10],
+[ 
+1,-1/5,-1/2,1/10,-1/2,1/10,1/10,1/10,1/10,1/10,1/10,1/10,1/10,-1/5,-1/5,1/10,1/10,-1/5,1/10,-1/5,1/10,1/10,1/10,-1/2,1/10,1/10,1/10,1,1/10,1/10,1/10,1/10,1/10,1/10,1/10,-1/2,-1/2,1/10,1/10,1/10,1/10,-1/2,1/10],
+[ 
+1,1/10,1/10,1/10,1/10,-1/5,1/10,1/10,-1/2,1/10,1/10,1/10,1/10,1/10,1/10,1/10,1/10,1/10,1/10,-1/2,1/10,-1/2,1/10,1/10,1/10,-1/2,-1/5,1/10,1,1/10,-1/5,1/10,1/10,1/10,1/10,-1/5,1/10,-1/5,-1/2,1/10,1/10,-1/2,1/10],
+[ 
+1,1/10,-1/5,1/10,1/10,1/10,1/10,-1/2,1/10,1/10,1/10,1/10,1/10,1/10,1/10,-1/2,1/10,1/10,1/10,-1/2,1/10,-1/5,1/10,-1/2,1/10,1/10,1/10,1/10,1/10,1,-1/2,1/10,-1/5,-1/5,-1/5,1/10,1/10,1/10,1/10,1/10,1/10,1/10,-1/2],
+[ 
+1,1/10,1/10,-1/2,1/10,-1/5,1/10,1/10,1/10,1/10,1/10,1/10,1/10,1/10,-1/2,1/10,1/10,1/10,1/10,1/10,1/10,1/10,-1/2,1/10,-1/2,1/10,-1/5,1/10,-1/5,-1/2,1,1/10,1/10,1/10,1/10,-1/5,-1/2,-1/5,1/10,1/10,1/10,1/10,1/10],
+[ 
+1,1/10,1/10,-1/5,1/10,1/10,-1/2,-1/2,1/10,1/10,1/10,-1/5,1/10,1/10,1/10,1/10,-1/5,-1/2,1/10,1/10,1/10,-1/2,1/10,-1/5,-1/2,1/10,1/10,1/10,1/10,1/10,1/10,1,1/10,1/10,1/10,-1/2,1/10,1/10,-1/5,1/10,1/10,1/10,1/10],
+[ 
+1,1/10,-1/5,1/10,1/10,-1/2,1/10,1/10,1/10,-1/2,1/10,-1/2,1/10,1/10,1/10,1/10,1/10,-1/2,1/10,1/10,1/10,-1/5,1/10,1/10,1/10,-1/2,1/10,1/10,1/10,-1/5,1/10,1/10,1,-1/5,-1/5,1/10,-1/2,1/10,1/10,1/10,1/10,1/10,1/10],
+[ 
+1,1/10,-1/5,1/10,1/10,1/10,1/10,1/10,1/10,1/10,1/10,1/10,1/10,-1/2,1/10,1/10,1/10,1/10,1/10,1/10,-1/2,-1/5,-1/2,1/10,1/10,1/10,1/10,1/10,1/10,-1/5,1/10,1/10,-1/5,1,-1/5,-1/2,1/10,1/10,-1/2,1/10,-1/2,1/10,1/10],
+[ 
+1,-1/2,-1/5,-1/2,1/10,1/10,-1/2,1/10,1/10,1/10,-1/2,1/10,1/10,1/10,1/10,1/10,1/10,1/10,1/10,1/10,1/10,-1/5,1/10,1/10,1/10,1/10,-1/2,1/10,1/10,-1/5,1/10,1/10,-1/5,-1/5,1,1/10,1/10,1/10,1/10,1/10,1/10,-1/2,1/10],
+[ 
+1,1/10,1/10,1/10,1/10,-1/5,1/10,1/10,1/10,-1/2,-1/2,1/10,1/10,1/10,1/10,-1/2,1/10,1/10,1/10,1/10,1/10,1/10,1/10,1/10,1/10,1/10,-1/5,-1/2,-1/5,1/10,-1/5,-1/2,1/10,-1/2,1/10,1,1/10,-1/5,1/10,1/10,1/10,1/10,1/10],
+[ 
+1,1/10,1/10,1/10,1/10,1/10,-1/2,-1/5,-1/5,1/10,-1/5,1/10,-1/2,1/10,1/10,1/10,1/10,1/10,1/10,1/10,-1/5,1/10,1/10,1/10,1/10,1/10,1/10,-1/2,1/10,1/10,-1/2,1/10,-1/2,1/10,1/10,1/10,1,1/10,-1/2,-1/5,1/10,1/10,1/10],
+[ 
+1,1/10,-1/2,1/10,1/10,-1/5,-1/2,1/10,1/10,1/10,1/10,-1/2,1/10,-1/2,1/10,1/10,1/10,1/10,1/10,1/10,1/10,1/10,1/10,1/10,1/10,1/10,-1/5,1/10,-1/5,1/10,-1/5,1/10,1/10,1/10,1/10,-1/5,1/10,1,1/10,-1/2,1/10,1/10,-1/2],
+[ 
+1,-1/2,1/10,-1/5,1/10,1/10,1/10,1/10,1/10,1/10,1/10,-1/5,1/10,1/10,1/10,1/10,-1/5,1/10,-1/2,1/10,1/10,1/10,1/10,-1/5,1/10,1/10,1/10,1/10,-1/2,1/10,1/10,-1/5,1/10,-1/2,1/10,1/10,-1/2,1/10,1,1/10,1/10,1/10,-1/2],
+[ 
+1,-1/2,1/10,1/10,1/10,1/10,1/10,-1/5,-1/5,-1/2,-1/5,1/10,1/10,1/10,1/10,1/10,1/10,1/10,1/10,1/10,-1/5,-1/2,-1/2,-1/2,1/10,1/10,1/10,1/10,1/10,1/10,1/10,1/10,1/10,1/10,1/10,1/10,-1/5,-1/2,1/10,1,1/10,1/10,1/10],
+[ 
+1,1/10,1/10,1/10,1/10,-1/2,-1/2,1/10,-1/2,-1/5,1/10,1/10,-1/5,1/10,-1/2,1/10,1/10,1/10,1/10,1/10,1/10,1/10,1/10,-1/2,-1/5,1/10,1/10,1/10,1/10,1/10,1/10,1/10,1/10,-1/2,1/10,1/10,1/10,1/10,1/10,1/10,1,-1/5,-1/5],
+[ 
+1,1/10,1/10,1/10,1/10,1/10,1/10,-1/2,1/10,-1/5,1/10,-1/2,-1/5,1/10,1/10,1/10,1/10,1/10,1/10,1/10,1/10,1/10,-1/2,1/10,-1/5,1/10,1/10,-1/2,-1/2,1/10,1/10,1/10,1/10,1/10,-1/2,1/10,1/10,1/10,1/10,1/10,-1/5,1,-1/5],
+[ 
+1,1/10,1/10,1/10,-1/2,1/10,1/10,1/10,1/10,-1/5,-1/2,1/10,-1/5,1/10,1/10,1/10,1/10,-1/2,1/10,1/10,1/10,1/10,1/10,1/10,-1/5,1/10,1/10,1/10,1/10,-1/2,1/10,1/10,1/10,1/10,1/10,1/10,1/10,-1/2,-1/2,1/10,-1/5,-1/5,1]
+];
+EXT2:=List(EXT, x->RemoveFraction(x));
+
+GRP:=__VectorConfiguration_Automorphism(EXT2);
+
+
+LorbFAC:=DualDescriptionStandard(EXT2, GRP); 
+############################
+FuncCreateMagicHypercube:=function(n, pDim)
+  local LES, LESres, ListEqua, iDim, SLR, eRes, TheEqua, ListM, iSet, fSet, VCE, eLine, TheIneq, eIneq, ListGen, eGen, NewListEqua, Pos, ListN, eSet, ListIneq, eV;
+  LES:=BuildSet(pDim, [1..n]);
+  LESres:=BuildSet(pDim-1, [1..n]);
+  ListEqua:=[];
+  for iDim in [1..pDim]
+  do
+    SLR:=Difference([1..pDim], [iDim]);
+    for eRes in LESres
+    do
+      TheEqua:=ListWithIdenticalEntries(Length(LES)+1, 0);
+      TheEqua[1]:=1;
+      ListM:=[];
+      for iSet in [1..Length(LES)]
+      do
+        fSet:=LES[iSet];
+        if fSet{SLR}=eRes then
+          Add(ListM, iSet);
+          TheEqua[iSet+1]:=-1;
+        fi;
+      od;
+      Add(ListEqua, TheEqua);
+    od;
+  od;
+  ListGen:=[];
+  for eGen in GeneratorsOfGroup(SymmetricGroup([1..n]))
+  do
+    ListN:=[];
+    for iSet in [1..Length(LES)]
+    do
+      eSet:=LES[iSet];
+      fSet:=[OnPoints(eSet[1], eGen)];
+      Append(fSet, eSet{[2..pDim]});
+      Pos:=Position(LES, fSet);
+      Add(ListN, Pos);
+    od;
+    Add(ListGen, PermList(ListN));
+  od;
+  for eGen in GeneratorsOfGroup(SymmetricGroup([1..pDim]))
+  do
+    ListN:=[];
+    for iSet in [1..Length(LES)]
+    do
+      eSet:=LES[iSet];
+      fSet:=Permuted(eSet, eGen);
+      Pos:=Position(LES, fSet);
+      Add(ListN, Pos);
+    od;
+    Add(ListGen, PermList(ListN));
+  od;
+  ListIneq:=[];
+  for iSet in [1..Length(LES)]
+  do
+    TheIneq:=ListWithIdenticalEntries(Length(LES)+1, 0);
+    TheIneq[iSet+1]:=1;
+    Add(ListIneq, TheIneq);
+  od;
+  VCE:=NullspaceMat(TransposedMat(ListEqua));
+  NewListEqua:=[];
+  for eIneq in ListIneq
+  do
+    eLine:=[];
+    for eV in VCE
+    do
+      Add(eLine, eIneq*eV);
+    od;
+    Add(NewListEqua, eLine);
+  od;
+  return rec(ListIneq:=NewListEqua, GRP:=Group(ListGen));
+end;
+
+
+# Cases [n,2] have only one orbit apparently.
+
+ListCases:=[[3,3],[4,3],[3,4],[3,5],[4,2],[5,2],[6,2],[7,2]];
+for eCase in ListCases
+do
+  n:=eCase[1];
+  pDim:=eCase[2];
+  eRec:=FuncCreateMagicHypercube(n, pDim);
+  nbIneq:=Length(eRec.ListIneq);
+  RelDim:=RankMat(eRec.ListIneq);
+  OrdGRP:=Order(eRec.GRP);
+  Print("n=", n, " p=", pDim, " dim=", RelDim, " |FAC|=", nbIneq, " |GRP|=", OrdGRP, "\n");
+od;
+
+ListCases:=[[4,3]];
+for eCase in ListCases
+do
+  n:=eCase[1];
+  pDim:=eCase[2];
+  ePre:=Concatenation("Magic", String(n), "_", String(pDim));
+  eFileEXT:=Concatenation(ePre, ".ext");
+  eFileGRP:=Concatenation(ePre, ".grp");
+  eRec:=FuncCreateMagicHypercube(n, pDim);
+  SYMPOL_PrintMatrix(eFileEXT, eRec.ListIneq);
+  SYMPOL_PrintGroup(eFileGRP, Length(eRec.ListIneq), eRec.GRP);
+od;
+############################
+
+
+
+BigGroup:=MathieuGroup(12);
+SmaGroup:=MathieuGroup(10);
+
+
+
+LiftFunc:=GlobalLiftingFunctionality(SmaGroup, BigGroup);
+
+for iter in [1..100]
+do
+    eSet:=Set([]);
+    for i in [1..Random([1..6])]
+    do
+        eVal:=Random([1..12]);
+        AddSet(eSet, eVal);
+    od;
+    List1:=Orbit(BigGroup, eSet, OnSets);
+    ListRepr:=LiftFunc(eSet);
+    List2:=[];
+    for eRepr in ListRepr
+    do
+        Append(List2, Orbit(SmaGroup, eRepr, OnSets));
+    od;
+    if Set(List1)<>Set(List2) then
+        Error("Found bug in the orbit splitting");
+    fi;
+    Print("iter=", iter, " |eSet|=", Length(eSet), " |List1|=", Length(List1), "\n");
+od;
+############################
+#TheGramMat:=ClassicalSporadicLattices("ER7");
+#TheGramMat:=ClassicalSporadicLattices("E8");
+#TheGramMat:=ClassicalSporadicLattices("Lambda9");
+#TheGramMat:=RemoveFractionMatrix(Inverse(ClassicalSporadicLattices("Lambda9")));
+#TheGramMat:=LatticeDnPlus(10);
+#TheGramMat:=FuncFormAnr(11,4);
+TheGramMat:=ClassicalSporadicLattices("K12");
+
+DualPair:=function(eName)
+  local TheList, TheGramMat, test, DualGramMat, DualName;
+  Print("Inserting lattice ", eName, "\n");
+  TheList:=[];
+  TheGramMat:=ClassicalSporadicLattices(eName);
+  Add(TheList, rec(eName:=eName, GramMat:=TheGramMat));
+  test:=IsSelfDualLattice(TheGramMat);
+  if test=false then
+    DualGramMat:=RemoveFractionMatrix(Inverse(TheGramMat));
+    DualName:=Concatenation("Dual_", eName);
+    Add(TheList, rec(eName:=DualName, GramMat:=DualGramMat));
+  fi;
+  return TheList;
+end;
+
+ListCases:=[];
+Append(ListCases, DualPair("E6"));
+Append(ListCases, DualPair("E7"));
+Append(ListCases, DualPair("ER7"));
+Append(ListCases, DualPair("E8"));
+Append(ListCases, DualPair("Lambda9"));
+Append(ListCases, DualPair("Lambda10"));
+Append(ListCases, DualPair("O10"));
+Append(ListCases, DualPair("K12"));
+Append(ListCases, DualPair("BW16"));
+Append(ListCases, DualPair("Kappa7"));
+Append(ListCases, DualPair("Kappa8"));
+Append(ListCases, DualPair("Kappa9"));
+Append(ListCases, DualPair("Kappa10"));
+Append(ListCases, DualPair("Kappa11"));
+Append(ListCases, DualPair("Lambda11max"));
+Append(ListCases, DualPair("Lambda11min"));
+Append(ListCases, DualPair("Lambda12max"));
+Append(ListCases, DualPair("Lambda12mid"));
+Append(ListCases, DualPair("Lambda12min"));
+Append(ListCases, DualPair("Lambda13max"));
+Append(ListCases, DualPair("Lambda13mid"));
+Append(ListCases, DualPair("Lambda13min"));
+
+
+TheFile:="CoveringStatus";
+output:=OutputTextFile(TheFile, true);
+for eCase in ListCases
+do
+  AppendTo(output, "Lattice name=", eCase.eName, "\n");
+  n:=Length(eCase.GramMat);
+  LFC:=DelaunayComputationStandardFunctions(eCase.GramMat);
+  TestPessimum:=LFC.TestCoveringPessimum();
+  TestMaxima:=LFC.TestCoveringMaximality();
+  AppendTo(output, "TestPessimum=", TestPessimum, "  TestMaxima=", TestMaxima, "\n");
+  AppendTo(output, "\n");
+od;
+CloseStream(output);
+############################
+GramMat:=ClassicalSporadicLattices("ER7");
+#GramMat:=ClassicalSporadicLattices("BW16");
+#GramMat:=ClassicalSporadicLattices("E7");
+#GramMat:=ClassicalSporadicLattices("E6");
+#GramMat:=ClassicalSporadicLattices("O10");
+#GramMat:=ClassicalSporadicLattices("O12");
+#GramMat:=LatticeDn(4);
+
+ListFunc:=DelaunayComputationStandardFunctions(GramMat);
+DelCO:=ListFunc.GetDelaunayDescription();
+############################
+n:=4;
+
+EXT:=[];
+for eVect in BuildSet(n, [-1/2, 3/2])
+do
+  Add(EXT, Concatenation([1], eVect));
+od;
+
+#FAC:=DualDescription(EXT);
+ListFAC:=DualDescription(EXT);
+Print("|ListFAC|=", Length(ListFAC), "\n");
+############################
+TheChoice:=2;
+if TheChoice=1 then
+  GramMat:=LatticeDn(4).TheGram;
+elif TheChoice=2 then
+  GramMat:=ClassicalSporadicLattices("E6"); # that should be fast
+elif TheChoice=3 then
+  GramMat:=ClassicalSporadicLattices("L81"); # takes a few days
+                                             # reserves 300M at least in /tmp
+elif TheChoice=4 then
+  GramMat:=ClassicalSporadicLattices("L99"); # takes about a week
+                                             # reserves 2G at least in /tmp
+fi;
+
+n:=Length(GramMat);
+SHV:=ShortestVectorDutourVersion(GramMat);
+MatrGRP:=ArithmeticAutomorphismMatrixFamily_HackSouvignier_V2("", [GramMat], SHV);
+
+LimitNbRepresentatives:=10;
+TheRec:=IndepFam_GetAllSets(SHV, MatrGRP, LimitNbRepresentatives);
+
+TheFileCases:=Concatenation("TheCases", String(n), "_", String(Length(SHV)), "_", String(Order(MatrGRP)));
+Print("TheFileCases=", TheFileCases, "\n");
+IndepFam_PrintResult(TheFileCases, TheRec);
+############################
+GetHalfCube:=function(n)
+  local EXT;
+  EXT:=Filtered(BuildSet(n, [0,1]), x->Sum(x) mod 2=0);
+  return List(EXT, x->Concatenation([1], x));
+end;
+
+
+
+HalfH4:=GetHalfCube(4);
+AffBas:=CreateAffineBasis(HalfH4);
+
+DistMat:=NullMat(5,5);
+for i in [1..5]
+do
+  for j in [1..5]
+  do
+    eDiff:=AffBas[i]-AffBas[j];
+    dist:=eDiff*eDiff;
+    DistMat[i][j]:=dist;
+  od;
+od;
+GramMat:=DistanceMatrixToGramMatrix(DistMat);
+
+GRP:=ArithmeticAutomorphismGroup([GramMat]);
+SHV:=ShortestVectorDutourVersion(GramMat);
+
+VoronoiPolytopeFacet:=[];
+for eVect in SHV
+do
+  eFac:=[eVect*GramMat*eVect/2];
+  Append(eFac, eVect*GramMat);
+  Add(VoronoiPolytopeFacet, eFac);
+od;
+EXTprev:=DualDescription(VoronoiPolytopeFacet);
+EXT:=List(EXTprev, x->x/x[1]);
+FAC:=DualDescription(EXT);
+
+nbV:=24;
+DM:=NullMat(nbV, nbV);
+for i in [1..nbV-1]
+do
+  for j in [i+1..nbV]
+  do
+    eDiff:=EXT[i]{[2..5]}-EXT[j]{[2..5]};
+    DM[i][j]:=eDiff*GramMat*eDiff;
+    DM[j][i]:=eDiff*GramMat*eDiff;
+  od;
+od;
+iVert1:=1;
+iVert2:=First([1..nbV], x->DM[iVert1][x]=1);
+
+GRP24cell:=AutomorphismGroupEdgeColoredGraph(DM);
+LorbFlag:=ListFlagOrbit(GRP24cell, EXT, FAC);
+
+
+#TheMiddle:=(EXT[iVert1]+EXT[iVert2])/2;  # middle of edges
+#TheMiddle:=(EXT[iVert1]+EXT[iVert2]+EXT[3])/3; # center of triangle
+TheMiddle:=Concatenation([1], SHV[1]/2);
+
+TheMiddleRed:=VectorMod1(TheMiddle{[2..5]});
+
+FuncActionMod1:=function(eClass, eElt)
+  return VectorMod1(eClass*eElt);
+end;
+
+
+ListCoset:=Orbit(GRP, TheMiddleRed, FuncActionMod1);
+ListCosetForProg:=List(ListCoset, x->Concatenation([1], x));
+
+eRecU:=rec(GramMat:=GramMat, ListCosets:=ListCosetForProg);
+
+ListFunc:=Periodic_DelaunayComputationStandardFunctions(eRecU);
+TheDesc:=ListFunc.GetDelaunayDescription();
+ListVoronoiVertices:=ListFunc.GetVoronoiVertices();
+
+############################
+GramMat:=[
+[2,1],
+[1,2]
+];
+
+
+
+MatrixGRP:=ArithmeticAutomorphismGroup([GramMat]);
+
+AffineGroup:=Group(List(GeneratorsOfGroup(MatrixGRP), x->FuncCreateBigMatrix(ListWithIdenticalEntries(Length(GramMat),0), x)));
+
+
+ListCosets:=List([[1, 1/3, 1/3], [1, -1/3, -1/3]], PeriodicVectorMod1);
+
+eRecU:=rec(GramMat:=GramMat, ListCosets:=ListCosets);
+ListFunc:=Periodic_DelaunayComputationStandardFunctions(eRecU);
+TheDesc:=ListFunc.GetDelaunayDescription();
+ListVoronoiVertices:=ListFunc.GetVoronoiVertices();
+############################
+GramMat:=ClassicalSporadicLattices("E6");
+PointGRP:=ArithmeticAutomorphismGroup([GramMat]);
+
+
+DelCO:=DelaunayDescriptionStandard(
+    rec(GramMat:=GramMat,
+        PointGRP:=PointGRP)
+       );
+
+CP:=CenterRadiusDelaunayPolytopeGeneral(GramMat, DelCO[1].EXT);
+eVect1:=CP.Center;
+eVect2:=-CP.Center;
+eVect2[1]:=1;
+ListCosets:=List([eVect1, eVect2], PeriodicVectorMod1);
+
+U:=rec(GramMat:=GramMat, ListCosets:=ListCosets);
+
+ListFunc:=Periodic_DelaunayComputationStandardFunctions(U);
+TheDesc:=ListFunc.GetDelaunayDescription();
+ListVoronoiVertices:=ListFunc.GetVoronoiVertices();
+############################
+GramMat:=ClassicalSporadicLattices("E7");
+
+MatrixGRP:=ArithmeticAutomorphismGroup([GramMat]);
+
+ListFunc:=DelaunayComputationStandardFunctions(GramMat);
+DelCO:=ListFunc.GetDelaunayDescription();
+
+ListSiz:=List(DelCO, x->Length(x.EXT));
+Pos:=Position(ListSiz, 8);
+
+CP:=CenterRadiusDelaunayPolytopeGeneral(GramMat, DelCO[Pos].EXT);
+TheCenter:=CP.Center;
+TheCenterRed:=VectorMod1(TheCenter{[2..8]});
+FuncActionMod1:=function(eClass, eElt)
+  return VectorMod1(eClass*eElt);
+end;
+TheOrbit:=Orbit(MatrixGRP, TheCenterRed, FuncActionMod1);
+
+ListCosets:=List(TheOrbit, x->Concatenation([1], x));
+
+eRecU:=rec(GramMat:=GramMat, ListCosets:=ListCosets);
+ListFunc:=Periodic_DelaunayComputationStandardFunctions(eRecU);
+TheDesc:=ListFunc.GetDelaunayDescription();
+ListVoronoiVertices:=ListFunc.GetVoronoiVertices();
+############################
+ManyMatrices:=[
+[[8,2,-1,-3,-3],[2,9,-2,-3,-3],[-1,-2,6,-1,-1],[-3,-3,-1,9,-1],[-3,-3,-1,-1,9]]
+];
+Dim:=5;
+total:=0;
+Fvector:=[];
+for GramMat in ManyMatrices
+do
+  total:=total+1;
+  Print("Working with decomposition" ,total);
+  LFC:=DelaunayComputationStandardFunctions(GramMat);
+  Print("LFC finished\n");
+  RecVor:=LFC.GetVoronoiVertices();
+  TheCanon:=RecVor.GetCanonicalGraph();
+od;
+############################
+n := 5;
+ListTotal:=CTYP_EnumerateCtypes(n, "unset");
+Print("We have ListTotal |ListTotal|=", Length(ListTotal), "\n");
+############################
+preEXT:=ReadVectorFile("FileCoord");
+
+EXT:=ColumnReduction(preEXT).EXT;
+GRP:=LinPolytope_Automorphism(EXT);
+FAC:=DualDescription(EXT);
+
+TheResult:=CreateK_skeletton(GRP, EXT, FAC);
+############################
+eRec:=ReadAsFunction("DATA_LP")();
+
+ListIneq:=eRec.ListIneq;
+ToBeMinimized:=eRec.ToBeMinimized;
+
+
+
+
+TheSol:=LPSOLVE_LinearProgramming(ListIneq, ToBeMinimized);
+
+
+############################
+GetCutPolytope:=function(n)
+  local LSET, EXT, eSet, H, V, eGen, i, j, LVECT, eVect, eList, GetPosition, ListPermGens, eVect2, PermGRP;
+  LSET:=Combinations([1..n-1]);
+  #
+  EXT:=[];
+  for eSet in LSET
+  do
+    V:=[1];
+    for i in [1..n-1]
+    do
+      for j in [i+1..n]
+      do
+        H:=Intersection(eSet, [i,j]);
+        if Length(H)=1 then
+          Add(V, 1);
+        else
+          Add(V, 0);
+        fi;
+      od;
+    od;
+    Add(EXT, V);
+  od;
+  #
+  LVECT:=[];
+  for eSet in LSET
+  do
+    eVect:=ListWithIdenticalEntries(n,0);
+    eVect{eSet}:=ListWithIdenticalEntries(Length(eSet), 1);
+    Add(LVECT, eVect);
+  od;
+  GetPosition:=function(eVect)
+    local pos, eVect2;
+    pos:=Position(LVECT, eVect);
+    if pos<>fail then
+      return pos;
+    fi;
+    eVect2:=ListWithIdenticalEntries(n, 1)-eVect;
+    pos:=Position(LVECT, eVect2);
+    if pos=fail then
+      Print("Something is wrong somewhere\n");
+      Print(NullMat(5));
+    fi;
+    return pos;
+  end;
+  ListPermGens:=[];
+  for eGen in GeneratorsOfGroup(SymmetricGroup([1..n]))
+  do
+    eList:=[];
+    for eVect in LVECT
+    do
+      Add(eList, GetPosition(Permuted(eVect, eGen)));
+    od;
+    Add(ListPermGens, PermList(eList));
+  od;
+  eList:=[];
+  for eVect in LVECT
+  do
+    eVect2:=ShallowCopy(eVect);
+    eVect2[1]:=1-eVect2[1];
+    Add(eList, GetPosition(eVect2));
+  od;
+  Add(ListPermGens, PermList(eList));
+  PermGRP:=Group(ListPermGens);
+  return rec(EXT:=EXT, PermGRP:=PermGRP);
+end;
+
+
+n:=7;
+
+TheInfo:=GetCutPolytope(n);
+PolyInfo:=RepresentationMatrixAndFacetStandard(TheInfo.EXT, TheInfo.PermGRP);
+############################
+GramMat:=ClassicalSporadicLattices("E6");
+
+LFC:=DelaunayComputationStandardFunctions(GramMat);
+
+n:=Length(GramMat);
+eDen:=3;
+
+for i in [1..10]
+do
+  eVert:=[];
+  for i in [1..n]
+  do
+    eVal:=Random([0..eDen])/eDen;
+    Add(eVert, eVal);
+  od;
+  #
+  Print("i=", i, " eVert=", eVert, "\n");
+  ListRec:=LFC.GetAllContainingCells(eVert);
+  Print("   |ListRec|=", Length(ListRec), "\n");
+od;
+############################

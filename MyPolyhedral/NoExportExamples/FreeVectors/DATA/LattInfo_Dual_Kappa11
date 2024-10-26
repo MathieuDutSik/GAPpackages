@@ -1,0 +1,6 @@
+return rec(
+  MaxRad := 103/12,
+  det := 764411904,
+  min := 12,
+  n := 11,
+  name := "Dual_Kappa11" );

@@ -1,0 +1,48 @@
+#!/usr/bin/perl -w
+
+$nbGraph=0;
+print "return [";
+while(<>)
+{
+    if ($_ ne "\n")
+    {
+	if ($nbGraph ne 0)
+	{
+	    print ",";
+	}
+	s/\n//;
+	@U=split(": ", $_);
+	$nbV=$U[1];
+	$iVert=1;
+	
+	print "[";
+	while(<>)
+	{
+	    if ($iVert>1)
+	    {
+		print ",";
+	    }
+	    s/\n//;
+	    @V=split(":", $_);
+	    @W=split(" ", $V[1]);
+	    print "[";
+	    for ($jVert=1; $jVert<=scalar(@W); $jVert++)
+	    {
+		if ($jVert>1)
+		{
+		    print ",";
+		}
+		print $W[$jVert-1];
+	    }
+	    print "]";
+	    if ($iVert eq $nbV)
+	    {
+		last;
+	    }
+	    $iVert++;
+	}
+	print "]";
+	$nbGraph++;
+    }
+}
+print "];\n";

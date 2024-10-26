@@ -1,0 +1,6 @@
+return rec(
+  MaxRad := 23/8,
+  det := 864,
+  min := 4,
+  n := 9,
+  name := "Kappa9" );

@@ -1,0 +1,53 @@
+#!/usr/bin/perl -w
+
+# This script takes the output of LCDD
+# and creates some files t
+
+$uu=scalar(@ARGV);
+if ($uu ne 2)
+{
+    print "NudifyCDD.standard is used as\n";
+    print "NudifyCDD.standard FileData FileMetaData < [File]\n";
+    print "\n";
+    print "It splits large lists of lines\n";
+    print "into small file\n";
+    die;
+}
+$FileData=$ARGV[0];
+$FileMetaData=$ARGV[1];
+open(OUT1, "> ".$FileData);
+open(OUT2, "> ".$FileMetaData);
+
+$print=0;
+
+$nbR=0;
+$PrevLine="unset";
+$MetaInfo="unset";
+while(<STDIN>)
+{
+    $Chain=$_;
+    if ($MetaInfo ne "unset")
+    {
+	$print=1;
+    }
+    if ($PrevLine eq "begin\n")
+    {
+	$MetaInfo=$Chain;
+    }
+    if ($Chain eq "end\n")
+    {
+	$print=0;
+    }
+    if ($print eq 1)
+    {
+	print OUT1 $Chain;
+    }
+    $nbR=$nbR+1;
+    $PrevLine=$Chain;
+}
+@L=split(" ", $MetaInfo);
+$nbEXT=$L[0];
+$nbCol=$L[1];
+print OUT2 $nbEXT." ".$nbCol."\n";
+close(OUT1);
+close(OUT2);

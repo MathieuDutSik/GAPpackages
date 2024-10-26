@@ -1,0 +1,7 @@
+TheGramMat:=ClassicalSporadicLattices("E8");
+#
+#
+#
+ListFunc:=DelaunayComputationStandardFunctions(TheGramMat);
+TheIntegral:=ListFunc.GetQuantization();
+Print("TheIntegral=", TheIntegral, "\n");

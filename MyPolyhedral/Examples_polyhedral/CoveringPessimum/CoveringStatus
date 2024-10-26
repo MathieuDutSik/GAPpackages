@@ -1,0 +1,203 @@
+Lattice name=E6
+TestPessimum=fail  TestMaxima=true
+
+Lattice name=Dual_E6
+TestPessimum=true  TestMaxima=false
+
+Lattice name=E7
+TestPessimum=fail  TestMaxima=true
+
+Lattice name=Dual_E7
+TestPessimum=true  TestMaxima=false
+
+Lattice name=ER7
+TestPessimum=fail  TestMaxima=true
+
+Lattice name=Dual_ER7
+TestPessimum=fail  TestMaxima=false
+
+Lattice name=E8
+TestPessimum=true  TestMaxima=false
+
+Lattice name=Lambda9
+TestPessimum=fail  TestMaxima=false
+
+Lattice name=Dual_Lambda9
+TestPessimum=fail  TestMaxima=false
+
+Lattice name=Lambda10
+TestPessimum=fail  TestMaxima=false
+
+Lattice name=Dual_Lambda10
+TestPessimum=fail  TestMaxima=false
+
+Lattice name=O10
+TestPessimum=fail  TestMaxima=true
+
+Lattice name=K12
+TestPessimum=true  TestMaxima=false
+
+Lattice name=BW16
+TestPessimum=fail  TestMaxima=true
+
+Lattice name=Kappa7
+TestPessimum=true  TestMaxima=false
+
+Lattice name=Dual_Kappa7
+TestPessimum=fail  TestMaxima=false
+
+Lattice name=Kappa8
+TestPessimum=fail  TestMaxima=false
+
+Lattice name=Dual_Kappa8
+TestPessimum=fail  TestMaxima=false
+
+Lattice name=Kappa9
+TestPessimum=fail  TestMaxima=false
+
+Lattice name=Dual_Kappa9
+TestPessimum=fail  TestMaxima=false
+
+Lattice name=Kappa10
+TestPessimum=fail  TestMaxima=false
+
+Lattice name=Dual_Kappa10
+TestPessimum=fail  TestMaxima=false
+
+Lattice name=Kappa11
+TestPessimum=fail  TestMaxima=false
+
+Lattice name=Dual_Kappa11
+TestPessimum=fail  TestMaxima=false
+
+Lattice name=Lambda11max
+TestPessimum=fail  TestMaxima=false
+
+Lattice name=Dual_Lambda11max
+TestPessimum=fail  TestMaxima=false
+
+Lattice name=Lambda11min
+TestPessimum=fail  TestMaxima=false
+
+Lattice name=Dual_Lambda11min
+TestPessimum=fail  TestMaxima=false
+
+Lattice name=Lambda12max
+TestPessimum=true  TestMaxima=false
+
+Lattice name=Dual_Lambda12max
+TestPessimum=true  TestMaxima=false
+
+Lattice name=Lambda12mid
+TestPessimum=fail  TestMaxima=false
+
+Lattice name=Dual_Lambda12mid
+Lattice name=E6
+TestPessimum=true  TestMaxima=true
+
+Lattice name=Dual_E6
+TestPessimum=true  TestMaxima=false
+
+Lattice name=E7
+TestPessimum=true  TestMaxima=true
+
+Lattice name=Dual_E7
+TestPessimum=true  TestMaxima=false
+
+Lattice name=ER7
+TestPessimum=true  TestMaxima=true
+
+Lattice name=Dual_ER7
+TestPessimum=false  TestMaxima=false
+
+Lattice name=E8
+TestPessimum=true  TestMaxima=false
+
+Lattice name=Lambda9
+TestPessimum=false  TestMaxima=false
+
+Lattice name=Dual_Lambda9
+TestPessimum=false  TestMaxima=false
+
+Lattice name=Lambda10
+TestPessimum=false  TestMaxima=false
+
+Lattice name=Dual_Lambda10
+TestPessimum=false  TestMaxima=false
+
+Lattice name=O10
+TestPessimum=true  TestMaxima=true
+
+Lattice name=K12
+TestPessimum=true  TestMaxima=false
+
+Lattice name=BW16
+TestPessimum=true  TestMaxima=true
+
+Lattice name=Kappa7
+TestPessimum=true  TestMaxima=false
+
+Lattice name=Dual_Kappa7
+TestPessimum=false  TestMaxima=false
+
+Lattice name=Kappa8
+TestPessimum=true  TestMaxima=false
+
+Lattice name=Dual_Kappa8
+TestPessimum=false  TestMaxima=false
+
+Lattice name=Kappa9
+TestPessimum=false  TestMaxima=false
+
+Lattice name=Dual_Kappa9
+TestPessimum=false  TestMaxima=false
+
+Lattice name=Kappa10
+TestPessimum=false  TestMaxima=false
+
+Lattice name=Dual_Kappa10
+TestPessimum=false  TestMaxima=false
+
+Lattice name=Kappa11
+TestPessimum=false  TestMaxima=false
+
+Lattice name=Dual_Kappa11
+TestPessimum=false  TestMaxima=false
+
+Lattice name=Lambda11max
+TestPessimum=false  TestMaxima=false
+
+Lattice name=Dual_Lambda11max
+TestPessimum=false  TestMaxima=false
+
+Lattice name=Lambda11min
+TestPessimum=false  TestMaxima=false
+
+Lattice name=Dual_Lambda11min
+TestPessimum=false  TestMaxima=false
+
+Lattice name=Lambda12max
+TestPessimum=true  TestMaxima=false
+
+Lattice name=Dual_Lambda12max
+TestPessimum=true  TestMaxima=false
+
+Lattice name=Lambda12mid
+TestPessimum=true  TestMaxima=false
+
+Lattice name=Dual_Lambda12mid
+TestPessimum=false  TestMaxima=false
+
+Lattice name=Lambda12min
+TestPessimum=true  TestMaxima=false
+
+Lattice name=Dual_Lambda12min
+TestPessimum=false  TestMaxima=false
+
+Lattice name=Lambda13max
+TestPessimum=true  TestMaxima=false
+
+Lattice name=Dual_Lambda13max
+TestPessimum=false  TestMaxima=false
+
+Lattice name=Lambda13mid

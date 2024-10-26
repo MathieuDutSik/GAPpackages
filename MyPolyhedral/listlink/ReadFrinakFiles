@@ -1,0 +1,72 @@
+#!/usr/bin/perl -w
+use strict;
+use warnings;
+
+my $nbU=scalar(@ARGV);
+if ($nbU ne 2)
+{
+    print "ReadFrinakFiles is used as\n";
+    print "ReadFrinakFiles [in] [out]\n";
+    print "with [in] the input\n";
+    print "with [out] the output\n";
+    exit(1);
+}
+
+my $FileIN=$ARGV[0];
+my $FileOUT=$ARGV[1];
+open(IN, $FileIN) or die "impossible to open ".$FileIN;
+my @RESULT=<IN>;
+close(IN);
+
+my $nbLine=scalar(@RESULT);
+
+my $nbCase=0;
+my @ListEmpty=(-1);
+for (my $iLine=0; $iLine<$nbLine; $iLine++)
+{
+    my $eLine=$RESULT[$iLine];
+    if ($eLine eq "\n")
+    {
+	$nbCase++;
+	$ListEmpty[scalar(@ListEmpty)]=$iLine;
+    }
+}
+
+
+open(OUT, "> ".$FileOUT);
+print OUT "return [";
+for (my $iCase=0; $iCase<$nbCase; $iCase++)
+{
+    if ($iCase > 0)
+    {
+	print OUT ",\n\n";
+    }
+    print OUT "[";
+    for (my $iLine=$ListEmpty[$iCase]+1; $iLine<$ListEmpty[$iCase+1]; $iLine++)
+    {
+	$_=$RESULT[$iLine];
+	s/\n//;
+	my $eLine=$_;
+	if ($iLine > $ListEmpty[$iCase]+1)
+	{
+	    print OUT ",\n";
+	}
+	print OUT "[";
+	my @V=split("\t", $eLine);
+	my $nbEnt=scalar(@V);
+	for (my $iEnt=0; $iEnt<$nbEnt; $iEnt++)
+	{
+	    if ($iEnt > 0)
+	    {
+		print OUT ",";
+	    }
+	    print OUT $V[$iEnt];
+	}
+	print OUT "]";
+    }
+    print OUT "]";
+}
+print OUT "];\n";
+close(OUT);
+
+

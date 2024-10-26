@@ -1,0 +1,11 @@
+#n:=5;
+n:=6;
+#n:=7;
+ListDelaunay:=InfDel_ClassificationDimensionN(n);
+nbPerfect:=Length(ListDelaunay);
+for iPerfect in [1..nbPerfect]
+do
+  eRec:=ListDelaunay[iPerfect];
+  GRP:=LinPolytope_Automorphism(eRec.EXT);
+  Print("iPerfect=", iPerfect, "/", nbPerfect, " dim=", RankMat(eRec.EXT)-1, " nbV=", Length(eRec.EXT), " |G|=", Order(GRP), "\n");
+od;

@@ -1,0 +1,3 @@
+DoClean("ExternalProg/WythoffEnum");
+print "\nCLEANED WythoffEnum\n\n";
+

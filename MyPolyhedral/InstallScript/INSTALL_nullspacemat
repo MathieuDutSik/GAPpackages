@@ -1,0 +1,34 @@
+#!/usr/bin/perl -w
+
+use Cwd;
+$TheDirPWD = getcwd;
+
+$eProg="ExternalProg/NullspaceMat/src/NullspaceMat.prog";
+$test=0;
+if (-e $eProg)
+{$test=1;}
+if ($test eq 0)
+{
+    $PrefixGMP=$TheDirPWD."/ExternalProg/gmp_install";
+    $PrefixLD="LDFLAGS=\"-L".$PrefixGMP."/lib\"";
+    $PrefixINC="CPPFLAGS=\"-I".$PrefixGMP."/include\"";
+    $order="(cd ExternalProg/NullspaceMat && ./configure ".$PrefixLD." ".$PrefixINC." && make)";
+    print $order."\n";
+    if (system($order) != 0) {
+	die "Error in compilation of NullspaceMat.prog\n";
+    }
+}
+if (!(-e $eProg))
+{
+    print "Compilation of ".$eProg." failed\n";
+    exit -1;
+}
+print "\nCOMPILED NullspaceMat\n\n";
+
+$order="(cd ExternalProg/Binaries && ln -sf ../NullspaceMat/src/NullspaceMat.prog)";
+print $order."\n";
+if (system($order) != 0) {
+    die "Error when linking\n";
+}
+
+exit 0;

@@ -1,0 +1,83 @@
+#!/usr/bin/perl -w
+
+# This script transform a cdd adjacency file into 
+# a dreadnaut adjacency file
+
+
+@B=<>;
+
+$i=0;
+while (1)
+{
+#    print "Not the good line\n";
+    if ($B[$i] eq "begin\n")
+    {
+	last;
+    }
+    $i++;
+}
+
+#print "Begin in line".$i."\n";
+
+@l=split(" ", $B[$i+1]);
+$nbVert=$l[0];
+$N=$nbVert+1;
+print "n=".$N."\n";
+print "g\n";
+
+@Status=();
+for ($iVert=1; $iVert<=$nbVert; $iVert++)
+{
+    $Status[$iVert-1]=0;
+}
+
+
+for ($j=$i+2; $j<=scalar(@B)-2; $j++)
+{
+    $_=$B[$j];
+    s/\n//;
+    @l=split(":", $_);
+    @sec=split(" ", $l[0]);
+    @thi=split("", $sec[1]);
+    if ($thi[0] eq "-")
+    {
+	$chg=1;
+    }
+    else
+    {
+	$chg=0;
+    }
+#    print "thi[0]=".$thi[0]."\n";
+#    print "chg=".$chg."\n";
+#    print "l1=".$l[1]."\n";
+#    print "h=".$l[0]."\n";
+#    print "h=".$l[0]."\n";
+    if ($chg eq 0)
+    {
+	print $sec[0]." :".$l[1].";\n";
+    }
+    else
+    {
+	print $sec[0]." :";
+	for ($iVert=1; $iVert<=$nbVert; $iVert++)
+	{
+	    $Status[$iVert-1]=1;
+	}
+	@U=split(" ", $l[1]);
+	for ($iU=1; $iU<=scalar(@U); $iU++)
+	{
+	    $eVert=$U[$iU-1];
+	    $Status[$eVert-1]=0;
+	}
+	for ($iVert=1; $iVert<=$nbVert; $iVert++)
+	{
+	    if ($Status[$iVert-1] eq 1)
+	    {
+		print " ".$iVert;
+	    }
+	}
+	print ";\n";
+    }
+}
+print "x\n";
+print "o\n";

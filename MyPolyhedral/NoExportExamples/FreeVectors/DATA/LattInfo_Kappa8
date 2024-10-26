@@ -1,0 +1,6 @@
+return rec(
+  MaxRad := 8/3,
+  det := 576,
+  min := 4,
+  n := 8,
+  name := "Kappa8" );

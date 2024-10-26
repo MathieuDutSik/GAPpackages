@@ -1,0 +1,3 @@
+DoClean("ExternalProg/4ti2-1.6");
+print "\nCLEANED 4ti2\n\n";
+

@@ -1,0 +1,6 @@
+return rec(
+  MaxRad := 7/2,
+  det := 16384,
+  min := 4,
+  n := 12,
+  name := "Dual_Lambda12mid" );

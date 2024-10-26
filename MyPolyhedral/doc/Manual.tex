@@ -1,0 +1,90 @@
+\documentclass[12pt]{amsart}
+\usepackage{amsfonts, amsmath, latexsym, epsfig}
+\usepackage{amssymb}
+\usepackage{epsf}
+\usepackage{url}
+
+
+\newcommand{\RR}{\ensuremath{\mathbb{R}}}
+\newcommand{\NN}{\ensuremath{\mathbb{N}}}
+\newcommand{\QQ}{\ensuremath{\mathbb{Q}}}
+\newcommand{\CC}{\ensuremath{\mathbb{C}}}
+\newcommand{\ZZ}{\ensuremath{\mathbb{Z}}}
+\newcommand{\TT}{\ensuremath{\mathbb{T}}}
+\newtheorem{proposition}{Proposition}
+\newtheorem{theorem}{Theorem}
+\newtheorem{corollary}{Corollary}
+\newtheorem{lemma}{Lemma}
+\newtheorem{problem}{Problem}
+\newtheorem{conjecture}{Conjecture}
+\newtheorem{claim}{Claim}
+\newtheorem{remark}{Remark}
+\newtheorem{definition}{Definition}
+%\newcommand{\qed}{\hfill $\Box$ }
+%\newcommand{\proof}{\noindent{\bf Proof.}\ \ }
+\def\QuotS#1#2{\leavevmode\kern-.0em\raise.2ex\hbox{$#1$}\kern-.1em/\kern-.1em\lower.25ex\hbox{$#2$}}
+
+
+%\usepackage{vmargin}
+%\setpapersize{custom}{21cm}{29.7cm}
+%\setmarginsrb{1.7cm}{1cm}{1.7cm}{3.5cm}{0pt}{0pt}{0pt}{0pt}
+%marge gauche, marge haut, marge droite, marge bas.
+\urlstyle{sf}
+%\author{Mathieu DUTOUR SIKIRI\'C}
+
+\DeclareMathOperator{\Aut}{Aut}
+\DeclareMathOperator{\Sym}{Sym}
+
+
+\begin{document}
+
+\author{Mathieu Dutour Sikiri\'c}
+\address{Mathieu Dutour Sikiri\'c, Rudjer Boskovi\'c Institute, Bijenicka 54, 10000 Zagreb, Croatia, Fax: +385-1-468-0245}
+\email{mdsikir@irb.hr}
+
+
+
+
+
+\title{Partial manual on the polyhedral computer package}
+
+
+\maketitle
+
+\begin{abstract}
+We explain here how to enumerate the extreme Delaunay polytopes
+in dimension $n$.
+\end{abstract}
+
+\section{Designs principles}
+
+\begin{enumerate}
+\item The manual is not supposed to reflect the reality of the code.
+The idea is to have the maximal flexibility in the code, so as to maximize
+speed and functionality. Manual is for help and is not supposed to reflect
+reality.
+\item When a function failed to do a computation, it does not return ``fail''.
+It stops in the middle with a call to {\rm Print(NullMat(5))} that usually
+express the problem.
+\item When it is cheap, all sort of checks are made everywhere so as to
+ensure security. We want to avoid the code going in wrong directions for
+too long. Those checks are for safety, but of course they cannot guarantee
+safety. For example, if a group is given for a lattice, then we do check that
+the groups, i.e. the generators preserve the lattice, because this is easy.
+But we do not check that the full group of the lattice is this one because
+this is expensive.
+\item All sort of bugs can and do occurr. Nobody is perfect, all papers
+and programs contain error. But I will do my best to correct them if at
+all possible.
+\item The principle is in modularity. Most of the code is in GAP.
+When speed is needed use C++ for some auxilliary computations.
+\item The goal is, in principle, to be modular. But we have not enforced
+with absolute consistency this because i
+
+
+
+
+\end{enumerate}
+
+
+\end{document}

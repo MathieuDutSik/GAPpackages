@@ -1,0 +1,3 @@
+DoClean("ExternalProg/polyhedral_common");
+print "\nCLEANED polyhedral_common\n\n";
+

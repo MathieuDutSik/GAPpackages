@@ -1,0 +1,82 @@
+#!/usr/bin/perl -w
+use strict;
+use warnings;
+
+my $uu=scalar(@ARGV);
+if ($uu ne 1)
+{
+    print "SUB_CheckBelonging is used as:\n";
+    print "SUB_CheckBelonging [projectname]\n";
+    die;
+}
+my $ProjectName=$ARGV[0];
+
+#
+# Loading data sets
+#
+
+my $eFileBinary="Generation/NeededBinaries_".$ProjectName;
+open(INFILE, $eFileBinary) or die "impossible to open : ".$eFileBinary;
+my @BC=<INFILE>;
+close(INFILE);
+my $lenBC=scalar(@BC);
+
+
+my $eFilePerl="Generation/Binaries_PerlStatus_".$ProjectName;
+open(IN, $eFilePerl) or die "impossible to open ".$eFilePerl."\n";
+my @PerlStatus=<IN>;
+close(IN);
+my $nbPerl=scalar(@PerlStatus);
+
+
+my $eFileBinaryStatus="Generation/Binaries_BinaryStatus_".$ProjectName;
+open(IN, $eFileBinaryStatus) or die "impossible to open ".$eFileBinaryStatus."\n";
+my @BinaryStatus=<IN>;
+close(IN);
+my $nbBin=scalar(@BinaryStatus);
+
+#
+# Exploting the data
+#
+
+if ($nbBin ne $lenBC || $nbPerl ne $lenBC)
+{
+    print "Inconsistency in data set\n";
+    print "lenBC=".$lenBC."\n";
+    print "nbPerl=".$nbPerl."\n";
+    print "nbBin=".$nbBin."\n";
+    die;
+}
+
+my $nbError=0;
+for (my $iBC=0; $iBC<$lenBC; $iBC++)
+{
+    $_=$PerlStatus[$iBC];
+    s/\n//;
+    my $ePerlStatus=$_;
+    #
+    $_=$BinaryStatus[$iBC];
+    s/\n//;
+    my $eBinStatus=$_;
+    #
+    my $eFullStatus=$ePerlStatus + $eBinStatus;
+    if ($eFullStatus ne 1)
+    {
+	print "Incoherency, File ".$BC[$iBC]." is required\n";
+	print "   eFullStatus=".$eFullStatus."\n";
+	print "   But PerlStatus=".$ePerlStatus."\n";;
+	print "   And BinStatus=".$eBinStatus."\n";;
+	$nbError++;
+    }
+}
+if ($nbError > 0)
+{
+    print "nbError=".$nbError."\n";
+    print "There are some errors in the binaries\n";
+    print "Please correct those obvious bugs\n";
+    die;
+}
+else
+{
+    print "SUB_CheckBelonging did not detect errors\n";
+}

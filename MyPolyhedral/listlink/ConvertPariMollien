@@ -1,0 +1,86 @@
+#!/usr/bin/perl -w
+
+$uu=scalar(@ARGV);
+
+if ($uu ne 2)
+{
+    print "ConvertPariMollien [input] [output]\n";
+    die;
+}
+
+$InputFile=$ARGV[0];
+$OutputFile=$ARGV[1];
+
+open(INFILE, $InputFile) or die "impossible to open InputFile=".$InputFile."\n";
+@B=<INFILE>;
+close(INFILE);
+
+#
+
+$nbLine=scalar(@B);
+$LastLine1=$B[$nbLine-1];
+$LastLine2=$B[$nbLine-2];
+$LastLine3=$B[$nbLine-3];
+$LastLine4=$B[$nbLine-4];
+$LastLine5=$B[$nbLine-5];
+@U=split(" ", $LastLine5);
+$FirstStr=$U[0];
+if ($FirstStr ne "parisize")
+{
+    print "Assumption broken in the code 1\n";
+    die;
+}
+@US=split("!", $LastLine1);
+if ($US[0] ne "Goodbye")
+{
+    print "Assumption broken in the code 2\n";
+    die;
+}
+
+
+#
+#
+#
+
+$_=$LastLine4;
+s/\n//;
+$LastLine4b=$_;
+
+$_=$LastLine3;
+s/\n//;
+$LastLine3b=$_;
+
+@U=split("", $LastLine3b);
+#print "LastLine2b=".$LastLine2b."\n";
+$str4="";
+for ($iU=1; $iU<scalar(@U)-1; $iU++)
+{
+    $str4=$str4.$U[$iU];
+}
+
+@U1=split("; ", $str4);
+
+$strDenom="";
+foreach (@U1)
+{
+    $str=$_;
+    @V=split(", ", $str);
+    if ($V[1] eq 1)
+    {
+	$strDenom=$strDenom."(".$V[0].")";
+    }
+    else
+    {
+	$strDenom=$strDenom."(".$V[0].")^{".$V[1]."}";
+    }
+}
+
+$RetStr="(".$LastLine4b.") / (".$strDenom.")";
+
+$_=$LastLine2;
+s/\n//;
+$strTaylor=$_;
+
+open(OUT, "> ".$OutputFile);
+print OUT "return rec(strFrac:=\"".$RetStr."\", strTaylor:=\"".$strTaylor."\");\n";
+close(OUT);

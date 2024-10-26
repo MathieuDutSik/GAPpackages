@@ -1,0 +1,7 @@
+$order="(cd ExternalProg/FindNegativeVect && make clean)";
+print $order."\n";
+if (system($order) != 0) {
+   die "Impossible to do make clean in NegativeVect\n";
+}
+print "\nCLEANED FindNegativeVect (find negative vector)\n\n";
+

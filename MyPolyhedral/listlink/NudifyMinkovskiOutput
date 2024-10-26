@@ -1,0 +1,27 @@
+#!/usr/bin/perl -w
+
+$uu=scalar(@ARGV);
+if ($uu ne 1)
+{
+    print "NudifyCDD.standard is used as\n";
+    print "NudifyCDD.standard [FileIn]\n";
+    die;
+}
+$FileIn=$ARGV[0];
+$IsFirst=1;
+print "return [\n";
+open(INFILE, $FileIn);
+while(<INFILE>)
+{
+    $eLine=$_;
+    @U=split(" : ", $eLine);
+    $str=$U[1];
+    if ($IsFirst eq 0)
+    {
+	print ",\n";
+    }
+    $IsFirst=0;
+    print $str;
+}
+print "];\n";
+close(INFILE);

@@ -1,0 +1,71 @@
+#!/usr/bin/perl -w
+use strict;
+use warnings;
+
+# Two goals:
+# ---Copying the manual
+# ---Extracting relevant functions.
+
+my $uu=scalar(@ARGV);
+if ($uu ne 1)
+{
+    print "This script is used as\n";
+    print "SUB_WorkExample [projectname]\n";
+    die;
+}
+my $ProjectName=$ARGV[0];
+
+#
+# The Copy of the data
+#
+
+my $order1="tar -h -c Examples_".$ProjectName." | gzip > ../".$ProjectName."/Examples.tar.gz";
+print $order1."\n";
+if (system($order1) != 0) {
+    die "Error while tarring the Example directory\n";
+}
+
+my $order2="(cd ../".$ProjectName." && tar -vxzf Examples.tar.gz && rm Examples.tar.gz && mv Examples_".$ProjectName." Examples)";
+print $order2."\n";
+if (system($order2) != 0) {
+    die "Error while extracting the examples and/or removing the tar archive\n";
+}
+
+#
+# Extracting the symbols
+#
+
+print "Creating Symbol database\n";
+my $TmpFile1="/tmp/ListMfiles";
+my $order3="(cd ../".$ProjectName."/Examples && find . -name \"*.g\" > ".$TmpFile1.")";
+print $order3."\n";
+if (system($order3) != 0) {
+    die "Error while determining the list of files\n";
+}
+#
+open(IN1, $TmpFile1) or die "impossible to open : ".$TmpFile1;
+my @UL1=<IN1>;
+close(IN1);
+#
+my $order4="rm -f ".$TmpFile1;
+print $order4."\n";
+if (system($order4) != 0) {
+    die "Error while remove TmpFile1\n";
+}
+#
+my $SymbolFile="Generation/ListSearch_Example_".$ProjectName;
+open(OUT, "> ".$SymbolFile) or die "impossible to create ".$SymbolFile."\n";
+for (my $iFile=0; $iFile<scalar(@UL1); $iFile++)
+{
+    my $eFile="../".$ProjectName."/Examples/".$UL1[$iFile];
+    open(INF, $eFile) or die "impossible to open".$eFile;
+    my @B=<INF>;
+    close(INF);
+    my $nbLine=scalar(@B);
+    for (my $iLine=0; $iLine<$nbLine; $iLine++)
+    {
+	print OUT $B[$iLine];
+    }
+    print OUT "############################\n";
+}
+close(OUT);

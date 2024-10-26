@@ -1,0 +1,8 @@
+SetUserPreference( "InfoPackageLoadingLevel", 4 ); # for additional debugging informations
+SetUserPreference( "PackagesToLoad", [ "polyhedral"]);
+INDEF_FORM_GetOrbitRepresentative:=function(Qmat, X)
+INDEF_FORM_StabilizerVector:=function(Qmat, v)
+INDEF_FORM_EquivalenceVector:=function(Qmat1, Qmat2, v1, v2)
+INDEF_FORM_AutomorphismGroup:=function(Qmat)
+INDEF_FORM_TestEquivalence:=function(Qmat1, Qmat2)
+############################

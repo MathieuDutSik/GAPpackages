@@ -1,0 +1,13 @@
+#TheGramMat:=ClassicalSporadicLattices("E6");
+#TheGramMat:=ClassicalSporadicLattices("E7");
+#TheGramMat:=ClassicalSporadicLattices("ER7");
+TheGramMat:=ClassicalSporadicLattices("E8");
+#TheGramMat:=ClassicalSporadicLattices("Lambda9");
+#TheGramMat:=RemoveFractionMatrix(Inverse(ClassicalSporadicLattices("Lambda9")));
+#TheGramMat:=LatticeDnPlus(10);
+#TheGramMat:=FuncFormAnr(11,4);
+#TheGramMat:=ClassicalSporadicLattices("K12");
+
+ListFunc:=DelaunayComputationStandardFunctions(TheGramMat);
+TheIntegral:=ListFunc.GetQuantization();
+Print("TheIntegral=", TheIntegral, "\n");

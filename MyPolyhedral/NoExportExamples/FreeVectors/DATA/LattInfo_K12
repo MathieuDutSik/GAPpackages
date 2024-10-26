@@ -1,0 +1,6 @@
+return rec(
+  MaxRad := 8/3,
+  det := 729,
+  min := 4,
+  n := 12,
+  name := "K12" );

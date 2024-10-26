@@ -1,0 +1,78 @@
+#!/usr/bin/perl -w
+
+@ListDirExamples=("Benchmarks", "CoveringPessimum", "CUT_polytope", "DelaunaySubdivizion", "DualDescriptionAdjacencies", "ExampleDim14", "FaceLattice", "FlagComputation", "FreeVectors", "GroupActOnSetsSets", "HomologyPSL4", "HomologySp4Z", "MetricCone", "QuantizationExample", "RepresentationMatrix", "SublatticeEnumeration", "VolumeComputation");
+
+$nbDirExample=scalar(@ListDirExamples);
+
+for ($iDir=1; $iDir<=$nbDirExample; $iDir++)
+{
+    
+}
+
+open(INFILE, "../../sysinfo.gap") or die "cannot found ../../sysinfo.gap";
+@BU=<INFILE>;
+close(INFILE);
+$_=$BU[0];
+chomp($_);
+@HS=split("=", $_);
+
+$arch=$HS[1];
+
+#########################
+
+$order="rm -rf bin/*";
+print $order."\n";
+if (system($order) != 0) {
+    die "Error after bin elimination\n";
+}
+
+$order="mkdir bin/".$arch;
+print $order."\n";
+if (system($order) != 0) {
+    die "Error when mkdir bin\n";
+}
+
+@U=();
+@U[0]="x86_64-unknown-linux-gnu-gcc";
+@U[1]="x86_64-unknown-linux-gnu-gcc-default64";
+@U[2]="i386-unknown-freebsd5.1-gcc";
+@U[3]="i686-pc-linux-gnu-gcc";
+$nbU=scalar(@U);
+for ($iU=1; $iU<=$nbU; $iU++)
+{
+    $ArchB=$U[$iU-1];
+    if ($arch ne $ArchB)
+    {
+	$order="ln -sf ./".$arch." bin/".$ArchB;
+	print $order."\n";
+	if (system($order) != 0) {
+	    die "Error when linking\n";
+	}
+    }
+}
+
+$eListProg="/tmp/ListProg";
+
+$order="ls listlink/ > ".$eListProg;
+print $order."\n";
+if (system($order) != 0) {
+    die "Error after ls operation\n";
+}
+
+open(INF, $eListProg) or die "impossible to open ".$eListProg;
+while(<INF>)
+{
+    chomp($_);
+    $order="(cd bin/".$arch." && ln -s ../../listlink/".$_." .)";
+    print $order."\n";
+    if (system($order) != 0) {
+	die "Error after linking\n";
+    }
+}
+close(INF);
+
+$order="rm -f ".$eListProg;
+print $order."\n";
+if (system($order) != 0) {
+    die "Error after rm operation\n";
+}

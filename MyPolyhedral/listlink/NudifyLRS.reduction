@@ -1,0 +1,65 @@
+#!/usr/bin/perl -w
+
+# This script takes the output of glrs
+# and create a sequence of files to be
+# loaded sequencially by GAP
+
+$nbE=0;
+while(1)
+{
+    $let=getc();
+    if ($let eq "\n")
+    {
+	$nbE++;
+    }
+    if ($nbE eq 3)
+    {
+	last;
+    }
+}
+
+$uu=scalar(@ARGV);
+if ($uu ne 2)
+{
+    print "NudifyLRS.standard is used as\n";
+    print "NudifyLRS.standard FileData FileMetaData < [File]\n";
+    print "\n";
+    print "It splits large lists of lines\n";
+    print "into small file\n";
+    die;
+}
+$FileData=$ARGV[0];
+$FileMetaData=$ARGV[1];
+open(OUT1, "> ".$FileData);
+open(OUT2, "> ".$FileMetaData);
+
+$print=0;
+
+$nbR=0;
+while(<STDIN>)
+{
+    $Chain=$_;
+    if ($nbR eq 4)
+    {
+	$print=1;
+	$typical=$Chain;
+    }
+    if ($Chain eq "end\n")
+    {
+	$print=0;
+    }
+    if ($print eq 1)
+    {
+	print OUT1 $Chain;
+    }
+    $nbR=$nbR+1;
+}
+#print "nbR=".$nbR."\n";
+@L=split(" ", $typical);
+$nbCol=scalar(@L);
+$nbLine=$nbR-10;
+#print "nbCol=".$nbCol." nbLine=".$nbLine."\n";
+#print "typical=".$typical;
+print OUT2 $nbLine." ".$nbCol."\n";
+close(OUT1);
+close(OUT2);

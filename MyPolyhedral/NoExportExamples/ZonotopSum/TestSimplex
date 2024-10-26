@@ -1,0 +1,14 @@
+n:=4;
+
+
+EXT:=[];
+eCent:=ListWithIdenticalEntries(n,1/n);
+for i in [1..n]
+do
+  eVect:=ListWithIdenticalEntries(n,0);
+  eVect[i]:=1;
+  Add(EXT, eVect);
+  Add(EXT, 2*eCent - eVect);
+od;
+
+EXTsum:=ZONOTOP_GetVerticesMinkSum(EXT);
