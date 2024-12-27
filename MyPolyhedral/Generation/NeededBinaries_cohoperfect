@@ -4,6 +4,7 @@ GetDate
 dreadnaut
 NautyGroupToGAP_sec
 NautyIsoOutputToGAP
+GRP_LinPolytope_Invariant
 smith
 rank
 smithvalence
@@ -13,11 +14,15 @@ SmithvalenceToGap
 lpcddcleaner
 testlp2_gmp
 glrs
-IsomorphismReduction.prog
+GRP_IsomorphismReduction
 lcdd_gmp
 lcdd_QN
+ppl_lcdd
 Nudify
-NudifyLRS.reduction
+NudifyLRS.reductionNG
+NudifyCDD.reductionNG
 AUTO
 AUTO
 AUTOMtoGAP
+"TSPACE_Stabilizer
+"TSPACE_Equivalence

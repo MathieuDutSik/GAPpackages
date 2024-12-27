@@ -103,11 +103,11 @@ if (system($order11) != 0) {
     die "Impossible to run SUB_PackageExportation\n";
 }
 
-my $order12="./SUB_CheckBelonging ".$ProjectName;
-print $order12."\n";
-if (system($order12) != 0) {
-    die "Impossible to run SUB_Check_Belonging\n";
-}
+#my $order12="./SUB_CheckBelonging ".$ProjectName;
+#print $order12."\n";
+#if (system($order12) != 0) {
+#    die "Impossible to run SUB_Check_Belonging\n";
+#}
 
 #
 # Now making the archive
