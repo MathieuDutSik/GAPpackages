@@ -2263,30 +2263,41 @@ end;
 
 
 
-
-SYMPOL_ReadMatrix:=function(eFile)
-    local ListLines, TheMat, nRow, nCol, iRow;
-    ListLines:=ReadVectorFile(eFile);
-    TheMat:=ListLines{[2..Length(ListLines)]};
-    nRow:=ListLines[1][1];
-    nCol:=ListLines[1][2];
-    if Length(TheMat)<>nRow then
-        Error("Error in number of rows");
-    fi;
-    for iRow in [1..nRow]
+ReadMatrixFile:=function(eFile)
+    local ReadLineRed, file, line, LStr, nbRow, nbCol, TheMat, iRow, eLine, eStr, val;
+    ReadLineRed:=function(file)
+        local line, n_char, lineRed;
+        line:=ReadLine(file);
+        n_char:=Length(line) - 1;
+        lineRed:=line{[1..n_char]};
+        return lineRed;
+    end;
+    file:=InputTextFile(eFile);
+    line:=ReadLineRed(file);
+    LStr:=SplitString(line, " ");
+    nbRow:=Int(LStr[1]);
+    nbCol:=Int(LStr[2]);
+    TheMat:=[];
+    for iRow in [1..nbRow]
     do
-        if Length(TheMat[iRow]) <> nCol then
-            Error("Error in number of cols");
+        line:=ReadLineRed(file);
+        LStr:=SplitString(line, " ");
+        eLine:=[];
+        for eStr in LStr
+        do
+            if Length(eStr) > 0 then
+                val:=Rat(eStr);
+                Add(eLine, val);
+            fi;
+        od;
+        if Length(eLine)<>nbCol then
+            Print("|eLine|=", Length(eLine), " nbCol=", nbCol, "\n");
+            Error("Inconsistent length of vector");
         fi;
+        Add(TheMat, eLine);
     od;
     return TheMat;
 end;
-
-
-ReadMatrixFile:=function(eFile)
-    return SYMPOL_ReadMatrix(eFile);
-end;
-
 
 
 

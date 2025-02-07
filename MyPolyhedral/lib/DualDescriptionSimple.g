@@ -313,6 +313,42 @@ DualDescriptionLRS:=function(EXT, GroupExt)
 end;
 
 
+ReadCddRaysOutput:=function(FileOut)
+    local list_lines, list_lines_red, IsInside, eLine;
+    list_lines:=ReadTextFile(FileOut);
+    list_lines_red:=[];
+    IsInside:=false;
+    end_str:="rational";
+    len_end_str:=Length(end_str);
+    for eLine in list_lines
+    do
+        len:=Length(eLine);
+        ends_rational:=false;
+        if IsInside=false then
+            if len > len_end_str then
+                pos_start:=len - len_end_str + 1;
+                if eLine{[pos_start..len]}=end_str then
+                    ends_rational:=true;
+                fi;
+            fi;
+        fi;
+        if ends_rational then
+            IsInside:=true;
+        else
+            if eLine="end" then
+                IsInside:=false;
+            else
+                if IsInside then
+                    Add(list_lines_red, eLine);
+                fi;
+            fi;
+        fi;
+    od;
+    return ReadVector_list_lines(list_lines_red);
+end;
+
+
+
 
 
 __DualDescriptionDoubleDescMethod_Reduction:=function(EXT, GroupExt, ThePath, TheProg)
@@ -360,10 +396,10 @@ __DualDescriptionDoubleDescMethod_Reduction:=function(EXT, GroupExt, ThePath, Th
     TheCommand:=Concatenation(FilePPL_LCDD, " ", FileExt, " > ", FileOut);
   fi;
   Exec(TheCommand);
-  #
-  TheCommand:=Concatenation(FileNudifyCDD_reductionNG, " ", FileFAC, " < ", FileOut);
-  Exec(TheCommand);
   Print("Double description computation finished\n");
+  #
+  FACread:=ReadCddRaysOutput(FileOut);
+  WriteMatrixFile(FileFAC, FACread);
   #
   WriteMatrixFile(FileSupport, EXTnew);
   #

@@ -1,4 +1,8 @@
 BindGlobal("POLYHEDRAL_tmpdir", DirectoryTemporary());
+FileVectorCddGap:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"VectorCddGap");
+FileConvertListFileAsVector:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"ConvListFile");
+
+
 
 
 
@@ -47,12 +51,6 @@ GetBinaryFilename:=function(FileName)
     fi;
     return list_lines[1];
 end;
-
-
-
-FileVectorCddGap:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"VectorCddGap");
-FileConvertListFileAsVector:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"ConvListFile");
-
 
 
 
@@ -147,14 +145,33 @@ end;
 
 
 
-ReadVectorFile:=function(FileName)
-  local Ftmp, DataVar;
-  Ftmp:=Filename(POLYHEDRAL_tmpdir, "GapFile");
-  Exec(FileVectorCddGap, " ", FileName, "> ", Ftmp);
-  DataVar:=ReadAsFunction(Ftmp)();
-  RemoveFile(Ftmp);
-  return DataVar;
+ReadVector_list_lines:=function(list_lines)
+    local TheMat, line, LStr, eLine, eStr, val;
+    TheMat:=[];
+    for line in list_lines
+    do
+        LStr:=SplitString(line, " ");
+        eLine:=[];
+        for eStr in LStr
+        do
+            if Length(eStr) > 0 then
+                val:=Rat(eStr);
+                Add(eLine, val);
+            fi;
+        od;
+        Add(TheMat, eLine);
+    od;
+    return TheMat;
 end;
+
+ReadVectorFile:=function(FileName)
+    local list_lines;
+    list_lines:=ReadTextFile(FileName);
+    return ReadVector_list_lines(list_lines);
+end;
+
+
+
 
 
 SaveStringToFile:=function(FileName, eStr)
