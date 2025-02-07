@@ -661,31 +661,29 @@ __GetListAdjacency:=function(TheGraph)
 end;
 
 SymmetryGroupVertexColoredGraphAdjList:=function(ListAdjacency, ThePartition)
-  local FileNauty, FileDR, FileRead, FileError, n, output, TheGroup;
-  FileNauty:=Filename(POLYHEDRAL_tmpdir, "GraphInput");
-  FileDR:=Filename(POLYHEDRAL_tmpdir, "GraphDRout");
-  FileRead:=Filename(POLYHEDRAL_tmpdir, "GraphRead");
-  FileError:=Filename(POLYHEDRAL_tmpdir, "GraphError");
-  RemoveFileIfExist(FileNauty);
-  RemoveFileIfExist(FileDR);
-  RemoveFileIfExist(FileRead);
-  RemoveFileIfExist(FileError);
-  n:=Length(ListAdjacency);
-  output:=OutputTextFile(FileNauty, true);
-  AppendTo(output, "n=", n, "\n");
-  __PrintPartition(output, ThePartition);
-  __PrintGraph(output, ListAdjacency);
-  AppendTo(output, "x\n");
-  CloseStream(output);
-  Exec(FileDR2, " < ", FileNauty, " > ", FileDR, " 2>", FileError);
-  if IsExistingFile(FileDR)=false or IsExistingFile(FileError)=false then
-      Error("The file FileDR and FileError are missing");
-  fi;
-  TheGroup:=ReadNautyGroupOutput(FileDR);
-  RemoveFile(FileNauty);
-  RemoveFile(FileDR);
-  RemoveFile(FileError);
-  return TheGroup;
+    local TmpDir, FileNauty, FileDR, FileError, n, output, TheGroup;
+    Print("Passing in SymmetryGroupVertexColoredGraphAdjList\n");
+#    TmpDir:=DirectoryTemporary();
+    TmpDir:=POLYHEDRAL_tmpdir;
+    FileNauty:=Filename(TmpDir, "GraphInput");
+    FileDR:=Filename(TmpDir, "GraphDRout");
+    FileError:=Filename(TmpDir, "GraphError");
+    n:=Length(ListAdjacency);
+    output:=OutputTextFile(FileNauty, true);
+    AppendTo(output, "n=", n, "\n");
+    __PrintPartition(output, ThePartition);
+    __PrintGraph(output, ListAdjacency);
+    AppendTo(output, "x\n");
+    CloseStream(output);
+    Exec(FileDR2, " < ", FileNauty, " > ", FileDR, " 2>", FileError);
+    if IsExistingFile(FileDR)=false or IsExistingFile(FileError)=false then
+        Error("The file FileDR and FileError are missing");
+    fi;
+    TheGroup:=ReadNautyGroupOutput(FileDR);
+    RemoveFile(FileNauty);
+    RemoveFile(FileDR);
+    RemoveFile(FileError);
+    return TheGroup;
 end;
 
 
@@ -1165,7 +1163,7 @@ end;
 IsIsomorphicEdgeColoredGraph:=function(DistMat1, DistMat2)
   local SetV, k, n, Meth2_NBV, Meth3_NBV;
   SetV:=__SetValue(DistMat1);
-  Print("SetV1=", __SetValue(DistMat1), " SetV2=", __SetValue(DistMat2), "\n");
+#  Print("SetV1=", __SetValue(DistMat1), " SetV2=", __SetValue(DistMat2), "\n");
   if __SetValue(DistMat2)<>SetV then
     return false;
   fi;
@@ -1320,6 +1318,8 @@ end;
 
 AutomorphismGroupColoredGraph:=function(ScalarMat)
   local DistMat, NewListGens, GRP, eGen, eList, RetGRP;
+  Print("Passing in AutomorphismGroupColoredGraph\n");
+  SaveDataToFile("ScalarMat", ScalarMat);
   DistMat:=MappedScalarMatrixDistanceMatrix(ScalarMat);
   NewListGens:=[];
   GRP:=AutomorphismGroupEdgeColoredGraph(DistMat);
@@ -1488,6 +1488,8 @@ end;
 
 AutomorphismWeightedDigraph:=function(ScalarMat)
   local n, DistMat, NewListGens, GRP, eGen, eList, RetGRP;
+  Print("Passing in AutomorphismWeightedDigraph\n");
+  SaveDataToFile("ScalarMat", ScalarMat);
   n:=Length(ScalarMat);
   DistMat:=MappedWeightedDigraphToWeightedSymmetricDigraph(ScalarMat);
   NewListGens:=[];
