@@ -1,19 +1,6 @@
-#FileIsom:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"isom");
-#FileAutom:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"autom");
-FileISOM:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"ISOM");
-FileAUTO:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"AUTO");
-#FileISOM32:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"ISOM32");
-#FileAUTO32:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"AUTO32");
-#FileISOM64:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"ISOM64");
-#FileAUTO64:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"AUTO64");
-FileISOM32:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"ISOM");
-FileAUTO32:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"AUTO");
-FileISOM64:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"ISOM");
-FileAUTO64:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"AUTO");
-FileISOMtoGAP:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"ISOMtoGAP");
-FileAUTOMtoGAP:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"AUTOMtoGAP");
+FileISOM:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"LATT_Isomorphism");
+FileAUTO:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"LATT_Automorphism");
 FileMatrix_TYP_Aut_Grp:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"Matrix_TYP_AutGrp_to_GAP");
-FileIsometry:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"Isometry");
 FileZ_equiv:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"Z_equiv");
 FileZ_equiv_toGAP:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"Z_equiv_toGAP");
 FileAutoVectorFamily:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"AutomorphismGroupVectorFamily");
@@ -509,14 +496,8 @@ RetrieveListPermGensFromVectors:=function(SVR, ListGen)
   do
     ePermB:=SortingPerm(SVRset*eGen);
     ePerm:=ePermSort*ePermB*Inverse(ePermSort);
-#    ePermTest:=PermList(List(SVR, x->Position(SVR, x*eGen)));
-#    if ePerm<>ePermTest then
-#      Error("Wrong formula for ePerm");
-#    fi;
     Add(ListPermGens, ePerm);
   od;
-#  Print("We got the permutations\n");
-#  Print(NullMat(5));
   return ListPermGens;
 end;
 
@@ -534,7 +515,6 @@ end;
 __ExtractInvariantFaithfulFamilyShortVector:=function(GramMat, MatrixGrp)
   local SVR;
   SVR:=Kernel_ExtractInvariantFaithfulFamilyShortVector(GramMat, MatrixGrp);
-#  Print("|SVR|=", Length(SVR), "\n");
   return rec(SVR:=SVR,
              ListPermGens:=RetrieveListPermGensFromVectors(SVR, GeneratorsOfGroup(MatrixGrp)));
 end;
@@ -963,7 +943,7 @@ ArithmeticAutomorphismMatrixFamily_Souvignier:=function(TheOption, ListMat, SVR)
   fi;
   CloseStream(output);
   # not completely satisfying here ...
-  Exec(FileAUTO32, TheOption, ChainOption, " < ", FileIn, " > ", FileOut, "2>", FileError32);
+#  Exec(FileAUTO32, TheOption, ChainOption, " < ", FileIn, " > ", FileOut, "2>", FileError32);
 #  Exec(FileAUTO64, TheOption, ChainOption, " < ", FileIn, " > ", FileOut, "2>", FileError);
   if IsEmptyFile(FileError32)=false then
     Print("Error at 32 bit arithmetic, trying 64 bits...\n");
@@ -1267,8 +1247,6 @@ end;
 __CharacteristicGraphMatrixFamily:=function(ListMat, SVR)
   local nbV, DistMat, iVect, jVect, TheRec;
   nbV:=Length(SVR);
-#  Print("nbV=", nbV, "\n");
-#  Print("|ListMat|=", Length(ListMat), "\n");
   DistMat:=NullMat(nbV, nbV);
   for iVect in [1..nbV-1]
   do
@@ -1551,19 +1529,6 @@ ArithmeticIsomorphism:=function(ListGramMat1, ListGramMat2)
 #  return ArithmeticIsomorphism_Nauty(ListGramMat1, ListGramMat2);
 end;
 
-
-
-
-
-#ArithmeticAutomorphismMatrixFamily_Hack:=function(ListMat, SVR, AffBas)
-#  return ArithmeticAutomorphismMatrixFamily_HackSouvignier(ListMat, SVR, AffBas);
-##  return ArithmeticAutomorphismMatrixFamily_Nauty(ListMat, SVR);
-#end;
-
-#ArithmeticEquivalenceMatrixFamily_Hack:=function(ListMat1, SVR1, AffBas1, ListMat2, SVR2, AffBas2)
-#  return ArithmeticEquivalenceMatrixFamily_HackSouvignier(ListMat1, SVR1, AffBas1, ListMat2, SVR2, AffBas2);
-##  return ArithmeticEquivalenceMatrixFamily_Nauty(ListMat1, SVR1, ListMat2, SVR2);
-#end;
 
 
 #

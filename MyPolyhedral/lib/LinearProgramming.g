@@ -1,19 +1,22 @@
+FilePolyRedundancy:=GetBinaryFilename("POLY_redundancy");
+FilePolyRedundancyClarkson:=GetBinaryFilename("POLY_redundancyClarkson");
+FilePolyRedundancyClarksonBlocks:=GetBinaryFilename("POLY_redundancyClarksonBlocks");
+FileStandaloneSparseSolver:=GetBinaryFilename("StandaloneSparseSolver");
+FileStandaloneSparseSolver_NNZ:=GetBinaryFilename("StandaloneSparseSolver_NNZ");
+FileRedcheck:=GetBinaryFilename("redcheck_gmp");
+FileTestlp2:=GetBinaryFilename("testlp2_gmp");
+FileAdjacency:=GetBinaryFilename("adjacency_gmp");
+FileGlpsol:=GetBinaryFilename("glpsol");
+
+
 Filelpcddcleaner:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"lpcddcleaner");
 FilelpcddcleanerPol:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"lpcddcleanerPol");
-FileRedcheck:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"redcheck_gmp");
-FileTestlp2:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"testlp2_gmp");
 FileRedcheckRead:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"redcheckRead");
-FileAdjacency:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"adjacency_gmp");
 FileAdjacencyRead:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"adjacencyRead");
-FileGlpsol:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"glpsol");
 FileLpsolve:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"lp_solve");
-FilePolyRedundancy:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"POLY_redundancy");
-FilePolyRedundancyClarkson:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"POLY_redundancyClarkson");
-FilePolyRedundancyClarksonBlocks:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"POLY_redundancyClarksonBlocks");
 FileLpsolveExtractSolution:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"LPSOLVE_ExtractSolution");
 FileGLPSOL_ExtractXsol:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"GLPSOL_ExtractXsol");
-FileStandaloneSparseSolver:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"StandaloneSparseSolver");
-FileStandaloneSparseSolver_NNZ:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"StandaloneSparseSolver_NNZ");
+
 
 
 CPP_RedundancyReduction:=function(EXT)

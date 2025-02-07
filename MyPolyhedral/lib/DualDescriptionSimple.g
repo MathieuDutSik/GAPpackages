@@ -1,13 +1,15 @@
+FileGetFullRankFacetSet:=GetBinaryFilename("POLY_GetFullRankFacetSet");
+FilePolyDualDescription:=GetBinaryFilename("POLY_dual_description");
+FileLCDD:=GetBinaryFilename("lcdd_gmp");
+FileSCDD:=GetBinaryFilename("scdd_gmp");
+FilePPL_LCDD:=GetBinaryFilename("ppl_lcdd");
+
+
 FileRemoveFractions:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"removeFractions");
 FileGLRS:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"glrs");
 FileIsoReduction:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"IsomorphismReduction.prog");
 FileIsoReductionNG:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"GRP_IsomorphismReduction");
 FileNudifyLRS:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"NudifyLRS");
-FileSCDD:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"scdd_gmp");
-FileLCDD:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"lcdd_gmp");
-FileSCDD_QN:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"scdd_QN");
-FileLCDD_QN:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"lcdd_QN");
-FilePPL_LCDD:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"ppl_lcdd");
 FileNudify:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"Nudify");
 FileCddToNauty:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"CddToNauty");
 FileNudifyLRS_reduction:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"NudifyLRS.reduction");
@@ -15,8 +17,6 @@ FileNudifyLRS_reductionNG:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"
 FileNudifyCDD_reduction:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"NudifyCDD.reduction");
 FileNudifyCDD_reductionNG:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"NudifyCDD.reductionNG");
 FileNautyToGRAPE:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"NautyToGRAPE");
-FileGetFullRankFacetSet:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"POLY_GetFullRankFacetSet");
-FilePolyDualDescription:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"POLY_dual_description");
 
 
 
@@ -101,52 +101,11 @@ WriteMatrixQN:=function(Nval, FileExt, EXTnew)
 end;
 
 
-DualDescription_QN:=function(Nval, EXT)
-  local DimEXT, FileExt, FileIne, FileIneNude, output, LPFAC, FileErr, eVect, eNewVect, FAC2, NvalueFile;
-  DimEXT:=Length(EXT[1]);
-  FileExt:=Filename(POLYHEDRAL_tmpdir,"Desc_QN.ext");
-  FileErr:=Filename(POLYHEDRAL_tmpdir,"Desc_QN.err");
-  FileIne:=Filename(POLYHEDRAL_tmpdir,"Desc_QN.ine");
-  FileIneNude:=Filename(POLYHEDRAL_tmpdir,"Desc_QN.ine.Nude");
-  #
-  NvalueFile:="/tmp/InitialN";
-  RemoveFileIfExist(NvalueFile);
-  output:=OutputTextFile(NvalueFile, true);;
-  AppendTo(output, " ", Nval, "\n");
-  CloseStream(output);
-  #
-  WriteMatrixQN(Nval, FileExt, EXT);
-  Exec(FileLCDD_QN, " ", FileExt, " > ", FileIne, " 2> ", FileErr);
-  Exec(FileNudify, " ", FileIne," > ", FileIneNude);
-  LPFAC:=ReadVectorFile(FileIneNude);
-  FAC2:=[];
-  for eVect in LPFAC
-  do
-    eNewVect:=List([1..DimEXT], x->eVect[2*x-1] + Sqrt(Nval)*eVect[2*x]);
-    Add(FAC2, eNewVect);
-  od;
-  if Length(FAC2)=0 then
-    Error("Error in DualDescription_QN");
-  fi;
-  RemoveFile(FileExt);
-  RemoveFile(FileErr);
-  RemoveFile(FileIne);
-  RemoveFile(FileIneNude);
-  return FAC2;
-end;
-
-
 DualDescription_General_Code:=function(EXT)
   local Nval;
   if IsMatrixRational(EXT)=true then
     return DualDescription_Rational(EXT);
   fi;
-  for Nval in [2,5]
-  do
-    if QN_IsMatrix(Nval, EXT)=true then
-      return DualDescription_QN(Nval, EXT);
-    fi;
-  od;
   Error("You have to build your own arithmetic");
 end;
 
@@ -264,7 +223,6 @@ DualDescriptionAdjacencies:=function(EXT)
   AppendTo(output, "input_adjacency\n");
   CloseStream(output);
   Exec(FileSCDD, " ", FileExt, " > ", FileLog, " 2> ", FileErr);
-#  Exec(FileSCDD, " ", FileExt);
   Exec(FileNudify, " ", FileIne," > ", FileIneNude);
   Exec(FileCddToNauty, " ", FileIad, " > ", FileIadNauty);
   Exec(FileNautyToGRAPE, " ", FileIadNauty, " > ", FileIadGrape);
@@ -290,58 +248,6 @@ DualDescriptionAdjacencies:=function(EXT)
   fi;
   return rec(FAC:=FAC, SkeletonGraph:=SkeletonGraph, RidgeGraph:=RidgeGraph);
 end;
-
-
-__DualDescriptionCDD_QN:=function(Nval, EXT, GroupExt, ThePath)
-  local FileExt, FileIne, FileLog, FileDdl, FileIneNude, output, LPFAC, RPL, eFac, ePair, eSub, EXT2, EXTnew, eVal, DimEXT, eEXT, FAC2, eVect, eNewVect, NvalueFile;
-#  Print("Entering polyhedral function CDD QN Nval=", Nval, " |GRP|=", Order(GroupExt), "\n");
-  FileExt:=Concatenation(ThePath,"CDD_Project_QN.ext");
-  FileIne:=Concatenation(ThePath,"CDD_Project_QN.ine");
-  FileLog:=Concatenation(ThePath,"CDD_Project_QN.log");
-  FileDdl:=Concatenation(ThePath,"CDD_Project_QN.ddl");
-  FileIneNude:=Filename(POLYHEDRAL_tmpdir,"CDD_Project_QN.ine.Nude");
-  #
-  NvalueFile:="/tmp/InitialN";
-  RemoveFileIfExist(NvalueFile);
-  output:=OutputTextFile(NvalueFile, true);;
-  AppendTo(output, " ", Nval, "\n");
-  CloseStream(output);
-  #
-  eSub:=__ProjectionFrame(EXT);
-  EXT2:=List(EXT, x->x{eSub});
-  if TestConicness(EXT2) then
-    EXTnew:=ShallowCopy(EXT2);
-  else
-    EXTnew:=List(EXT2, x->Concatenation([0], x));
-  fi;
-  DimEXT:=Length(EXTnew[1]);
-  #
-  WriteMatrixQN(Nval, FileExt, EXTnew);
-  Exec(FileLCDD_QN, " ", FileExt, " 2> ", FileLog, " > ", FileIne);
-  Exec(FileNudify, " ", FileIne, " > ", FileIneNude);
-  LPFAC:=ReadVectorFile(FileIneNude);
-  FAC2:=[];
-  for eVect in LPFAC
-  do
-    eNewVect:=List([1..DimEXT], x->eVect[2*x-1] + Sqrt(Nval)*eVect[2*x]);
-    Add(FAC2, eNewVect);
-  od;
-  if Length(FAC2)=0 then
-    Error("Error in __DualDescriptionCDD_QN");
-  fi;
-  RemoveFile(FileExt);
-  RemoveFile(FileIne);
-  RemoveFile(FileLog);
-  RemoveFile(FileDdl);
-  RemoveFile(FileIneNude);
-  RPL:=OnSetsGroupFormalism(500).OrbitGroupFormalism(EXTnew, GroupExt, "/irrelevant/", false);
-  for eFac in FAC2
-  do
-    RPL.FuncInsert(Filtered([1..Length(EXTnew)], x->EXTnew[x]*eFac=0));
-  od;
-  return RPL.FuncListOrbitIncidence();
-end;
-
 
 
 __DualDescriptionPoly:=function(EXT, command, ThePath)

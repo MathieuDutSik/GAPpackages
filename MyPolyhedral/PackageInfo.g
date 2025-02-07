@@ -229,12 +229,7 @@ AvailabilityTest :=
       Info(InfoWarning, 1, "Package `MyPolyhedral': non-Unix architecture");
       Info(InfoWarning, 1, "Package `MyPolyhedral': use at your own peril");
     fi;
-    ListProg:=[
-"AUTO", "ISOM", "AUTOMtoGAP", "ISOMtoGAP",
-"sv", "svRead", "svWrite",
-"CddToNauty", "lcdd_gmp", "scdd_gmp", "VectorCddGap",
-"glrs", "lpcddcleanerPol", "NautyToGRAPE", "VIStoGAP",
-"lpcddcleaner", "Nudify"];
+    ListProg:=[];
     ListMiss:=Filtered(ListProg, file->Filename(DirectoriesPackagePrograms("MyPolyhedral"), file) = fail);
     for eFile in ListMiss
     do

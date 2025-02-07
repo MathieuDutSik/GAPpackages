@@ -1,13 +1,102 @@
-FileDR2:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"dreadnaut");
-FileNautyGroupGAP:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"NautyGroupToGAP_sec");
+FileDR2:=GetBinaryFilename("dreadnaut");
+FileAMTOG:=GetBinaryFilename("amtog");
+FileGENG:=GetBinaryFilename("geng");
+FileLISTG:=GetBinaryFilename("listg");
 FileNautyIsoOutputGAP:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"NautyIsoOutputToGAP");
 FileNautyReadCanon:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"NautyReadCanon");
-FileAMTOG:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"amtog");
 FileMD5read:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"MD5_to_read");
 FileNautyGraph6Expression:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"NautyGraph6Expression");
-FileGENG:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"geng");
-FileLISTG:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"listg");
 FileLISTGtoGAP:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"LISTGtoGAP");
+
+
+ReadNautyGroupOutput:=function(FileName)
+    local list_lines, f_str_red, list_gen, str_gen, f_flush, f_append, eLine;
+    list_lines:=ReadTextFile(FileName);
+    f_str_red:=function(estr)
+        local pos, str_red;
+        pos:=0;
+        while(true)
+        do
+            if estr[pos+1]<>' ' then
+                str_red:=estr{[pos+1..Length(estr)]};
+                return rec(pos:=pos, str_red:=str_red);
+            fi;
+            pos:=pos+1;
+        od;
+    end;
+    list_gen:=[];
+    str_gen:="";
+    f_flush:=function()
+        local str_red, str_nb, IsFirst, l_ch, ch;
+        str_red:="";
+        str_nb:="";
+        f_flush_nb:=function()
+            local eVal;
+            eVal:=Int(str_nb);
+#            Print("Before str_red=", str_red, "\n");
+            str_red:=Concatenation(str_red, String(eVal+1));
+#            Print("After str_red=", str_red, "\n");
+            str_nb:="";
+        end;
+        l_ch:=['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+        if Length(str_gen)=0 then
+            return;
+        fi;
+#        Print("str_gen=", str_gen, "\n");
+        for ch in str_gen
+        do
+            if ch = '(' then
+                Add(str_red, ch);
+            else
+#                Print("ch=", ch, " pos=", Position(l_ch, ch), "\n");
+                if Position(l_ch, ch)<>fail then
+                    Add(str_nb, ch);
+                else
+                    f_flush_nb();
+                    if ch = ' ' then
+                        Add(str_red, ',');
+                    else
+#                        Print("Appending ch=", ch, "\n");
+                        Add(str_red, ch);
+                    fi;
+                fi;
+            fi;
+        od;
+#        Print("str_red=", str_red, "\n");
+        eGen:=EvalString(str_red);
+        Add(list_gen, eGen);
+        str_gen:="";
+    end;
+    f_append:=function(estr)
+        if estr[1]='(' then
+            str_gen:=Concatenation(str_gen, estr);
+        else
+            str_gen:=Concatenation(str_gen, " ", estr);
+        fi;
+    end;
+    for eLine in list_lines
+    do
+#        Print("eLine=", eLine, "\n");
+#        Print("Now str_gen=", str_gen, "\n");
+        if eLine[1]='(' then
+            f_flush();
+            str_gen:=eLine;
+        else
+            rec_red:=f_str_red(eLine);
+#            Print("pos=", rec_red.pos, "\n");
+#            Print("str_red=", rec_red.str_red, "\n");
+            if rec_red.pos>0 then
+                f_append(rec_red.str_red);
+            else
+                # Not starting with " " or "("
+                f_flush();
+            fi;
+        fi;
+    od;
+    return Group(list_gen);
+end;
+
+
 
 
 GRAPE_from_ListEdge:=function(ListEdge)
@@ -436,9 +525,6 @@ __GetGraph6Expression:=function(ListAdj)
   CloseStream(output);
   Exec(FileAMTOG, " ", FileInput, " > ", FileOut6, " 2>", FileError);
   Exec(FileNautyGraph6Expression, " ", FileOut6, " > ", FileRead);
-#  if IsEmptyFile(FileError)=false then
-#    Error("Some error happened in GetGraph6Expression");
-#  fi;
   TheStr:=ReadAsFunction(FileRead)();
   RemoveFile(FileInput);
   RemoveFile(FileOut6);
@@ -597,18 +683,9 @@ SymmetryGroupVertexColoredGraphAdjList:=function(ListAdjacency, ThePartition)
   if IsExistingFile(FileDR)=false or IsExistingFile(FileError)=false then
       Error("The file FileDR and FileError are missing");
   fi;
-  Exec(FileNautyGroupGAP, " < ", FileDR, " > ", FileRead);
-  if IsExistingFile(FileRead)=false then
-      Error("The file FileRead is missing");
-  fi;
-  if IsEmptyFile(FileError)=false then
-    Error("Nonempty error file in SymmetryGroupColoredGraph");
-  fi;
-  TheGroup:=ReadAsFunction(FileRead)();
-#  Print(NullMat(5));
+  TheGroup:=ReadNautyGroupOutput(FileDR);
   RemoveFile(FileNauty);
   RemoveFile(FileDR);
-  RemoveFile(FileRead);
   RemoveFile(FileError);
   return TheGroup;
 end;
@@ -627,15 +704,10 @@ SymmetryGroupVertexColoredGraphAdjList_Scalable:=function(eRecGraph)
   AppendTo(output, "x\n");
   CloseStream(output);
   Exec(FileDR2, " < ", FileNauty, " > ", FileDR, " 2>", FileError);
-  Exec(FileNautyGroupGAP, " < ", FileDR, " > ", FileRead);
-  if IsEmptyFile(FileError)=false then
-    Error("Nonempty error file in SymmetryGroupColoredGraph");
-  fi;
-  TheGroup:=ReadAsFunction(FileRead)();;
-#  Print(NullMat(5));
+  Print("Case 2\n");
+  TheGroup:=ReadNautyGroupOutput(FileDR);
   RemoveFile(FileNauty);
   RemoveFile(FileDR);
-  RemoveFile(FileRead);
   RemoveFile(FileError);
   return TheGroup;
 end;

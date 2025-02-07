@@ -1,6 +1,6 @@
 FilePEV:=Filename(DirectoriesPackagePrograms("MyPolyhedral"), "GetPEV_forRead");
-FileTspaceStabilizer:=Filename(DirectoriesPackagePrograms("MyPolyhedral"), "TSPACE_Stabilizer");
-FileTspaceEquivalence:=Filename(DirectoriesPackagePrograms("MyPolyhedral"), "TSPACE_Equivalence");
+FileTspaceStabilizer:=GetBinaryFilename("TSPACE_Stabilizer");
+FileTspaceEquivalence:=GetBinaryFilename("TSPACE_Equivalence");
 
 ConvertNumberToBinary:=function(eNumber)
   local TheRet, idx, eNumberWork, eRes;

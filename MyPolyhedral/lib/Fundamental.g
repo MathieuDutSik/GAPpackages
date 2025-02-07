@@ -1,7 +1,4 @@
-FileGetDate:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"GetDate");
-FileRatToString:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"RatToString");
-FileLattLll:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"LATT_lll");
-
+FileLattLll:=GetBinaryFilename("LATT_lll");
 
 SymmetricMatrixToVector:=function(SymMat)
   if Length(SymMat)<>Length(SymMat[1]) then
@@ -1049,12 +1046,9 @@ end;
 GetDate:=function()
   local FileD1, FileD2, reply;
   FileD1:=Filename(POLYHEDRAL_tmpdir,"DateFile1");
-  FileD2:=Filename(POLYHEDRAL_tmpdir,"DateFile2");
   Exec("date +%s > ", FileD1);
-  Exec(FileGetDate, " ", FileD1, " > ", FileD2);
-  reply:=ReadAsFunction(FileD2)();
-  RemoveFile(FileD1);
-  RemoveFile(FileD2);
+  list_lines:=ReadTextFile(FileD1);
+  reply:=Int(list_lines[1]);
   return reply;
 end;
 

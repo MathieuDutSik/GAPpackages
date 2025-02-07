@@ -1,8 +1,58 @@
-BindGlobal("POLYHEDRAL_tmpdir",DirectoryTemporary());
+BindGlobal("POLYHEDRAL_tmpdir", DirectoryTemporary());
 
-FileIsEmptyFile:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"IsEmptyFile");
+
+
+ReadTextFile:=function(FileName)
+    local file, list_lines, line, line_red, n_char;
+    file:=InputTextFile(FileName);
+    list_lines:=[];
+    while(true)
+    do
+        line:=ReadLine(file);
+        if line=fail then
+            return list_lines;
+        fi;
+        n_char:=Length(line) - 1;
+        line_red:=line{[1..n_char]};
+        Add(list_lines, line_red);
+    od;
+end;
+
+
+
+IsEmptyFile:=function(FileName)
+    file:=InputTextFile(FileName);
+    line:=ReadLine(file);
+    if line=fail then
+        return true;
+    fi;
+    return false;
+end;
+
+
+
+
+GetBinaryFilename:=function(FileName)
+    local file_name, TmpFile, file;
+    file_name:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),FileName);
+    if file_name<>fail then
+        return file_name;
+    fi;
+    TmpFile:=Filename(DirectoryTemporary(), "Test.in");
+    Exec("which ", FileName, " > ", TmpFile);
+    list_lines:=ReadTextFile(TmpFile);
+    if Length(list_lines)=0 then
+        return fail;
+    fi;
+    return list_lines[1];
+end;
+
+
+
 FileVectorCddGap:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"VectorCddGap");
 FileConvertListFileAsVector:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"ConvListFile");
+
+
 
 
 
@@ -95,16 +145,6 @@ end;
 
 
 
-
-
-IsEmptyFile:=function(FileName)
-  local FileRep, TheRep;
-  FileRep:=Filename(POLYHEDRAL_tmpdir, "FileInterpretation");
-  Exec(FileIsEmptyFile, " ", FileName, " > ", FileRep);
-  TheRep:=ReadAsFunction(FileRep)();
-  RemoveFile(FileRep);
-  return TheRep;
-end;
 
 ReadVectorFile:=function(FileName)
   local Ftmp, DataVar;
