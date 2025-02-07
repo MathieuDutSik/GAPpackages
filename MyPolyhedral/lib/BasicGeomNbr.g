@@ -1048,7 +1048,7 @@ Enumerate2laminationsOrbitwise:=function(EXT, PermGRP)
   #
   Exec(FileSeparation, " ", FileIn, " ", FileOutput, " ", FileOutputMeta, " 2> ", FileError1);
   #
-  Exec(FileIsoReduction, " ", FileOutput, " ", FileOutputMeta, " ", FileGroup, " ", FileSupport, " ", FileScratch, " ", FileOutput2, " 2> ", FileError2);
+#  Exec(FileIsoReduction, " ", FileOutput, " ", FileOutputMeta, " ", FileGroup, " ", FileSupport, " ", FileScratch, " ", FileOutput2, " 2> ", FileError2);
   ListRes:=ReadAsFunction(FileOutput2)();
   #
   ListSolutions:=[];

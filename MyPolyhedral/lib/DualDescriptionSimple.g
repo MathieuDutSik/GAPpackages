@@ -314,7 +314,7 @@ end;
 
 
 ReadCddRaysOutput:=function(FileOut)
-    local list_lines, list_lines_red, IsInside, eLine;
+    local list_lines, list_lines_red, IsInside, eLine, end_str, len_end_str, ends_rational, pos_start, len;
     list_lines:=ReadTextFile(FileOut);
     list_lines_red:=[];
     IsInside:=false;
@@ -352,7 +352,7 @@ end;
 
 
 __DualDescriptionDoubleDescMethod_Reduction:=function(EXT, GroupExt, ThePath, TheProg)
-  local eSub, EXT2, FileExt, FileOut, FileFAC, FileGroup, FileSupport, FileOutput, output, DimEXT, test, EXTnew, ListInc, FileError, TheCommand;
+  local eSub, EXT2, FileExt, FileOut, FileFAC, FileGroup, FileSupport, FileOutput, output, DimEXT, test, EXTnew, ListInc, FileError, TheCommand, FACread;
 #  Print("Entering polyhedral function CDD_Reduction |GRP|=", Order(GroupExt), "\n");
   FileExt:=Concatenation(ThePath, "DD_Project.ext");
   FileOut:=Concatenation(ThePath, "DD_Project.out");

@@ -1048,6 +1048,7 @@ GetDate:=function()
   FileD1:=Filename(POLYHEDRAL_tmpdir,"DateFile1");
   Exec("date +%s > ", FileD1);
   list_lines:=ReadTextFile(FileD1);
+  RemoveFile(FileD1);
   reply:=Int(list_lines[1]);
   return reply;
 end;

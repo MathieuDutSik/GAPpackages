@@ -247,7 +247,7 @@ GetFacetsAndTriangulationFromLRS_Reduction:=function(EXT, GroupEXT)
   WriteMatrix(output, RemoveFractionMatrix(EXT));
   CloseStream(output);
   #
-  Exec(FileIsoReduction, " ", FileFacet, " ", FileMeta, " ", FileGroup, " ", FileSupport, " ", FileScratch, " ", FileOutput, "2>", FileError);
+#  Exec(FileIsoReduction, " ", FileFacet, " ", FileMeta, " ", FileGroup, " ", FileSupport, " ", FileScratch, " ", FileOutput, "2>", FileError);
   #
   ListInc:=ReadAsFunction(FileOutput)();
   RemoveFile(FileExt);

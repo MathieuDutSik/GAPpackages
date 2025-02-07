@@ -1301,17 +1301,7 @@ EnumerationProcedureLtypeStandard:=function(eCase, PathSave, IsSaving, MemorySav
   if IsMatrixFamilyRational(eCase.Basis) then
     DataPolyhedralTiling.DualDescriptionFunction:=__DualDescriptionLRS_Reduction;
   else
-    for Nval in [2,5]
-    do
-      if QN_IsMatrixFamily(Nval, eCase.Basis)=true then
-        NvalCopy:=Nval;
-        MyDualDescription:=function(EXT, GroupExt, ThePath)
-          return __DualDescriptionCDD_QN(NvalCopy, EXT, GroupExt, ThePath);
-        end;
-        DataPolyhedralTiling.DualDescriptionFunction:=MyDualDescription;
-        DataPolyhedralTiling.Nval:=Nval;
-      fi;
-    od;
+    Error("The basis should be rational");
   fi;
   if eCase.IsBravaisSpace=false then
     GetDiscInfo:=function(GramMat)

@@ -728,8 +728,8 @@ Method1IsomorphyLattice:=function(SymMat1, SymMat2)
     AppendTo(output, "\n");
   od;
   CloseStream(output);
-  Exec(FileISOM, " ", FileIn, " > ", FileOut);
-  Exec(FileISOMtoGAP, " ", FileOut, " > ", FileGap);
+#  Exec(FileISOM, " ", FileIn, " > ", FileOut);
+#  Exec(FileISOMtoGAP, " ", FileOut, " > ", FileGap);
   REP:=ReadAsFunction(FileGap)();
   RemoveFile(FileIn);
   RemoveFile(FileOut);
@@ -907,12 +907,12 @@ ArithmeticAutomorphismMatrixFamily_Souvignier:=function(TheOption, ListMat, SVR)
   if IsEmptyFile(FileError32)=false then
     Print("Error at 32 bit arithmetic, trying 64 bits...\n");
     RemoveFile(FileOut);
-    Exec(FileAUTO64, TheOption, ChainOption, " < ", FileIn, " > ", FileOut, "2>", FileError64);
+#    Exec(FileAUTO64, TheOption, ChainOption, " < ", FileIn, " > ", FileOut, "2>", FileError64);
     if IsEmptyFile(FileError64)=false then
       Error("Error also at 64 bits in ArithmeticAutomorphismMatrixFamily_Souvignier");
     fi;
   fi;
-  Exec(FileAUTOMtoGAP, " ", FileOut, " > ", FileGap);
+#  Exec(FileAUTOMtoGAP, " ", FileOut, " > ", FileGap);
   REP:=ReadAsFunction(FileGap)();
   TheMatrixGRP:=Group(REP.ListMat);
   SetSize(TheMatrixGRP, REP.order);
@@ -1000,7 +1000,7 @@ end;
 
 
 ArithmeticAutomorphismGroup:=function(ListGramMat)
-    local FileIn, FileOut;
+    local FileIn, FileOut, output, eMat, TheCommand, ListGen;
     FileIn:=Filename(POLYHEDRAL_tmpdir, "AUTO.in");
     FileOut:=Filename(POLYHEDRAL_tmpdir, "AUTO.out");
     output:=OutputTextFile(FileIn, true);
@@ -1127,16 +1127,16 @@ ArithmeticEquivalenceMatrixFamily_Souvignier:=function(TheOption, ListMat1, SVR1
   fi;
   CloseStream(output);
   # not completely satisfying here ...
-  Exec(FileISOM32, TheOption, ChainOption, " ", FileIn, " > ", FileOut, " 2>", FileError32);
+#  Exec(FileISOM32, TheOption, ChainOption, " ", FileIn, " > ", FileOut, " 2>", FileError32);
   if IsEmptyFile(FileError32)=false then
     Print("Error at 32 bit arithmetic, trying 64 bits...\n");
     RemoveFile(FileOut);
-    Exec(FileISOM64, TheOption, ChainOption, " ", FileIn, " > ", FileOut, " 2>", FileError64);
+#    Exec(FileISOM64, TheOption, ChainOption, " ", FileIn, " > ", FileOut, " 2>", FileError64);
     if IsEmptyFile(FileError64)=false then
       Error("Error also at 64 bits in ArithmeticEquivalenceMatrixFamily_Souvignier");
     fi;
   fi;
-  Exec(FileISOMtoGAP, " ", FileOut, " > ", FileGap);
+#  Exec(FileISOMtoGAP, " ", FileOut, " > ", FileGap);
   REP:=ReadAsFunction(FileGap)();
   if REP=false then
     TheClean();

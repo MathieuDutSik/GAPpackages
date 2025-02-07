@@ -179,7 +179,7 @@ end;
 
 # some invariant are really to expensive to store
 __GetMD5sum:=function(FileName)
-  local FileMD5, FileRead, FileProg, TheRet;
+  local FileMD5, FileRead, FileProg, list_lines, TheRet;
   FileMD5:=Filename(POLYHEDRAL_tmpdir, "MD5_out");
   FileRead:=Filename(POLYHEDRAL_tmpdir, "MD5_read");
   FileProg:="md5sum";
