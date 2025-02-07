@@ -1,8 +1,6 @@
 FileSympolOrbitFacePolytopeLP:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"Temp_StandaloneOrbitFacePolytopeLP");
-FileFaceLattice:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"POLY_FaceLatticeDirect");
-FileFaceLatticeGen:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"POLY_FaceLatticeGen");
-
-
+FileFaceLattice:=GetBinaryFilename("POLY_FaceLatticeDirect");
+FileFaceLatticeGen:=GetBinaryFilename("POLY_FaceLatticeGen");
 
 
 

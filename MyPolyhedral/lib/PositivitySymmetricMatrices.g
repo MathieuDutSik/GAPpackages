@@ -1,7 +1,7 @@
 FileNegVect:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"FindNegativeVect");
-FileGetShortVector:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"SHORT_GetShortVector");
-FileLattCanonicalization:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"LATT_canonicalize");
-FileLattCanonicalizationMultiple:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"LATT_canonicalizeMultiple");
+FileGetShortVector:=GetBinaryFilename("SHORT_GetShortVector");
+FileLattCanonicalization:=GetBinaryFilename("LATT_canonicalize");
+FileLattCanonicalizationMultiple:=GetBinaryFilename("LATT_canonicalizeMultiple");
 
 SymmetricExtractSubMatrix:=function(SymMat, eSet)
   return List(SymMat{eSet}, x->x{eSet});

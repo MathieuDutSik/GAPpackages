@@ -1,5 +1,5 @@
-FilePrimeRefinement:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"SHORT_CheckPrimeRealizability");
-FileShortReduceIsomorphyGAP:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"SHORT_ReduceVectorFamilyGAP");
+FilePrimeRefinement:=GetBinaryFilename("SHORT_CheckPrimeRealizability");
+FileShortReduceIsomorphyGAP:=GetBinaryFilename("SHORT_ReduceVectorFamilyGAP");
 FileConvertPariMollienOutput:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"ConvertPariMollien");
 FileReadFrinakFiles:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"ReadFrinakFiles");
 FileReadFrinakFiles2:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"ReadFrinakFiles2");

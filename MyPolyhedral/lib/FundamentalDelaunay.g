@@ -282,7 +282,7 @@ VoronoiLinearInequality:=function(ExtractedBasis, TheVert, TheBasis)
     TheSum:=TheVectRed*MAT*TheVectRed;
     for k in [1..n+1]
     do
-      eVect:=ExtractedBasis[k]{[2..n+1]};  
+      eVect:=ExtractedBasis[k]{[2..n+1]};
       TheSum:=TheSum-B[k]*(eVect*MAT*eVect);
     od;
     Add(TheIneq, TheSum);

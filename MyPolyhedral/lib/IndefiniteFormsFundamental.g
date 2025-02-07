@@ -2,7 +2,7 @@
 # quadratic forms of signature (n_+ , n_-) with n_+ >=
 
 FileConvertPariIsotropOutput:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"ConvertPariIsotrop");
-FileIndefiniteReduction:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"LATT_IndefiniteReduction");
+FileIndefiniteReduction:=GetBinaryFilename("LATT_IndefiniteReduction");
 
 IndefiniteReduction:=function(M)
     local FileI, FileO, FileE, n, output, i, j, eVal, eCommand, TheReply;

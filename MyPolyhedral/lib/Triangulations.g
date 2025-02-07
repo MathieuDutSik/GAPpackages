@@ -1,7 +1,7 @@
 ExtractTriangulation:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"ExtractTriangulation");
 ExtractTriangulationFacet:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"ExtractTriangulationFacet");
 ExtractTopcomResults:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"ExtractTopcomResult");
-TopComPoints2triang:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"points2triangs");
+TopComPoints2triang:=GetBinaryFilename("points2triangs");
 
 
 __RandomPositiveDefiniteMatrix:=function(n)

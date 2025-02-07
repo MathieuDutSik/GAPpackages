@@ -1,4 +1,4 @@
-FileMINISAT:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"minisat");
+FileMINISAT:=GetBinaryFilename("minisat");
 FileConvertMINISAToutput:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"MinisatToGAP");
 
 
