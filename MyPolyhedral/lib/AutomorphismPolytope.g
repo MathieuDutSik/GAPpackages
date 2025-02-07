@@ -1,9 +1,9 @@
-FileGRP_ComputeAut_ListMat_Diag_EXT:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"GRP_ListMat_Vdiag_EXT_Automorphism");
-FileGRP_TestEquivalence_ListMat_Diag_EXT:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"GRP_ListMat_Vdiag_EXT_Isomorphism");
-FileGRP_Invariant_ListMat_Diag_EXT:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"GRP_ListMat_Vdiag_EXT_Invariant");
-FileGRP_LinPolytope_Automorphism:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"GRP_LinPolytope_Automorphism");
-FileGRP_LinPolytope_Isomorphism:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"GRP_LinPolytope_Isomorphism");
-FileGRP_LinPolytope_Invariant:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"GRP_LinPolytope_Invariant");
+FileGRP_ComputeAut_ListMat_Diag_EXT:=GetBinaryFilename("GRP_ListMat_Vdiag_EXT_Automorphism");
+FileGRP_TestEquivalence_ListMat_Diag_EXT:=GetBinaryFilename("GRP_ListMat_Vdiag_EXT_Isomorphism");
+FileGRP_Invariant_ListMat_Diag_EXT:=GetBinaryFilename("GRP_ListMat_Vdiag_EXT_Invariant");
+FileGRP_LinPolytope_Automorphism:=GetBinaryFilename("GRP_LinPolytope_Automorphism");
+FileGRP_LinPolytope_Isomorphism:=GetBinaryFilename("GRP_LinPolytope_Isomorphism");
+FileGRP_LinPolytope_Invariant:=GetBinaryFilename("GRP_LinPolytope_Invariant");
 
 
 __VectorConfigurationFullDim_ScalarMat:=function(EXT)

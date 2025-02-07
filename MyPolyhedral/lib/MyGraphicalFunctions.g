@@ -10,7 +10,7 @@ FileLISTGtoGAP:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"LISTGtoGAP"
 
 
 ReadNautyGroupOutput:=function(FileName)
-    local list_lines, f_str_red, list_gen, str_gen, f_flush, f_append, eLine;
+    local list_lines, f_str_red, list_gen, str_gen, f_flush, f_append, eLine, rec_red;
     list_lines:=ReadTextFile(FileName);
     f_str_red:=function(estr)
         local pos, str_red;
@@ -27,7 +27,7 @@ ReadNautyGroupOutput:=function(FileName)
     list_gen:=[];
     str_gen:="";
     f_flush:=function()
-        local str_red, str_nb, IsFirst, l_ch, ch;
+        local str_red, str_nb, f_flush_nb, l_ch, ch, eGen;
         str_red:="";
         str_nb:="";
         f_flush_nb:=function()

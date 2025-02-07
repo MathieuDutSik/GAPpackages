@@ -1,8 +1,8 @@
-FileVIN_ComputeDomain:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"LORENTZ_FundDomain_Vinberg");
-FileEDGEWALK_ComputeDomain:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"LORENTZ_FundDomain_AllcockEdgewalk");
-FileCOXDYN_ComputeSymbol:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"COXDYN_ComputeSymbol");
-FileCOXDYN_FindExtensionsCoxMat:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"COXDYN_FindExtensionsCoxMat");
-FileComputeRootsVertex:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"LORENTZ_ComputeRoots_Vertex");
+FileVIN_ComputeDomain:=GetBinaryFilename("LORENTZ_FundDomain_Vinberg");
+FileEDGEWALK_ComputeDomain:=GetBinaryFilename("LORENTZ_FundDomain_AllcockEdgewalk");
+FileCOXDYN_ComputeSymbol:=GetBinaryFilename("COXDYN_ComputeSymbol");
+FileCOXDYN_FindExtensionsCoxMat:=GetBinaryFilename("COXDYN_FindExtensionsCoxMat");
+FileComputeRootsVertex:=GetBinaryFilename("LORENTZ_ComputeRoots_Vertex");
 
 
 LORENTZ_TerminateIfNotLorentzian:=function(LorMat)

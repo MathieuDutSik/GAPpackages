@@ -1144,18 +1144,6 @@ GetStandardFCT_DualDescriptionStandard:=function(EXT, PermGRP)
     DataPolyhedral.GetInitialRays:=GetInitialRays_LinProg;
   else
     IsMatch:=false;
-    for Nval in [2,5]
-    do
-      if QN_IsMatrix(Nval, EXT) then
-        NvalCopy:=Nval;
-        MyDualDescription:=function(EXT, GroupExt, ThePath)
-          return __DualDescriptionCDD_QN(NvalCopy, EXT, GroupExt, ThePath);
-        end;
-        DataPolyhedral.DualDescriptionFunction:=MyDualDescription;
-        DataPolyhedral.GetInitialRays:=GetInitialRays_LinProg;
-        IsMatch:=true;
-      fi;
-    od;
     if IsMatch=false then
       Error("Put your arithmetic here");
     fi;

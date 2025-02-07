@@ -1044,7 +1044,7 @@ end;
 
 
 GetDate:=function()
-  local FileD1, FileD2, reply;
+  local FileD1, list_lines, reply;
   FileD1:=Filename(POLYHEDRAL_tmpdir,"DateFile1");
   Exec("date +%s > ", FileD1);
   list_lines:=ReadTextFile(FileD1);

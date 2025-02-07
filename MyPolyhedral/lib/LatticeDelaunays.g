@@ -1,6 +1,6 @@
 FileCompCovDens:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"ComputeCoveringDensity");
-FileCompEngelSymbol:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"POLY_ComputeEngelSymbol");
-FileFaceLattice:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"POLY_FaceLatticeDirect");
+FileCompEngelSymbol:=GetBinaryFilename("POLY_ComputeEngelSymbol");
+FileFaceLattice:=GetBinaryFilename("POLY_FaceLatticeDirect");
 
 GetClassificationLatticeDelaunayPolytopes:=function(n)
   local eDir, eFile;

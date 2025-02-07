@@ -1,6 +1,5 @@
-FileZsolve:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"zsolve");
-FileIntPoints:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"POLY_IntegralPoints");
-
+FileZsolve:=GetBinaryFilename("zsolve");
+FileIntPoints:=GetBinaryFilename("POLY_IntegralPoints");
 
 
 GetIntegralPointsIteration_Kernel:=function(FAC, EXT)

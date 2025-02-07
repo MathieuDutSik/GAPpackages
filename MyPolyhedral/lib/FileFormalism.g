@@ -21,6 +21,7 @@ end;
 
 
 IsEmptyFile:=function(FileName)
+    local file, line;
     file:=InputTextFile(FileName);
     line:=ReadLine(file);
     if line=fail then
@@ -33,7 +34,7 @@ end;
 
 
 GetBinaryFilename:=function(FileName)
-    local file_name, TmpFile, file;
+    local file_name, TmpFile, file, list_lines;
     file_name:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),FileName);
     if file_name<>fail then
         return file_name;

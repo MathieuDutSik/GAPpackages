@@ -1,9 +1,5 @@
-FileSVWrite_QN:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"svWrite_QN");
-FileSV:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"sv");
-FileSV_gmp_read:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"sv_gmp_read");
-FileSV_exact:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"sv_exact");
+FileSV_exact:=GetBinaryFilename("sv_exact");
 FileSVRead:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"svRead");
-FileSVWrite:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"svWrite");
 
 
 CVPdimension1_Integral:=function(GramMat, eV)
@@ -59,37 +55,14 @@ Kernel_CVPVallentinProgramIntegral:=function(GramMat, eV, recOption)
   fStr:=Concatenation(fStr, "\n");
   WriteAll(output, fStr);
   CloseStream(output);
-#  TheOption:="Use gmp_read";
-#  TheOption:="Use real";
-#  Exec(FileSVWrite, " ", FilePreIn, " > ", FileIn);
-#  Exec("cat ", FilePreIn);
-#  Exec("cat ", FileIn);
   eFileIn:=FilePreIn;
-  if IsBound(recOption.UseExactArithmetic) then
-    if recOption.UseExactArithmetic then
-      opt:=1;
-    else
-      opt:=2;
-    fi;
-  else
-    opt:=2;
-  fi;
-  opt:=1;
-  if opt=1 then
-    CommSV:=FileSV_exact;
-  else
-    CommSV:=FileSV_gmp_read;
-  fi;
+  CommSV:=FileSV_exact;
   if IsBound(recOption.MaxVector) then
     CommSV:=Concatenation(CommSV, " -s", String(recOption.MaxVector));
   fi;
   TheComm:=Concatenation(CommSV, " -M -c < ", eFileIn, " > ", FileOut, " 2> ", FileErr);
-#  Print("TheComm=", TheComm, "\n");
-#  Error("Let us stop for a walk");
   Exec(TheComm);
-#  Print("Step 2\n");
   Exec(FileSVRead, " ", FileOut, " > ", FileGap);
-#  Print("Step 3\n");
   reply:=ReadAsFunction(FileGap)();
   for iVect in [1..Length(reply)]
   do
@@ -136,7 +109,6 @@ General_CVPVallentinProgram_Rational:=function(GramMatIn, eV, recOption)
   if First(eV, x->IsRat(x)=false)<>fail then
     Error("Calling with nonrational eV");
   fi;
-#  Print("Begin CVPVallentinProgramIntegral\n");
   n:=Length(GramMat);
   if IsIntegralVector(eV) then
     return rec(ListVect:=[eV], TheNorm:=0);
@@ -148,17 +120,12 @@ General_CVPVallentinProgram_Rational:=function(GramMatIn, eV, recOption)
   TheRemainder:=res.remainder;
   TheTransform:=res.transformation;
   InvTrans:=Inverse(TheTransform);
-#  Print("TheRemainder=\n");
-#  PrintArray(TheRemainder);
   if InvTrans*TheRemainder*TransposedMat(InvTrans)<>GramMat then
     Error("Error in LLL computation");
   fi;
   eVP:=eV*InvTrans;
   eVPnear:=List(eVP, NearestInteger);
   eVPdiff:=eVP - eVPnear;
-#  Print("TheRemainder=\n");
-#  PrintArray(TheRemainder);
-#  Print("eVPdiff=", eVPdiff, "\n");
   TheRecSol:=Kernel_CVPVallentinProgramIntegral(TheRemainder, eVPdiff, recOption);
   ListVectRet:=List(TheRecSol.ListVect, x->(x+eVPnear)*TheTransform);
   TheNorm:=TheRecSol.TheNorm;
@@ -176,152 +143,12 @@ end;
 
 
 
-CVPdimension1_QN:=function(Nval, GramMat, eV)
-  local x, a, b, r, x1, x2, eNorm1, eNorm2, TheNorm, ListVect, alpha, eValLower, eValUpper;
-  x:=eV[1];
-  alpha:=GramMat[1][1];
-  #
-  eValLower:=0;
-  while(true)
-  do
-    if QN_IsNonNegative(Nval, x-eValLower)=true then
-      break;
-    fi;
-    eValLower:=eValLower-1;
-  od;
-  while(true)
-  do
-    if QN_IsNonNegative(Nval, x-(eValLower+1))=false then
-      break;
-    fi;
-    eValLower:=eValLower+1;
-  od;
-  #
-  eValUpper:=0;
-  while(true)
-  do
-    if QN_IsNonNegative(Nval, eValUpper-x)=true then
-      break;
-    fi;
-    eValUpper:=eValUpper+1;
-  od;
-  while(true)
-  do
-    if QN_IsNonNegative(Nval, (eValUpper-1)-x)=false then
-      break;
-    fi;
-    eValUpper:=eValUpper+1;
-  od;
-  #
-  x1:=eValLower;
-  x2:=eValUpper;
-  eNorm1:=(x1-x)*alpha*(x1-x);
-  eNorm2:=(x2-x)*alpha*(x2-x);
-  if QN_IsPositive(Nval, eNorm1-eNorm2) then
-    TheNorm:=eNorm2;
-  else
-    TheNorm:=eNorm1;
-  fi;
-  ListVect:=[];
-  if TheNorm=eNorm1 then
-    Add(ListVect, [x1]);
-  fi;
-  if TheNorm=eNorm2 then
-    Add(ListVect, [x2]);
-  fi;
-  return rec(ListVect:=ListVect, TheNorm:=TheNorm);
-end;
-
-
-
-CVPVallentinProgram_QN:=function(Nval, GramMat, eV)
-  local FilePreIn, FileIn, FileOut, FileGap, test, n, output, i, j, reply, iVect, Sum, TheNorm, ListVect, TheReply, ePair;
-  if Length(GramMat)<>Length(eV) then
-    Error("Dimension error in the CVP program");
-  fi;
-  FilePreIn:=Filename(POLYHEDRAL_tmpdir, "SVvallentin.prein");
-  FileIn:=Filename(POLYHEDRAL_tmpdir, "SVvallentin.in");
-  FileOut:=Filename(POLYHEDRAL_tmpdir, "SVvallentin.out");
-  FileGap:=Filename(POLYHEDRAL_tmpdir, "SVvallentin.Gap");
-  RemoveFileIfExist(FilePreIn);
-  RemoveFileIfExist(FileIn);
-  RemoveFileIfExist(FileOut);
-  RemoveFileIfExist(FileGap);
-  n:=Length(GramMat);
-  test:=true;
-  for i in [1..n]
-  do
-    if IsInt(eV[i])=false then
-      test:=false;
-    fi;
-  od;
-  if test=true then
-    return rec(ListVect:=[eV], TheNorm:=0);
-  fi;
-  if n=1 then
-    return CVPdimension1_QN(Nval, GramMat, eV);
-  fi;
-  output:=OutputTextFile(FilePreIn, true);;
-  AppendTo(output, n , "\n");
-  for i in [1..n]
-  do
-    for j in [1..i]
-    do
-      ePair:=QN_GetExpression(Nval, GramMat[i][j]);
-      AppendTo(output, " ", ePair[1], " ", ePair[2]);
-    od;
-    AppendTo(output, "\n");
-  od;
-  for i in [1..n]
-  do
-    ePair:=QN_GetExpression(Nval, -eV[i]);
-    AppendTo(output, " ", ePair[1], " ", ePair[2]);
-  od;
-  AppendTo(output, "\n");
-  CloseStream(output);
-  Exec(FileSVWrite_QN, " ", String(Nval), " ", FilePreIn, " > ", FileIn);
-  Exec(FileSV, " -M -c < ", FileIn, " > ", FileOut);
-  Exec(FileSVRead, " ", FileOut, " > ", FileGap);
-  reply:=ReadAsFunction(FileGap)();
-  for iVect in [1..Length(reply)]
-  do
-    Sum:=(eV-reply[iVect])*GramMat*(eV-reply[iVect]);
-    if iVect=1 then
-      ListVect:=[reply[iVect]];
-      TheNorm:=Sum;
-    else
-      if TheNorm=Sum then
-        Add(ListVect, reply[iVect]);
-      else
-        if QN_IsPositive(Nval, TheNorm-Sum)=true then
-          ListVect:=[reply[iVect]];
-          TheNorm:=Sum;
-        fi;
-      fi;
-    fi;
-  od;
-  TheReply:=rec(ListVect:=ListVect, TheNorm:=TheNorm);
-  RemoveFile(FilePreIn);
-#  RemoveFile(FileIn);
-  RemoveFile(FileOut);
-  RemoveFile(FileGap);
-  return TheReply;
-end;
-
-
-
 
 CVPVallentinProgram:=function(GramMat, eV)
   local Nval;
   if IsMatrixRational(GramMat) and IsVectorRational(eV) then
     return CVPVallentinProgram_Rational(GramMat, eV);
   fi;
-  for Nval in [2,5]
-  do
-    if QN_IsMatrix(Nval, GramMat) and QN_IsVector(Nval, eV) then
-      return CVPVallentinProgram_QN(Nval, GramMat, eV);
-    fi;
-  od;
   Error("You have to build your own arithmetic");
 end;
 
@@ -384,48 +211,18 @@ Kernel_ClosestAtDistanceVallentinProgram:=function(GramMat, eV, TheDist, recOpti
   #
   #
   TheOption:="Use gmp_read";
-#  TheOption:="Use real";
-#  Exec(FileSVWrite, " ", FilePreIn, " > ", FileIn);
-#  Exec("cat ", FilePreIn);
-#  Exec("cat ", FileIn);
-  if IsBound(recOption.UseExactArithmetic) then
-    if recOption.UseExactArithmetic then
-      opt:=1;
-    else
-      opt:=2;
-    fi;
-  else
-    opt:=2;
-  fi;
-  opt:=1;
-  if opt=1 then
-    CommSV:=FileSV_exact;
-  else
-    CommSV:=FileSV_gmp_read;
-  fi;
+  CommSV:=FileSV_exact;
   FileIn:=FilePreIn;
-#  Print(NullMat(5));
   if IsBound(recOption.MaxVector) then
     CommSV:=Concatenation(CommSV, " -s", String(recOption.MaxVector));
   fi;
   TheComm:=Concatenation(CommSV, " -M -l < ", FileIn, " > ", FileOut, " 2> ", FileErr);
-#  TheComm:=Concatenation(CommSV, " -M -l < ", FileIn, " > ", FileOut);
   Print("TheComm=", TheComm, "\n");
   Exec(TheComm);
-#  Print(NullMat(5));
   #
   #
   #
   Exec(FileSVRead, " ", FileOut, " > ", FileGap);
-#  Print("FileIn =", FileIn, "\n");
-#  Print("FileOut=", FileOut, "\n");
-#  Print("FileGap=", FileGap, "\n");
-#  md5_in:=__GetMD5sum(FileIn);
-#  md5_out:=__GetMD5sum(FileOut);
-#  md5_gap:=__GetMD5sum(FileGap);
-#  Print("md5_in=", md5_in, "\n");
-#  Print("md5_out=", md5_out, "\n");
-#  Print("md5_gap=", md5_gap, "\n");
   reply:=ReadAsFunction(FileGap)();
   Print("|reply|=", Length(reply), "\n");
   ListVect:=[];
@@ -533,68 +330,3 @@ ClosestAtDistanceVallentinProgram:=function(GramMat, eV, TheDist)
 end;
 
 
-
-#
-# Short vector searches.
-# For invariant groups and so on.
-#
-
-QN_ShortestVectors:=function(Nval, GramMat, MaxNorm)
-  local eStrNorm, n, GramMat1, GramMat2, i, j, ePair, FilePreIn, FileIn, FileOut, FileGap, output, TheReply, vectors, norms, eNorm, eVect;
-  eStrNorm:=QN_GetQNdouble(Nval, MaxNorm);
-  n:=Length(GramMat);
-  GramMat1:=NullMat(n,n);
-  GramMat2:=NullMat(n,n);
-  for i in [1..n]
-  do
-    for j in [1..n]
-    do
-      ePair:=QN_GetExpression(Nval, GramMat[i][j]);
-      GramMat1[i][j]:=ePair[1];
-      GramMat2[i][j]:=ePair[2];
-    od;
-  od;
-  FilePreIn:=Filename(POLYHEDRAL_tmpdir, "SVvallentin.prein");
-  FileIn:=Filename(POLYHEDRAL_tmpdir, "SVvallentin.in");
-  FileOut:=Filename(POLYHEDRAL_tmpdir, "SVvallentin.out");
-  FileGap:=Filename(POLYHEDRAL_tmpdir, "SVvallentin.Gap");
-  RemoveFileIfExist(FilePreIn);
-  RemoveFileIfExist(FileIn);
-  RemoveFileIfExist(FileOut);
-  RemoveFileIfExist(FileGap);
-  #
-  output:=OutputTextFile(FilePreIn, true);
-  AppendTo(output, " ", n, "\n");
-  for i in [1..n]
-  do
-    for j in [1..i]
-    do
-      AppendTo(output, " ", GramMat1[i][j], " ", GramMat2[i][j]);
-    od;
-    AppendTo(output, "\n");
-  od;
-  CloseStream(output);
-  Exec(FileSVWrite_QN, " ", String(Nval), " ", FilePreIn, " > ", FileIn);
-  Exec(FileSV, " -b", eStrNorm, " < ", FileIn, " > ", FileOut);
-  Exec(FileSVRead, " ", FileOut, " > ", FileGap);
-  TheReply:=ReadAsFunction(FileGap)();
-  #
-  RemoveFile(FilePreIn);
-  RemoveFile(FileIn);
-  RemoveFile(FileOut);
-  RemoveFile(FileGap);
-  #
-  vectors:=[];
-  norms:=[];
-  for eVect in TheReply
-  do
-    eNorm:=eVect*GramMat*eVect;
-    if QN_IsNonNegative(Nval, MaxNorm-eNorm)=true then
-      Add(vectors, eVect);
-      Add(vectors, -eVect);
-      Add(norms, eNorm);
-      Add(norms, eNorm);
-    fi;
-  od;
-  return rec(vectors:=vectors, norms:=norms);
-end;

@@ -1,5 +1,5 @@
-FileGrpLinearSpaceEquivalence:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"GRP_LinearSpace_Equivalence");
-FileGrpLinearSpaceStabilizer:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"GRP_LinearSpace_Stabilizer");
+FileGrpLinearSpaceEquivalence:=GetBinaryFilename("GRP_LinearSpace_Equivalence");
+FileGrpLinearSpaceStabilizer:=GetBinaryFilename("GRP_LinearSpace_Stabilizer");
 
 
 ReducePrimeMultiplicity:=function(TheValue)

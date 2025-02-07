@@ -1,4 +1,4 @@
-FileGetFacetOneDomain:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"COXDYN_GetFacetOneDomain");
+FileGetFacetOneDomain:=GetBinaryFilename("COXDYN_GetFacetOneDomain");
 
 ReadGramMatFile:=function(TheFile)
   local PMat, iLin, iCol, GramMat;
