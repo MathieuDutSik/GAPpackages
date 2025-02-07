@@ -3,18 +3,13 @@ FilePolyDualDescription:=GetBinaryFilename("POLY_dual_description");
 FileLCDD:=GetBinaryFilename("lcdd_gmp");
 FileSCDD:=GetBinaryFilename("scdd_gmp");
 FilePPL_LCDD:=GetBinaryFilename("ppl_lcdd");
+FileIsoReductionNG:=GetBinaryFilename("GRP_IsomorphismReduction");
+FileGLRS:=GetBinaryFilename("glrs");
 
-
-FileRemoveFractions:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"removeFractions");
-FileGLRS:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"glrs");
-FileIsoReduction:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"IsomorphismReduction.prog");
-FileIsoReductionNG:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"GRP_IsomorphismReduction");
 FileNudifyLRS:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"NudifyLRS");
 FileNudify:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"Nudify");
 FileCddToNauty:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"CddToNauty");
-FileNudifyLRS_reduction:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"NudifyLRS.reduction");
 FileNudifyLRS_reductionNG:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"NudifyLRS.reductionNG");
-FileNudifyCDD_reduction:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"NudifyCDD.reduction");
 FileNudifyCDD_reductionNG:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"NudifyCDD.reductionNG");
 FileNautyToGRAPE:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"NautyToGRAPE");
 
@@ -56,17 +51,12 @@ DualDescription_Rational:=function(EXT)
   FileExt:=Filename(POLYHEDRAL_tmpdir,"CDD_Desc.ext");
   FileErr:=Filename(POLYHEDRAL_tmpdir,"CDD_Desc.err");
   FileIne:=Filename(POLYHEDRAL_tmpdir,"CDD_Desc.ine");
-#  Print("FileExt=", FileExt, "\n");
-#  Print("FileErr=", FileErr, "\n");
-#  Print("FileIne=", FileIne, "\n");
   FileIneNude:=Filename(POLYHEDRAL_tmpdir,"CDD_Desc.ine.Nude"); 
   RemoveFileIfExist(FileExt);
   output:=OutputTextFile(FileExt, true);;
   AppendTo(output, "V-representation\n");
   AppendTo(output, "begin\n");
   AppendTo(output, Length(EXT), "  ", Length(EXT[1]), "  integer\n");
-#  EXTred:=List(EXT, RemoveFraction);
-#  WriteMatrix(output, EXTred);
   WriteMatrix(output, EXT);
   AppendTo(output, "end\n");
   CloseStream(output);
@@ -82,22 +72,6 @@ DualDescription_Rational:=function(EXT)
   RemoveFile(FileIne);
   RemoveFile(FileIneNude);
   return FAC;
-end;
-
-
-WriteMatrixQN:=function(Nval, FileExt, EXTnew)
-  local output, eEXT, eVal, ePair;
-  RemoveFileIfExist(FileExt);
-  output:=OutputTextFile(FileExt, true);;
-  AppendTo(output, "V-representation\n");
-  AppendTo(output, "begin\n");
-  AppendTo(output, Length(EXTnew), " ", Length(EXTnew[1]), " integer\n");
-  for eEXT in EXTnew
-  do
-    QN_WriteVector(Nval, output, eEXT);
-  od;
-  AppendTo(output, "end\n");
-  CloseStream(output);
 end;
 
 
