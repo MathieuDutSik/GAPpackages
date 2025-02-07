@@ -1,5 +1,5 @@
-FileISOM:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"LATT_Isomorphism");
-FileAUTO:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"LATT_Automorphism");
+FileISOM_CPP:=GetBinaryFilename("LATT_Isomorphism");
+FileAUTO_CPP:=GetBinaryFilename("LATT_Automorphism");
 FileMatrix_TYP_Aut_Grp:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"Matrix_TYP_AutGrp_to_GAP");
 FileZ_equiv:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"Z_equiv");
 FileZ_equiv_toGAP:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"Z_equiv_toGAP");
@@ -261,10 +261,8 @@ __ExtractInvariantZBasisShortVectorNoGroup_V1:=function(GramMat)
   n:=Length(GramMat);
   WorkGramMat:=RemoveFractionMatrix(GramMat);
   TheDiag:=GetReducedDiagonal(GramMat);
-#  Print("TheDiag=", TheDiag, "\n");
   LNorm:=Set(TheDiag);
   SHV:=ShortestVectors(WorkGramMat, Maximum(LNorm));
-#  Print("|SHV.norms|=", Length(SHV.norms), " Coll=", Collected(SHV.norms), "\n");
   ListVector:=[];
   ListNorms:=Set(SHV.norms);
   TheDet:=Determinant(BaseIntMat(SHV.vectors));
@@ -279,7 +277,6 @@ __ExtractInvariantZBasisShortVectorNoGroup_V1:=function(GramMat)
   DoExpansion:=function()
     iNorm:=iNorm+1;
     eNorm:=ListNorms[iNorm];
-#    Print("iNorm=", iNorm, " eNorm=", eNorm, "\n");
     eSHV:=[];
     for iV in [1..Length(SHV.norms)]
     do
@@ -429,11 +426,9 @@ __ExtractInvariantZBasisShortVectorNoGroup_Q2_V1:=function(TheGramMat)
   #
   eRec:=Q2_ShortestVectors(TheGramMat, MaxNorm);
   SVR:=eRec.vectors;
-#  Print("|SVR|=", Length(SVR), "\n");
   ListNorm:=List(SVR, x->x*TheGramMat*x);
   SetNormW:=ShallowCopy(Set(ListNorm));
   nb:=Length(SetNormW);
-#  Print("nb=", nb, "\n");
   FCT:=function(a, b)
     return QN_IsPositive(2, b-a);
   end;
@@ -442,36 +437,6 @@ __ExtractInvariantZBasisShortVectorNoGroup_Q2_V1:=function(TheGramMat)
   do
     if QN_IsPositive(2, SetNormW[i+1]-SetNormW[i])=false then
       Error("Sorting has failed");
-    fi;
-  od;
-  SHVgroup:=[];
-  for i in [1..nb]
-  do
-    eSet:=Filtered([1..Length(SVR)], x->ListNorm[x]=SetNormW[i]);
-    Add(SHVgroup, SVR{eSet});
-  od;
-  return __ExtractInvariantZBasisShortVectorNoGroupGeneral(TheGramMat, SHVgroup);
-end;
-
-
-
-
-__ExtractInvariantZBasisShortVectorNoGroup_Q2:=function(TheGramMat)
-  local n, MaxNorm, eCoeff, eRec, SVR, ListNorm, SetNormW, nb, FCT, i, eSet, SHVgroup;
-  n:=Length(TheGramMat);
-  eRec:=Q2_CriticalInformation(TheGramMat);
-  SVR:=QN_ShortestVectors(2, TheGramMat, eRec.CharVal).vectors;
-  ListNorm:=List(SVR, x->x*TheGramMat*x);
-  SetNormW:=ShallowCopy(Set(ListNorm));
-  nb:=Length(SetNormW);
-  FCT:=function(a, b)
-    return QN_IsPositive(2, b-a);
-  end;
-  Sort(SetNormW, FCT);
-  for i in [1..nb-1]
-  do
-    if QN_IsPositive(2, SetNormW[i+1]-SetNormW[i])=false then
-      Error("Sorting has failed B");
     fi;
   od;
   SHVgroup:=[];
@@ -504,9 +469,6 @@ end;
 Kernel_ExtractInvariantFaithfulFamilyShortVector:=function(GramMat, MatrixGrp)
   if IsMatrixRational(GramMat)=true then
     return __ExtractInvariantFaithfulFamilyShortVector_Rational(GramMat, MatrixGrp);
-  fi;
-  if QN_IsMatrix(2, GramMat)=true then
-    return __ExtractInvariantZBasisShortVectorNoGroup_Q2(GramMat);
   fi;
   Error("Put your arithmetic here");
 end;
@@ -570,9 +532,6 @@ end;
 __ExtractInvariantZBasisShortVector:=function(GramMat, PointGRP)
   if IsMatrixRational(GramMat)=true then
     return __ExtractInvariantZBasisShortVector_Rational(GramMat, PointGRP);
-  fi;
-  if QN_IsMatrix(2, GramMat)=true then
-    return __ExtractInvariantZBasisShortVectorNoGroup_Q2(GramMat);
   fi;
   Error("Please put your arithmetic here");
 end;
@@ -1034,14 +993,31 @@ end;
 
 
 ArithmeticAutomorphismGroup_InputBasis:=function(ListGramMat, InvariantBasis)
-  return ArithmeticAutomorphismMatrixFamily_HackSouvignier_V2("", ListGramMat, InvariantBasis);
+    Error("Stop here");
+
+    return ArithmeticAutomorphismMatrixFamily_HackSouvignier_V2("", ListGramMat, InvariantBasis);
 end;
 
 
 ArithmeticAutomorphismGroup:=function(ListGramMat)
-  local InvariantBasis;
-  InvariantBasis:=__ExtractInvariantZBasisShortVectorNoGroup(ListGramMat[1]);
-  return ArithmeticAutomorphismGroup_InputBasis(ListGramMat, InvariantBasis);
+    local FileIn, FileOut;
+    FileIn:=Filename(POLYHEDRAL_tmpdir, "AUTO.in");
+    FileOut:=Filename(POLYHEDRAL_tmpdir, "AUTO.out");
+    output:=OutputTextFile(FileIn, true);
+    AppendTo(output, Length(ListGramMat), "\n");
+    for eMat in ListGramMat
+    do
+        CPP_WriteMatrix(output, eMat);
+    od;
+    CloseStream(output);
+    #
+    TheCommand:=Concatenation(FileAUTO_CPP, " ", FileIn, " GAP ", FileOut);
+    Exec(TheCommand);
+    #
+    ListGen:=ReadAsFunction(FileOut)();
+    RemoveFile(FileIn);
+    RemoveFile(FileOut);
+    return Group(ListGen);
 end;
 
 

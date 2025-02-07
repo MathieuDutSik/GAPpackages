@@ -1195,7 +1195,7 @@ end;
 #   ---Retraction functions that allows to know if a matrix is
 #      positive definite.
 Kernel_GetEnumerationPerfectForm:=function(eCaseGen2)
-  local n, DimSpace, TheTesselation, FuncInsert, IsFinished, ListAdj, TheAdj, eFac, FlippedGram, iRecord, TheFormal, eOrb, PermGRP, GRP, GramMat, ListOrbit, SHV, nbRecord, DiscInfo, SingleOrbInfo, eGen, TheBasis, iOrb, nbOrb, FuncDoRetractionDual, FuncDoRetractionDirect, ListGenTotal, FuncIsomorphismDirect, FuncAutomorphismDirect, FuncInvariantDirect, eRecIAIdirect, FuncIsomorphismDual, FuncAutomorphismDual, FuncInvariantDual, eRecIAIdual, ScalProdMatrix, eScal, InvSuper, FuncDoRetractionDual_RankApproach, TheFormalDisc, SHVdisc, GRPpermSetIneq, TheBasisExpand, IsValidGram, RecExtRay, TotalNbPerfectCone;
+  local n, DimSpace, TheTesselation, FuncInsert, IsFinished, ListAdj, TheAdj, eFac, FlippedGram, iRecord, TheFormal, eOrb, PermGRP, GRP, GramMat, ListOrbit, SHV, nbRecord, DiscInfo, SingleOrbInfo, eGen, TheBasis, iOrb, nbOrb, FuncDoRetractionDual, FuncDoRetractionDirect, ListGenTotal, FuncIsomorphismDirect, FuncAutomorphismDirect, FuncInvariantDirect, eRecIAIdirect, FuncIsomorphismDual, FuncAutomorphismDual, FuncInvariantDual, eRecIAIdual, ScalProdMatrix, eScal, InvSuper, FuncDoRetractionDual_RankApproach, TheFormalDisc, SHVdisc, GRPpermSetIneq, TheBasisExpand, IsValidGram, RecExtRay;
   n:=Length(eCaseGen2.SuperMat[1]);
   TheTesselation:=[];
   ListGenTotal:=[];
@@ -1252,7 +1252,6 @@ Kernel_GetEnumerationPerfectForm:=function(eCaseGen2)
       eStabExtRay:=Stabilizer(RecExtRay.PermGrpExtRays, extRaySig, Permuted);
       OrbSiz:=Order(RecExtRay.PermGrpExtRays) / Order(eStabExtRay);
       eRecord.OrbitSize:=OrbSiz;
-      TotalNbPerfectCone:=TotalNbPerfectCone + OrbSiz;
     fi;
     Add(TheTesselation, eRecord);
     Print("Now we have ", Length(TheTesselation), " T-perfect forms\n");
@@ -1484,7 +1483,6 @@ Kernel_GetEnumerationPerfectForm:=function(eCaseGen2)
   return rec(eRecIAIdirect:=eRecIAIdirect,
              eRecIAIdual:=eRecIAIdual,
              TheTesselation:=TheTesselation,
-             TotalNbPerfectCone:=TotalNbPerfectCone,
              ListGenTotal:=ListGenTotal,
              FuncDoRetractionDirect:=FuncDoRetractionDirect,
              FuncDoRetractionDual:=FuncDoRetractionDual);

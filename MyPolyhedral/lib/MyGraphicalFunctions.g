@@ -871,7 +871,6 @@ EquivalenceVertexColoredGraphAdjList:=function(ListAdjacency1, ListAdjacency2, T
   if IsEmptyFile(FileError)=false then
     Error("Error in EquivalenceVertexColoredGraphAdjList");
   fi;
-  Exec("cat ", FileDR);
   TheReply:=ReadNautyIsoOutput(FileDR);
   RemoveFile(FileNauty);
   RemoveFile(FileDR);
