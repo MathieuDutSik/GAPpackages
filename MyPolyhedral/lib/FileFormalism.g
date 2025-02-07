@@ -1,5 +1,4 @@
 BindGlobal("POLYHEDRAL_tmpdir", DirectoryTemporary());
-FileVectorCddGap:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"VectorCddGap");
 FileConvertListFileAsVector:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"ConvListFile");
 
 

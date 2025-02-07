@@ -2,9 +2,7 @@ FileDR2:=GetBinaryFilename("dreadnaut");
 FileAMTOG:=GetBinaryFilename("amtog");
 FileGENG:=GetBinaryFilename("geng");
 FileLISTG:=GetBinaryFilename("listg");
-FileNautyIsoOutputGAP:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"NautyIsoOutputToGAP");
 FileNautyReadCanon:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"NautyReadCanon");
-FileMD5read:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"MD5_to_read");
 FileNautyGraph6Expression:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"NautyGraph6Expression");
 FileLISTGtoGAP:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"LISTGtoGAP");
 
@@ -186,8 +184,8 @@ __GetMD5sum:=function(FileName)
   FileRead:=Filename(POLYHEDRAL_tmpdir, "MD5_read");
   FileProg:="md5sum";
   Exec(FileProg, " ", FileName, " > ", FileMD5);
-  Exec(FileMD5read, " ", FileMD5, " > ", FileRead);
-  TheRet:=ReadAsFunction(FileRead)();
+  list_lines:=ReadTextFile(FileMD5);
+  TheRet:=list_lines[1];
   RemoveFile(FileMD5);
   RemoveFile(FileRead);
   return TheRet;
@@ -811,12 +809,51 @@ CanonicalRepresentativeVertexColoredGraph:=function(TheGraph, ThePartition)
 end;
 
 
+ReadNautyIsoOutput:=function(FileIsoOutput)
+    local list_lines, line_diff, line_equa, pos, eLine, Mapping, iVert, iline, LStr, eStr, LStrB, jVert, kVert;
+    list_lines:=ReadTextFile(FileIsoOutput);
+    line_diff:="h and h' are different.";
+    line_equa:="h and h' are identical.";
+    pos:=0;
+    for eLine in list_lines
+    do
+        pos:=pos+1;
+        if eLine=line_diff then
+            return false;
+        fi;
+        if eLine=line_equa then
+            Mapping:=[];
+            iVert:=0;
+            for iline in [pos+1..Length(list_lines)]
+            do
+                LStr:=SplitString(list_lines[iline], " ");
+                for eStr in LStr
+                do
+                    if Length(eStr) > 0 then
+                        LStrB:=SplitString(eStr, "-");
+                        jVert:=Int(LStrB[1]);
+                        if jVert<>iVert then
+                            Error("Inconsistency between iVert / jVert");
+                        fi;
+                        iVert:=iVert + 1;
+                        kVert:=Int(LStrB[2]) + 1;
+                        Add(Mapping, kVert);
+                    fi;
+                od;
+            od;
+            return Mapping;
+        fi;
+    od;
+    Error("We should not reach that line");
+end;
+
+
+
 
 EquivalenceVertexColoredGraphAdjList:=function(ListAdjacency1, ListAdjacency2, ThePartition)
-  local FileNauty, FileDR, FileRead, FileError, n, output, TheReply;
+  local FileNauty, FileDR, FileError, n, output, TheReply;
   FileNauty:=Filename(POLYHEDRAL_tmpdir, "GraphInput");
   FileDR:=Filename(POLYHEDRAL_tmpdir, "GraphDRout");
-  FileRead:=Filename(POLYHEDRAL_tmpdir, "GraphRead");
   FileError:=Filename(POLYHEDRAL_tmpdir, "GraphError");
   n:=Length(ListAdjacency1);
   if n<>Length(ListAdjacency2) then
@@ -831,24 +868,22 @@ EquivalenceVertexColoredGraphAdjList:=function(ListAdjacency1, ListAdjacency2, T
   AppendTo(output, "x ##\n");
   CloseStream(output);
   Exec(FileDR2, " < ", FileNauty, " > ", FileDR, " 2>", FileError);
-  Exec(FileNautyIsoOutputGAP, " ", FileDR, " > ", FileRead);
   if IsEmptyFile(FileError)=false then
     Error("Error in EquivalenceVertexColoredGraphAdjList");
   fi;
-  TheReply:=ReadAsFunction(FileRead)();
+  Exec("cat ", FileDR);
+  TheReply:=ReadNautyIsoOutput(FileDR);
   RemoveFile(FileNauty);
   RemoveFile(FileDR);
-  RemoveFile(FileRead);
   RemoveFile(FileError);
   return TheReply;
 end;
 
 
 EquivalenceVertexColoredGraphAdjList_Scalable:=function(eRecGraph1, eRecGraph2)
-  local FileNauty, FileDR, FileRead, FileError, n, output, TheReply;
+  local FileNauty, FileDR, FileError, n, output, TheReply;
   FileNauty:=Filename(POLYHEDRAL_tmpdir, "GraphInput");
   FileDR:=Filename(POLYHEDRAL_tmpdir, "GraphDRout");
-  FileRead:=Filename(POLYHEDRAL_tmpdir, "GraphRead");
   FileError:=Filename(POLYHEDRAL_tmpdir, "GraphError");
   n:=eRecGraph1.n;
   output:=OutputTextFile(FileNauty, true);
@@ -860,14 +895,12 @@ EquivalenceVertexColoredGraphAdjList_Scalable:=function(eRecGraph1, eRecGraph2)
   AppendTo(output, "x ##\n");
   CloseStream(output);
   Exec(FileDR2, " < ", FileNauty, " > ", FileDR, " 2>", FileError);
-  Exec(FileNautyIsoOutputGAP, " ", FileDR, " > ", FileRead);
   if IsEmptyFile(FileError)=false then
     Error("Error in EquivalenceVertexColoredGraphAdjList_Scalable");
   fi;
-  TheReply:=ReadAsFunction(FileRead)();
+  TheReply:=ReadNautyIsoOutput(FileDR);
   RemoveFile(FileNauty);
   RemoveFile(FileDR);
-  RemoveFile(FileRead);
   RemoveFile(FileError);
   return TheReply;
 end;
