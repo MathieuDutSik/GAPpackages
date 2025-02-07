@@ -13,6 +13,7 @@ ReadTextFile:=function(FileName)
     do
         line:=ReadLine(file);
         if line=fail then
+            CloseStream(file);
             return list_lines;
         fi;
         n_char:=Length(line) - 1;
@@ -27,6 +28,7 @@ IsEmptyFile:=function(FileName)
     local file, line;
     file:=InputTextFile(FileName);
     line:=ReadLine(file);
+    CloseStream(file);
     if line=fail then
         return true;
     fi;
