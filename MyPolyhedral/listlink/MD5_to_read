@@ -1,9 +1,0 @@
-#!/usr/bin/perl -w
-
-$File=$ARGV[0];
-open(INFILE, $File) or die "Impossible to open ".$File;
-@U=<INFILE>;
-close(INFILE);
-@VE=split(" ", $U[0]);
-
-print "return \"".$VE[0]."\";\n";
