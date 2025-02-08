@@ -661,13 +661,10 @@ __GetListAdjacency:=function(TheGraph)
 end;
 
 SymmetryGroupVertexColoredGraphAdjList:=function(ListAdjacency, ThePartition)
-    local TmpDir, FileNauty, FileDR, FileError, n, output, TheGroup;
-    Print("Passing in SymmetryGroupVertexColoredGraphAdjList\n");
-#    TmpDir:=DirectoryTemporary();
-    TmpDir:=POLYHEDRAL_tmpdir;
-    FileNauty:=Filename(TmpDir, "GraphInput");
-    FileDR:=Filename(TmpDir, "GraphDRout");
-    FileError:=Filename(TmpDir, "GraphError");
+    local FileNauty, FileDR, FileError, n, output, TheGroup;
+    FileNauty:=Filename(POLYHEDRAL_tmpdir, "GraphInput");
+    FileDR:=Filename(POLYHEDRAL_tmpdir, "GraphDRout");
+    FileError:=Filename(POLYHEDRAL_tmpdir, "GraphError");
     n:=Length(ListAdjacency);
     output:=OutputTextFile(FileNauty, true);
     AppendTo(output, "n=", n, "\n");
@@ -1318,8 +1315,6 @@ end;
 
 AutomorphismGroupColoredGraph:=function(ScalarMat)
   local DistMat, NewListGens, GRP, eGen, eList, RetGRP;
-  Print("Passing in AutomorphismGroupColoredGraph\n");
-  SaveDataToFile("ScalarMat", ScalarMat);
   DistMat:=MappedScalarMatrixDistanceMatrix(ScalarMat);
   NewListGens:=[];
   GRP:=AutomorphismGroupEdgeColoredGraph(DistMat);
@@ -1488,8 +1483,6 @@ end;
 
 AutomorphismWeightedDigraph:=function(ScalarMat)
   local n, DistMat, NewListGens, GRP, eGen, eList, RetGRP;
-  Print("Passing in AutomorphismWeightedDigraph\n");
-  SaveDataToFile("ScalarMat", ScalarMat);
   n:=Length(ScalarMat);
   DistMat:=MappedWeightedDigraphToWeightedSymmetricDigraph(ScalarMat);
   NewListGens:=[];

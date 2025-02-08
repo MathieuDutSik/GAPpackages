@@ -153,7 +153,42 @@ STRING_SplittingByBlock:=function(ListStr, nbPerLine)
   return ListStrBlock;
 end;
 
+starts_with:=function(big_str, small_str)
+    local len_sma, len_big, red_str;
+    len_sma:=Length(small_str);
+    len_big:=Length(big_str);
+    if len_sma > len_big then
+        return fail;
+    fi;
+    red_str:=big_str{[1..len_sma]};
+    if red_str<>small_str then
+        return fail;
+    fi;
+    return big_str{[len_sma+1..len_big]};
+end;
 
+ends_with:=function(big_str, small_str)
+    local len_sma, len_big, red_str;
+    len_sma:=Length(small_str);
+    len_big:=Length(big_str);
+    if len_sma > len_big then
+        return fail;
+    fi;
+    red_str:=big_str{[len_big-len_sma+1..len_big]};
+    if red_str<>small_str then
+        return fail;
+    fi;
+    return big_str{[1..len_big-len_sma]};
+end;
 
-
-
+drop_spaces:=function(eStr)
+    local fStr, ch;
+    fStr:="";
+    for ch in eStr
+    do
+        if ch<>' ' then
+            Add(fStr, ch);
+        fi;
+    od;
+    return fStr;
+end;

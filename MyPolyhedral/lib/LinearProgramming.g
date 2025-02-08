@@ -7,13 +7,12 @@ FileRedcheck:=GetBinaryFilename("redcheck_gmp");
 FileTestlp2:=GetBinaryFilename("testlp2_gmp");
 FileAdjacency:=GetBinaryFilename("adjacency_gmp");
 FileGlpsol:=GetBinaryFilename("glpsol");
+FileLpsolve:=GetBinaryFilename("lp_solve");
 
 
 Filelpcddcleaner:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"lpcddcleaner");
-FilelpcddcleanerPol:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"lpcddcleanerPol");
 FileRedcheckRead:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"redcheckRead");
 FileAdjacencyRead:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"adjacencyRead");
-FileLpsolve:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"lp_solve");
 FileLpsolveExtractSolution:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"LPSOLVE_ExtractSolution");
 FileGLPSOL_ExtractXsol:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"GLPSOL_ExtractXsol");
 
@@ -137,42 +136,6 @@ end;
 
 
 
-RedundancyCheckOriginal_QN:=function(Nval, EXT)
-  local FileExt, FileError, FileRed, FileRead, output, TheRet, eEXT, NvalueFile;
-  FileExt:=Filename(POLYHEDRAL_tmpdir,"Desc.ext");
-  FileError:=Filename(POLYHEDRAL_tmpdir,"Desc.error");
-  FileRed:=Filename(POLYHEDRAL_tmpdir,"Desc.redcheck");
-  FileRead:=Filename(POLYHEDRAL_tmpdir,"Desc.read");
-  RemoveFileIfExist(FileExt);
-  output:=OutputTextFile(FileExt, true);;
-  AppendTo(output, "V-representation\n");
-  AppendTo(output, "begin\n");
-  AppendTo(output, Length(EXT), "  ", Length(EXT[1]), "  integer\n");
-  for eEXT in EXT
-  do
-    QN_WriteVector(Nval, output, eEXT);
-  od;
-  AppendTo(output, "end\n");
-  CloseStream(output);
-  #
-  NvalueFile:="/tmp/InitialN";
-  RemoveFileIfExist(NvalueFile);
-  output:=OutputTextFile(NvalueFile, true);;
-  AppendTo(output, " ", Nval, "\n");
-  CloseStream(output);
-  #
-  Exec(FileRedcheck_QN, " ", FileExt, " 2> ", FileError, " > ", FileRed);
-  Exec(FileRedcheckRead, " ", FileRed," > ", FileRead);
-  TheRet:=ReadAsFunction(FileRead)();
-  RemoveFile(FileExt);
-  RemoveFile(FileError);
-  RemoveFile(FileRed);
-  RemoveFile(FileRead);
-  return Difference([1..Length(EXT)], TheRet);
-end;
-
-
-
 RedundancyCheckOriginal_Rational:=function(EXTinp)
   local EXT, FileExt, FileError, FileRed, FileRead, output, TheRet;
   FileExt:=Filename(POLYHEDRAL_tmpdir,"Desc.ext");
@@ -206,12 +169,6 @@ RedundancyCheckOriginal:=function(EXT)
   if IsMatrixRational(EXT)=true then
     return RedundancyCheckOriginal_Rational(EXT);
   fi;
-  for Nval in [2,5]
-  do
-    if QN_IsMatrix(Nval, EXT)=true then
-      return RedundancyCheckOriginal_QN(Nval, EXT);
-    fi;
-  od;
   Error("You have to build your own arithmetic");
 end;
 
@@ -225,83 +182,74 @@ RedundancyCheck:=function(EXT)
 end;
 
 
-
-LinearProgramming_QN:=function(Nval, InequalitySet, ToBeMinimized)
-  local FileIne, FileLps, FileErr, FileGap, FileDdl, FileLog, outputCdd, input, eLine, A, TheDim, eVect, eIneq, eSum, eEnt, absVal, NvalueFile, output;
-  FileIne:=Filename(POLYHEDRAL_tmpdir, "LP_QN.ine");
-  FileLps:=Filename(POLYHEDRAL_tmpdir, "LP_QN.lps");
-  FileErr:=Filename(POLYHEDRAL_tmpdir, "LP_QN.error");
-  FileGap:=Filename(POLYHEDRAL_tmpdir, "LP_QN.gap");
-  FileDdl:=Filename(POLYHEDRAL_tmpdir, "LP_QN.ddl");
-  FileLog:=Filename(POLYHEDRAL_tmpdir, "LP_QN.log");
-#  Print("FileIne=", FileIne, "\n");
-  RemoveFileIfExist(FileIne);
-  RemoveFileIfExist(FileLps);
-  RemoveFileIfExist(FileErr);
-  RemoveFileIfExist(FileGap);
-  RemoveFileIfExist(FileDdl);
-  RemoveFileIfExist(FileLog);
-  TheDim:=Length(InequalitySet[1]);
-  for eVect in InequalitySet
-  do
-    if Length(eVect)<>TheDim then
-      Print("Incoherence in dimensions of InequalitySet\n");
-      Error("Please correct");
-    fi;
-  od;
-  if TheDim<>Length(ToBeMinimized) then
-    Error("Incoherence in dimensions, please be careful");
-  fi;
-  outputCdd:=OutputTextFile(FileIne, true);;
-  AppendTo(outputCdd, "H-representation\n");
-  AppendTo(outputCdd, "begin\n");
-  AppendTo(outputCdd, " ", Length(InequalitySet), " ", Length(ToBeMinimized), " integer\n");
-  for eIneq in InequalitySet
-  do
-    QN_WriteVector(Nval, outputCdd, eIneq);
-  od;
-  AppendTo(outputCdd, "end\n");
-  AppendTo(outputCdd, "minimize\n");
-  QN_WriteVector(Nval, outputCdd, ToBeMinimized);
-  CloseStream(outputCdd);
-  #
-  NvalueFile:="/tmp/InitialN";
-  RemoveFileIfExist(NvalueFile);
-  output:=OutputTextFile(NvalueFile, true);;
-  AppendTo(output, " ", Nval, "\n");
-  CloseStream(output);
-  #
-  Exec(FileTestlp2_QN, " ", FileIne, " 2> ", FileErr, " > ", FileLog);
-  Exec(FilelpcddcleanerQN, " ", String(Nval), " < ", FileLog, " > ", FileGap);
-  A:=ReadAsFunction(FileGap)();
-  if IsBound(A.dual_direction) then
-    eSum:=ListWithIdenticalEntries(TheDim,0);
-    for eEnt in A.dual_direction
+ReadCddLinearProgramOutput:=function(FileLPout)
+    local list_lines;
+    list_lines:=ReadTextFile(FileLPout);
+    TheReply:=rec();
+    list_lines_red:=[];
+    IsInside:=false;
+    for eLine in list_lines
     do
-      if QN_IsPositive(Nval, eEnt[2]) then
-        absVal:=eEnt[2];
-      else
-        absVal:=-eEnt[2];
-      fi;
-      eSum:=eSum+InequalitySet[eEnt[1]]*absVal;
+        residue:=starts_with(eLine, "  optimal_value :  ");
+        if residue<>fail then
+            TheReply.optimal:=Rat(residue);
+        else
+            Add(list_lines_red, eLine);
+        fi;
     od;
-    if QN_IsNonNegative(Nval,eSum[1])=true then
-      Print("Apparently something is not understood for\n");
-      Error("cdd and linear programming (unfeasibilities) 1");
+    f_value:=function(key)
+        local big_key, IsInside, LEnt, has_key, eLine, a, b, eEnt;
+        big_key:=Concatenation("  ", key);
+#        Print("big_key=", big_key, "\n");
+        IsInside:=false;
+        LEnt:=[];
+        has_key:=false;
+        for eLine in list_lines_red
+        do
+            if eLine=big_key then
+                IsInside:=true;
+                has_key:=true;
+            else
+                if IsInside then
+                    LStr:=SplitString(eLine, ":");
+                    if Length(LStr)=1 then
+                        IsInside:=false;
+                    else
+#                        Print("LStr=", LStr, "\n");
+                        a:=drop_spaces(LStr[1]);
+                        b:=drop_spaces(LStr[2]);
+#                        Print("a=", a, " b=", b, "\n");
+                        eEnt:=[Rat(a), Rat(b)];
+                        Add(LEnt, eEnt);
+                    fi;
+                fi;
+            fi;
+        od;
+        if has_key then
+            return LEnt;
+        else
+            return fail;
+        fi;
+    end;
+    TheResult:=f_value("primal_solution");
+    if TheResult<>fail then
+        TheReply.primal_solution:=TheResult;
     fi;
-    if eSum{[2..TheDim]}<>ListWithIdenticalEntries(TheDim-1,0) then
-      Print("Apparently something is not understood for\n");
-      Error("cdd and linear programming (unfeasibilities) 2");
+    TheResult:=f_value("primal_direction");
+    if TheResult<>fail then
+        TheReply.primal_direction:=TheResult;
     fi;
-  fi;
-  RemoveFileIfExist(FileIne);
-  RemoveFileIfExist(FileLps);
-  RemoveFileIfExist(FileErr);
-  RemoveFileIfExist(FileGap);
-  RemoveFileIfExist(FileDdl);
-  RemoveFileIfExist(FileLog);
-  return A;
+    TheResult:=f_value("dual_solution");
+    if TheResult<>fail then
+        TheReply.dual_solution:=TheResult;
+    fi;
+    TheResult:=f_value("dual_direction");
+    if TheResult<>fail then
+        TheReply.dual_direction:=TheResult;
+    fi;
+    return TheReply;
 end;
+
 
 
 
@@ -311,19 +259,15 @@ end;
 # Basically, everything is outputed, everything is read
 # and you have to make interpretations yourself.
 LinearProgramming_Rational:=function(InequalitySet, ToBeMinimized)
-  local FileIne, FileLps, FileErr, FileGap, FileDdl, FileLog, outputCdd, input, eLine, TheLP, TheDim, eVect, eSum, eEnt, nbIneq, TheCommand1, TheCommand2;
+  local FileIne, FileLps, FileErr, FileDdl, FileLog, outputCdd, input, eLine, TheLP, TheDim, eVect, eSum, eEnt, nbIneq, TheCommand1, TheCommand2;
   FileIne:=Filename(POLYHEDRAL_tmpdir, "LP.ine");
   FileLps:=Filename(POLYHEDRAL_tmpdir, "LP.lps");
   FileErr:=Filename(POLYHEDRAL_tmpdir, "LP.error");
-  FileGap:=Filename(POLYHEDRAL_tmpdir, "LP.gap");
-  FileDdl:=Filename(POLYHEDRAL_tmpdir, "LP.ddl");
   FileLog:=Filename(POLYHEDRAL_tmpdir, "LP.log");
 #  Print("FileIne=", FileIne, "\n");
   RemoveFileIfExist(FileIne);
   RemoveFileIfExist(FileLps);
   RemoveFileIfExist(FileErr);
-  RemoveFileIfExist(FileGap);
-  RemoveFileIfExist(FileDdl);
   RemoveFileIfExist(FileLog);
   TheDim:=Length(InequalitySet[1]);
   nbIneq:=Length(InequalitySet);
@@ -352,11 +296,7 @@ LinearProgramming_Rational:=function(InequalitySet, ToBeMinimized)
 #  Print("TheCommand1=", TheCommand1, "\n");
   Exec(TheCommand1);
   #
-  TheCommand2:=Concatenation(Filelpcddcleaner, " < ", FileLog, " > ", FileGap);
-#  Print("TheCommand2=", TheCommand2, "\n");
-  Exec(TheCommand2);
-  #
-  TheLP:=ReadAsFunction(FileGap)();
+  TheLP:=ReadCddLinearProgramOutput(FileLog);
   if TheLP=rec() then
       Error("Debug from that point. TheLP=rec() is the error");
   fi;
@@ -394,8 +334,6 @@ LinearProgramming_Rational:=function(InequalitySet, ToBeMinimized)
   RemoveFileIfExist(FileIne);
   RemoveFileIfExist(FileLps);
   RemoveFileIfExist(FileErr);
-  RemoveFileIfExist(FileGap);
-  RemoveFileIfExist(FileDdl);
   RemoveFileIfExist(FileLog);
   return TheLP;
 end;
@@ -407,12 +345,6 @@ LinearProgramming_General_Code:=function(InequalitySet, ToBeMinimized)
   if IsMatrixRational(InequalitySet) and IsVectorRational(ToBeMinimized) then
     return LinearProgramming_Rational(InequalitySet, ToBeMinimized);
   fi;
-  for Nval in [2,5]
-  do
-    if QN_IsMatrix(Nval, InequalitySet) and QN_IsVector(Nval, ToBeMinimized) then
-      return LinearProgramming_QN(Nval, InequalitySet, ToBeMinimized);
-    fi;
-  od;
   Error("You have to build your own arithmetic");
 end;
 

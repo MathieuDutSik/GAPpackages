@@ -1134,15 +1134,8 @@ end;
 
 TestEquivalenceTspace:=function(eCase, SHV1, GramMat1, SHV2, GramMat2)
     local Result1, Result2;
-    Print("Passing in TestEquivalenceTspace1\n");
-    SaveDataToFile("eCase1", eCase);
     Result1:=TestEquivalenceTspace_CPP(eCase, GramMat1, GramMat2);
-    Print("Result1=", Result1, "\n");
-    Print("Passing in TestEquivalenceTspace2_A\n");
-    SaveDataToFile("eCase2", eCase);
-    Print("Passing in TestEquivalenceTspace2_B\n");
     Result2:=TestEquivalenceTspace_GAP(eCase, SHV1, GramMat1, SHV2, GramMat2);
-    Print("Result2=", Result2, "\n");
     if Result1=fail or Result2=fail then
         if Result1<>Result2 then
             Error("The computed equivalences are not matching");
