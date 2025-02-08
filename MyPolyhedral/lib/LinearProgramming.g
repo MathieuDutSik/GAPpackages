@@ -4,7 +4,7 @@ FilePolyRedundancyClarksonBlocks:=GetBinaryFilename("POLY_redundancyClarksonBloc
 FileStandaloneSparseSolver:=GetBinaryFilename("StandaloneSparseSolver");
 FileStandaloneSparseSolver_NNZ:=GetBinaryFilename("StandaloneSparseSolver_NNZ");
 FileRedcheck:=GetBinaryFilename("redcheck_gmp");
-FileTestlp2:=GetBinaryFilename("testlp2_gmp");
+FileTestlp:=GetBinaryFilename("testlp1_gmp");
 FileAdjacency:=GetBinaryFilename("adjacency_gmp");
 FileGlpsol:=GetBinaryFilename("glpsol");
 FileLpsolve:=GetBinaryFilename("lp_solve");
@@ -183,7 +183,7 @@ end;
 
 
 ReadCddLinearProgramOutput:=function(FileLPout)
-    local list_lines;
+    local list_lines, TheReply, list_lines_red, IsInside, eLine, residue, f_value, TheResult;
     list_lines:=ReadTextFile(FileLPout);
     TheReply:=rec();
     list_lines_red:=[];
@@ -198,7 +198,7 @@ ReadCddLinearProgramOutput:=function(FileLPout)
         fi;
     od;
     f_value:=function(key)
-        local big_key, IsInside, LEnt, has_key, eLine, a, b, eEnt;
+        local big_key, IsInside, LEnt, has_key, eLine, LStr, a, b, eEnt;
         big_key:=Concatenation("  ", key);
 #        Print("big_key=", big_key, "\n");
         IsInside:=false;
@@ -259,19 +259,19 @@ end;
 # Basically, everything is outputed, everything is read
 # and you have to make interpretations yourself.
 LinearProgramming_Rational:=function(InequalitySet, ToBeMinimized)
-  local FileIne, FileLps, FileErr, FileDdl, FileLog, outputCdd, input, eLine, TheLP, TheDim, eVect, eSum, eEnt, nbIneq, TheCommand1, TheCommand2;
+  local FileIne, FileLps, FileErr, FileDdl, FileLog, outputCdd, input, eLine, TheLP, TheDim, eVect, eSum, eEnt, nbIneq, TheCommand1, TheVert, eIneq, eScal;
   FileIne:=Filename(POLYHEDRAL_tmpdir, "LP.ine");
   FileLps:=Filename(POLYHEDRAL_tmpdir, "LP.lps");
   FileErr:=Filename(POLYHEDRAL_tmpdir, "LP.error");
   FileLog:=Filename(POLYHEDRAL_tmpdir, "LP.log");
-#  Print("FileIne=", FileIne, "\n");
   RemoveFileIfExist(FileIne);
   RemoveFileIfExist(FileLps);
   RemoveFileIfExist(FileErr);
   RemoveFileIfExist(FileLog);
   TheDim:=Length(InequalitySet[1]);
   nbIneq:=Length(InequalitySet);
-#  Print("nbIneq=", nbIneq, "  TheDim=", TheDim, "\n");
+  Print("TheDim=", TheDim, " nbIneq=", nbIneq, " RankMat(InequalitySet)=", RankMat(InequalitySet), "\n");
+  
   for eVect in InequalitySet
   do
     if Length(eVect)<>TheDim then
@@ -283,6 +283,7 @@ LinearProgramming_Rational:=function(InequalitySet, ToBeMinimized)
     Error("Incoherence in dimensions, please be careful");
   fi;
   outputCdd:=OutputTextFile(FileIne, true);;
+  AppendTo(outputCdd, "* ", FileIne, "\n");
   AppendTo(outputCdd, "H-representation\n");
   AppendTo(outputCdd, "begin\n");
   AppendTo(outputCdd, " ", Length(InequalitySet), " ", Length(ToBeMinimized), " integer\n");
@@ -292,10 +293,12 @@ LinearProgramming_Rational:=function(InequalitySet, ToBeMinimized)
   WriteVector(outputCdd, ToBeMinimized);
   CloseStream(outputCdd);
   #
-  TheCommand1:=Concatenation(FileTestlp2, " ", FileIne, " 2> ", FileErr, " > ", FileLog);
+  Print("FileIne=", FileIne, "\n");
+  TheCommand1:=Concatenation(FileTestlp, " < ", FileIne, " 2> ", FileErr, " > ", FileLog);
 #  Print("TheCommand1=", TheCommand1, "\n");
   Exec(TheCommand1);
   #
+  Exec("cat ", FileLog);
   TheLP:=ReadCddLinearProgramOutput(FileLog);
   if TheLP=rec() then
       Error("Debug from that point. TheLP=rec() is the error");
@@ -320,17 +323,37 @@ LinearProgramming_Rational:=function(InequalitySet, ToBeMinimized)
       Error("Please correct");
     fi;
   fi;
+  if IsBound(TheLP.dual_solution) then
+      SumIneq:=ListWithIdenticalEntries(TheDim, 0);
+      for eEnt in TheLP.dual_solution
+      do
+          SumIneq:=SumIneq + eEnt[2]*InequalitySet[eEnt[1]];
+      od;
+      Print("      SumIneq=", SumIneq, "\n");
+      Print("ToBeMinimized=", ToBeMinimized, "\n");
+  fi;
   if IsBound(TheLP.primal_solution) then
     eVect:=ListWithIdenticalEntries(TheDim-1,0);
     for eEnt in TheLP.primal_solution
     do
       eVect[eEnt[1]]:=eEnt[2];
     od;
+    TheVert:=Concatenation([1], eVect);
     TheLP.eVect:=eVect;
-    TheLP.TheVert:=Concatenation([1], eVect);
+    TheLP.TheVert:=TheVert;
+    nZero:=0;
+    for eIneq in InequalitySet
+    do
+        eScal:=eIneq * TheVert;
+        Print("eIneq=", eIneq, " eScal=", eScal, "\n");
+        if eScal=0 then
+            nZero:=nZero + 1;
+        fi;
+    od;
+    if nZero=0 then
+        Error("nZero should not be zero");
+    fi;
   fi;
-#  Print("Copy the files here\n");
-#  Print(NullMat(5));
   RemoveFileIfExist(FileIne);
   RemoveFileIfExist(FileLps);
   RemoveFileIfExist(FileErr);
@@ -370,9 +393,12 @@ GetPolytopizationInfo:=function(FAC)
   do
     eIneq:=Concatenation([-1], eFac);
     Add(ListIneq, eIneq);
-    ToBeMinimized:=ToBeMinimized+eIneq;
+    ToBeMinimized:=ToBeMinimized + eIneq;
   od;
+  Print("ToBeMinimized=", ToBeMinimized, "\n");
+  Print("ListIneq=", ListIneq, "\n");
   TheLP:=LinearProgramming(ListIneq, ToBeMinimized);
+  Print("TheLP=", TheLP, "\n");
   if IsBound(TheLP.primal_solution)=false then
     Error("Clear inconsistency, maybe the cone is empty");
   fi;

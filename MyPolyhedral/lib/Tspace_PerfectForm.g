@@ -925,7 +925,6 @@ GetStabilizerTspace_CPP:=function(eCase, GramMat)
   WriteMatrixFile(FileMatrix, GramMat);
   Exec(FileTspaceStabilizer, " ", FileTspace, " ", FileMatrix, " GAP ", FileResult);
   TheGRP:=ReadAsFunction(FileResult)();
-#  Print(NullMat(5));
   RemoveFileIfExist(FileTspace);
   RemoveFileIfExist(FileMatrix);
   RemoveFileIfExist(FileResult);
