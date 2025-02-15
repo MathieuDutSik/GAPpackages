@@ -1992,7 +1992,7 @@ INDEF_FORM_TestAutomorphismIsomorphism:=function(Qmat_A)
     CheckAutom:=false;
     CheckIsom:=true;
     if CheckAutom then
-        GRP_A:=INDEF_FORM_AutomorphismGroup(Qmat_A);
+        GRP_A:=GAP_INDEF_FORM_AutomorphismGroup(Qmat_A);
         eInvA:=INDEF_FORM_InvariantAutomorphism(Qmat_A, GRP_A);
     fi;
     n_iter:=10;
@@ -2002,14 +2002,14 @@ INDEF_FORM_TestAutomorphismIsomorphism:=function(Qmat_A)
         TheP:=TheP * GetRandomMatrixPerturbation(n);
         Qmat_B:=TheP * Qmat_A * TransposedMat(TheP);
         if CheckAutom then
-            GRP_B:=INDEF_FORM_AutomorphismGroup(Qmat_B);
+            GRP_B:=GAP_INDEF_FORM_AutomorphismGroup(Qmat_B);
             eInvB:=INDEF_FORM_InvariantAutomorphism(Qmat_B, GRP_B);
             if eInvA<>eInvB then
                 Error("Two equivalent groups have not isomorphic automorphic groups");
             fi;
         fi;
         if CheckIsom then
-            test:=INDEF_FORM_TestEquivalence(Qmat_A, Qmat_B);
+            test:=GAP_INDEF_FORM_TestEquivalence(Qmat_A, Qmat_B);
             if test=false then
                 Error("Two equivalent forms found not equivalent");
             fi;

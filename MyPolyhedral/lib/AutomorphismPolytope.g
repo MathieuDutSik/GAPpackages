@@ -247,7 +247,7 @@ end;
 
 
 LinPolytope_Invariant_CPP:=function(EXT)
-    local FileEXT, FileOUT, eInv;
+    local FileEXT, FileOUT, FileERR, eInv;
     FileEXT:=Filename(POLYHEDRAL_tmpdir, "Input.ext");
     FileOUT:=Filename(POLYHEDRAL_tmpdir, "Input.out");
     FileERR:=Filename(POLYHEDRAL_tmpdir, "Input.err");

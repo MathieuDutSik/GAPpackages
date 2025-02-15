@@ -259,15 +259,11 @@ end;
 # Basically, everything is outputed, everything is read
 # and you have to make interpretations yourself.
 LinearProgramming_Rational:=function(InequalitySet, ToBeMinimized)
-  local FileIne, FileLps, FileErr, FileDdl, FileLog, outputCdd, input, eLine, TheLP, TheDim, eVect, eSum, eEnt, nbIneq, TheCommand1, TheVert, eIneq, eScal;
+  local FileIne, FileLps, FileErr, FileDdl, FileLog, outputCdd, input, eLine, TheLP, TheDim, eVect, eSum, eEnt, nbIneq, TheCommand1, TheVert, eIneq, eScal, nZero;
   FileIne:=Filename(POLYHEDRAL_tmpdir, "LP.ine");
   FileLps:=Filename(POLYHEDRAL_tmpdir, "LP.lps");
   FileErr:=Filename(POLYHEDRAL_tmpdir, "LP.error");
   FileLog:=Filename(POLYHEDRAL_tmpdir, "LP.log");
-  RemoveFileIfExist(FileIne);
-  RemoveFileIfExist(FileLps);
-  RemoveFileIfExist(FileErr);
-  RemoveFileIfExist(FileLog);
   TheDim:=Length(InequalitySet[1]);
   nbIneq:=Length(InequalitySet);
 #  Print("TheDim=", TheDim, " nbIneq=", nbIneq, " RankMat(InequalitySet)=", RankMat(InequalitySet), "\n");
@@ -323,13 +319,6 @@ LinearProgramming_Rational:=function(InequalitySet, ToBeMinimized)
       Print("cdd and linear programming (unfeasibilities) 2\n");
       Error("Please correct");
     fi;
-  fi;
-  if IsBound(TheLP.dual_solution) then
-      SumIneq:=ListWithIdenticalEntries(TheDim, 0);
-      for eEnt in TheLP.dual_solution
-      do
-          SumIneq:=SumIneq + eEnt[2]*InequalitySet[eEnt[1]];
-      od;
   fi;
   if IsBound(TheLP.primal_solution) then
     eVect:=ListWithIdenticalEntries(TheDim-1,0);

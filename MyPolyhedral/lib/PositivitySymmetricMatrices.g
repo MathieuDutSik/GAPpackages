@@ -347,8 +347,6 @@ SHORT_GetShortVector_InfinitePrecision:=function(TheMat, CritNorm, StrictIneq, N
   local FileInput, FileOutput, TheCommand, TheResult;
   FileInput :=Filename(POLYHEDRAL_tmpdir,"InfPrec_Input");
   FileOutput:=Filename(POLYHEDRAL_tmpdir,"InfPrec_Output");
-  RemoveFileIfExist(FileInput);
-  RemoveFileIfExist(FileOutput);
   SHORT_WriteEigenvalueProblem(FileInput, TheMat, CritNorm, StrictIneq, NeedNonZero);
   #
   TheCommand:=Concatenation(FileGetShortVector, " ", FileInput, " ", FileOutput);
@@ -362,14 +360,11 @@ SHORT_GetShortVector_InfinitePrecision:=function(TheMat, CritNorm, StrictIneq, N
 end;
 
 
-FindNegativeVector:=function(TheGram)
-  local n, TheDiag, RedMat, idx, eVect, fVect;
+FindNegativeVector:=function(M)
+  local FileI, FileO, FileE, CritNorm, StrictIneq, eCommand, TheReply;
   FileI:=Filename(POLYHEDRAL_tmpdir,"Negative.input");
   FileO:=Filename(POLYHEDRAL_tmpdir,"Negative.output");
   FileE:=Filename(POLYHEDRAL_tmpdir,"Negative.error");
-  RemoveFileIfExist(FileI);
-  RemoveFileIfExist(FileO);
-  RemoveFileIfExist(FileE);
   WriteMatrixFile(FileI, -M); # The program search for positive.
   CritNorm:="0";
   StrictIneq:="T";

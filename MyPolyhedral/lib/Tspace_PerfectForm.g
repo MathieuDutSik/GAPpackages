@@ -914,14 +914,6 @@ GetStabilizerTspace_GAP:=function(eCase, TheFormal, GramMat)
   n:=Length(eCase.Basis[1]);
   DimSpace:=Length(eCase.Basis);
   BigDiscalarMat:=GeneralWeightMatrix_FullDim_Commuting(GramMat, TheFormal.SHV, eCase.ListComm);
-  TotList:=[];
-  for eLine in BigDiscalarMat
-  do
-      for eVal in eLine
-      do
-          Add(TotList, eVal);
-      od;
-  od;
   PreGRPpermSHV:=AutomorphismWeightedDigraph(BigDiscalarMat);
   GRPpermSHV:=Stabilizer(PreGRPpermSHV, TheFormal.eSetSetOrbitShort, OnSetsSets);
   ListPermGens:=GeneratorsOfGroup(GRPpermSHV);
@@ -1302,7 +1294,7 @@ Kernel_GetEnumerationPerfectForm:=function(eCaseGen2)
         GramMat:=TheTesselation[iRecord].GramMat;
         SingleOrbInfo:=GetStabilizerTspace(eCaseGen2, TheFormalDisc, GramMat);
         Append(ListGenTotal, GeneratorsOfGroup(SingleOrbInfo.TheTspaceMatrStab));
-        Print("|GRPpermSetIneq|=", Order(SingleOrbInfo.GRPpermSetIneq), "\n");
+#        Print("|GRPpermSetIneq|=", Order(SingleOrbInfo.GRPpermSetIneq), "\n");
         SHV:=TheTesselation[iRecord].SHV;
         TheFormal:=TspaceFormalism(eCaseGen2, SHV);
         GRPpermSetIneq:=GetActionOnShortest(TheFormal, SingleOrbInfo);
