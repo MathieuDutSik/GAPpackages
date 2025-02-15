@@ -72,7 +72,6 @@ ReadPkg("MyPolyhedral", "lib/Q5stuff.g");
 ReadPkg("MyPolyhedral", "lib/SublatticeEnumeration.g");
 ReadPkg("MyPolyhedral", "lib/Symplectic.g");
 ReadPkg("MyPolyhedral", "lib/ProjectiveSystem.g");
-ReadPkg("MyPolyhedral", "lib/SpaceFullerene.g");
 ReadPkg("MyPolyhedral", "lib/ConjugacyFunction.g");
 ReadPkg("MyPolyhedral", "lib/GapMET-CUT.g");
 ReadPkg("MyPolyhedral", "lib/ShortestConfig.g");

@@ -1,5 +1,5 @@
-FileMatroidColoring:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"COLOR_MatroidLinearColorings");
-FileEnumHyperplaneRegion:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"POLY_GapFindHyperplaneRegions");
+FileMatroidColoring:=GetBinaryFilename("COLOR_MatroidLinearColorings");
+FileEnumHyperplaneRegion:=GetBinaryFilename("POLY_GapFindHyperplaneRegions");
 
 
 EnumerationHyperplaneRegion:=function(EXT)

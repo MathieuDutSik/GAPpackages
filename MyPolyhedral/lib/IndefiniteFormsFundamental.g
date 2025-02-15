@@ -1,7 +1,6 @@
 # This is a set of codes for solving problems around
 # quadratic forms of signature (n_+ , n_-) with n_+ >=
 
-FileConvertPariIsotropOutput:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"ConvertPariIsotrop");
 FileIndefiniteReduction:=GetBinaryFilename("LATT_IndefiniteReduction");
 FileFindIsotropic:=GetBinaryFilename("LATT_FindIsotropic");
 
