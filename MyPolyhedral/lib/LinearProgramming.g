@@ -282,7 +282,13 @@ LinearProgramming_Rational:=function(InequalitySet, ToBeMinimized)
   if TheDim<>Length(ToBeMinimized) then
     Error("Incoherence in dimensions, please be careful");
   fi;
-  outputCdd:=OutputTextFile(FileIne, true);;
+  # The "testlp1" from cddlib works in a strange way. We have to write the
+  # stuff into a file, with the name of the file at the beginning.
+  # The first * is to indicate as comment when reading the file.
+  # Then the filename is there to be read.
+  # Very dirty but it works and avoids having to write our own stuff and we can
+  # use the testlp1_gmp from the "cddlib" github.
+  outputCdd:=OutputTextFile(FileIne, true);
   AppendTo(outputCdd, "* ", FileIne, "\n");
   AppendTo(outputCdd, "H-representation\n");
   AppendTo(outputCdd, "begin\n");
@@ -293,23 +299,18 @@ LinearProgramming_Rational:=function(InequalitySet, ToBeMinimized)
   WriteVector(outputCdd, ToBeMinimized);
   CloseStream(outputCdd);
   #
-  Print("FileIne=", FileIne, "\n");
   TheCommand1:=Concatenation(FileTestlp, " < ", FileIne, " 2> ", FileErr, " > ", FileLog);
-#  Print("TheCommand1=", TheCommand1, "\n");
   Exec(TheCommand1);
   #
-  Exec("cat ", FileLog);
   TheLP:=ReadCddLinearProgramOutput(FileLog);
   if TheLP=rec() then
       Error("Debug from that point. TheLP=rec() is the error");
   fi;
   TheLP.method:="cdd";
   if IsBound(TheLP.dual_direction) then
-#    Print("TheLP.dual_direction=", TheLP.dual_direction, "\n");
     eSum:=ListWithIdenticalEntries(TheDim,0);
     for eEnt in TheLP.dual_direction
     do
-#      Print("eIneq=", InequalitySet[eEnt[1]], "\n");
       eSum:=eSum+InequalitySet[eEnt[1]]*AbsInt(eEnt[2]);
     od;
     if eSum[1] >= 0 then
@@ -329,8 +330,6 @@ LinearProgramming_Rational:=function(InequalitySet, ToBeMinimized)
       do
           SumIneq:=SumIneq + eEnt[2]*InequalitySet[eEnt[1]];
       od;
-      Print("      SumIneq=", SumIneq, "\n");
-      Print("ToBeMinimized=", ToBeMinimized, "\n");
   fi;
   if IsBound(TheLP.primal_solution) then
     eVect:=ListWithIdenticalEntries(TheDim-1,0);
@@ -345,7 +344,6 @@ LinearProgramming_Rational:=function(InequalitySet, ToBeMinimized)
     for eIneq in InequalitySet
     do
         eScal:=eIneq * TheVert;
-        Print("eIneq=", eIneq, " eScal=", eScal, "\n");
         if eScal=0 then
             nZero:=nZero + 1;
         fi;

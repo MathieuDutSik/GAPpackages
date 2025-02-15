@@ -3,34 +3,18 @@
 
 FileConvertPariIsotropOutput:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"ConvertPariIsotrop");
 FileIndefiniteReduction:=GetBinaryFilename("LATT_IndefiniteReduction");
+FileFindIsotropic:=GetBinaryFilename("LATT_FindIsotropic");
 
 IndefiniteReduction:=function(M)
-    local FileI, FileO, FileE, n, output, i, j, eVal, eCommand, TheReply;
+    local FileI, FileO, FileE, eCommand, TheReply;
     FileI:=Filename(POLYHEDRAL_tmpdir,"Indefinite.input");
     FileO:=Filename(POLYHEDRAL_tmpdir,"Indefinite.output");
     FileE:=Filename(POLYHEDRAL_tmpdir,"Indefinite.error");
-#    Print("FileI=", FileI, "\n");
-#    Print("FileO=", FileO, "\n");
-#    Print("FileE=", FileE, "\n");
     RemoveFileIfExist(FileI);
     RemoveFileIfExist(FileO);
     RemoveFileIfExist(FileE);
-    n:=Length(M);
-    output:=OutputTextFile(FileI, true);
-    AppendTo(output, n, " ", n, "\n");
-    for i in [1..n]
-    do
-        for j in [1..n]
-        do
-            eVal:=M[i][j];
-            AppendTo(output, " ", eVal);
-        od;
-        AppendTo(output, "\n");
-    od;
-    CloseStream(output);
-    #
+    WriteMatrixFile(FileI, M);
     eCommand:=Concatenation(FileIndefiniteReduction, " ", FileI, " GAP ", FileO, " 2> ", FileE);
-#    Print("eCommand=", eCommand, "\n");
     Exec(eCommand);
     TheReply:=ReadAsFunction(FileO)();
     RemoveFileIfExist(FileI);
@@ -61,160 +45,22 @@ GetRandomMatrixPerturbation:=function(n)
     fi;
 end;
 
-# We can have the matrix M of signature (9,1)
-# but all the submatrices formed by eSet of signature (9,0)
-# In that scenario, we apply an expensive algorithm to find
-# a submatrix where we have some 
-INDEF_GetIndefinitesubset:=function(M)
-    local n, eSet, Mred, RecDiag, RedMat, eVal, eLine, MredProd, CritNorm, StrictIneq, NeedNonZero, NewVect, ApplySign, Mwork, eNorm;
-    n:=Length(M);
-    if n <= 9 then
-        RedMat:=IdentityMat(n);
-        return rec(RedMat:=RedMat, Mred:=M, look_kernel:=false);
-    fi;
-    for eSet in Combinations([1..n],9)
-    do
-        Mred:=List(M{eSet}, x->x{eSet});
-        RecDiag:=DiagonalizeSymmetricMatrix(Mred);
-        if RecDiag.nbZero>0 or (RecDiag.nbMinus > 0 and RecDiag.nbPlus > 0) then
-            RedMat:=[];
-            for eVal in eSet
-            do
-                eLine:=ListWithIdenticalEntries(n, 0);
-                eLine[eVal]:=1;
-                Add(RedMat, eLine);
-            od;
-            MredProd:=RedMat*M*TransposedMat(RedMat);
-            if MredProd<>Mred then
-                Error("Mred is not consistent with MredProd");
-            fi;
-            return rec(RedMat:=RedMat, Mred:=Mred, look_kernel:=RecDiag.nbZero > 0);
-        fi;
-    od;
-    #
-    # Uses the last to determine the scenario
-    #
-    ApplySign:=1;
-    if RecDiag.nbMinus > 0 then
-        ApplySign:=-1;
-    fi;
-    Mwork:=ApplySign * M;
-    #
-    # Now using the expensive short algo to find an isotropic or negative vector and continue forward
-    #
-    CritNorm:=0;
-    StrictIneq:=false;
-    NeedNonZero:=true;
-    NewVect:=SHORT_GetShortVector_InfinitePrecision(Mwork, CritNorm, StrictIneq, NeedNonZero);
-    eNorm:=NewVect * Mwork * NewVect;
-    if eNorm > 0 then
-        Error("Error in the computation of NewVect");
-    fi;
-    if eNorm=0 then
-        return rec(IsotopicVect:=NewVect);
-    fi;
-    RedMat:=[];
-    for eVal in eSet{[1..8]}
-    do
-        eLine:=ListWithIdenticalEntries(n, 0);
-        eLine[eVal]:=1;
-        Add(RedMat, eLine);
-    od;
-    Add(RedMat, NewVect);
-    Mred:=RedMat * M * TransposedMat(RedMat);
-    RecDiag:=DiagonalizeSymmetricMatrix(Mred);
-    if RecDiag.nbMinus = 0 or RecDiag.nbPlus = 0 then
-        Error("Failed to find correct submatrix");
-    fi;
-    return rec(RedMat:=RedMat, Mred:=Mred, look_kernel:=false);
-end;
-
-
-INDEF_FindIsotropic_Kernel:=function(M)
-    local n, FileInput, FileOutput, FileRead, FileErr, RecGRPcone, output, TheRec, TheCommand1, TheCommand2, eVect, ListCorrect, ListNorm, MinNorm, pos, eRes, FullVect, ClearFiles;
-    n:=Length(M);
-    FileInput :=Filename(POLYHEDRAL_tmpdir,"Isotrop.pari");
-    FileOutput:=Filename(POLYHEDRAL_tmpdir,"Isotrop.out");
-    FileRead:=Filename(POLYHEDRAL_tmpdir,"Isotrop.read");
-    FileErr:=Filename(POLYHEDRAL_tmpdir,"Isotrop.err");
-    RemoveFileIfExist(FileInput);
-    #
-    TheRec:=INDEF_GetIndefinitesubset(M);
-    if IsBound(TheRec.IsotropicVect) then
-        return TheRec.IsotropicVect;
-    fi;
-    #
-    output:=OutputTextFile(FileInput, true);
-    AppendTo(output, "M=");
-    PARI_PrintMatrix(output, TheRec.Mred);
-    AppendTo(output, "\n");
-    AppendTo(output, "eR = iferr(qfsolve(M),E,[],errname(E)==\"e_IMPL\")\n");
-    AppendTo(output, "print(eR)\n");
-    AppendTo(output, "quit\n");
-    CloseStream(output);
-    #
-    TheCommand1:=Concatenation("gp ", FileInput, " > ", FileOutput, " 2> ", FileErr);
-    Print("TheCommand1=", TheCommand1, "\n");
-    Exec(TheCommand1);
-#    Print("TheCommand1 has been executed\n");
-    #
-    TheCommand2:=Concatenation(FileConvertPariIsotropOutput, " ", FileOutput, " ", FileRead);
-#    Print("TheCommand2=", TheCommand2, "\n");
-    Exec(TheCommand2);
-    #
-    eRes:=ReadAsFunction(FileRead)();
-    ClearFiles:=function()
-        RemoveFileIfExist(FileInput);
-        RemoveFileIfExist(FileOutput);
-        RemoveFileIfExist(FileRead);
-        RemoveFileIfExist(FileErr);
-    end;
-    ListCorrect:=[];
-    for eVect in eRes
-    do
-        if Length(eVect) = Length(TheRec.Mred) then
-            FullVect:=eVect * TheRec.RedMat;
-            if FullVect * M * FullVect = 0 then
-                Add(ListCorrect, FullVect);
-            fi;
-        fi;
-    od;
-    if Length(ListCorrect) = 0 then
-        Print("gp seems to have failed. Vector is not isotrop");
-#        SaveDebugInfo("FailureIsotropSearch", M);
-        ClearFiles();
-        return fail;
-    fi;
-    ListNorm:=List(ListCorrect, Norm_L1);
-    MinNorm:=Minimum(ListNorm);
-    pos:=Position(ListNorm, MinNorm);
-    ClearFiles();
-    return ListCorrect[pos];
-end;
-
-
 INDEF_FindIsotropic:=function(M)
-    local n_iter, n, ThePerturb, ePerturb, Mtest, TheReply, OneIso, eScal;
-    n_iter:=0;
-    n:=Length(M);
-    ThePerturb:=IdentityMat(n);
-    while(true)
-    do
-        ePerturb:=GetRandomMatrixPerturbation(n);
-        ThePerturb:=ePerturb * ThePerturb;
-        Mtest:=ThePerturb * M * TransposedMat(ThePerturb);
-        TheReply:=INDEF_FindIsotropic_Kernel(Mtest);
-        if TheReply<>fail then
-            OneIso:=TheReply * ThePerturb;
-            eScal:=OneIso * M * OneIso;
-            if eScal<>0 then
-                Error("The eScal should be zero");
-            fi;
-            return OneIso;
-        fi;
-        n_iter:=n_iter+1;
-        Print("Retrying at n_iter=", n_iter, "\n");
-    od;
+    local FileI, FileO, FileE, eCommand, TheReply;
+    FileI:=Filename(POLYHEDRAL_tmpdir,"Indefinite.input");
+    FileO:=Filename(POLYHEDRAL_tmpdir,"Indefinite.output");
+    FileE:=Filename(POLYHEDRAL_tmpdir,"Indefinite.error");
+    RemoveFileIfExist(FileI);
+    RemoveFileIfExist(FileO);
+    RemoveFileIfExist(FileE);
+    WriteMatrixFile(FileI, M);
+    eCommand:=Concatenation(FileFindIsotropic, " rational ", FileI, " GAP ", FileO, " 2> ", FileE);
+    Exec(eCommand);
+    TheReply:=ReadAsFunction(FileO)();
+    RemoveFileIfExist(FileI);
+    RemoveFileIfExist(FileO);
+    RemoveFileIfExist(FileE);
+    return TheReply;
 end;
 
 

@@ -830,11 +830,11 @@ TspaceFormalism:=function(eCase, SHV)
   GRPshv:=Group(ListPermGens);
   O:=Orbits(GRPshv, [1..Length(SHV)], OnPoints);
   eSetSetOrbitShort:=Set(List(O, Set));
-  return rec(SHV:=SHV, 
+  return rec(SHV:=SHV,
              ListGroups:=ListGroups,
-             ListRep:=ListRep, 
+             ListRep:=ListRep,
              eSetSetOrbitShort:=eSetSetOrbitShort,
-             ListExpressionRays:=ListExpressionRays, 
+             ListExpressionRays:=ListExpressionRays,
              SetIneq:=SetIneq);
 end;
 
@@ -937,6 +937,15 @@ GetStabilizerTspace_GAP:=function(eCase, TheFormal, GramMat)
   n:=Length(eCase.Basis[1]);
   DimSpace:=Length(eCase.Basis);
   BigDiscalarMat:=GeneralWeightMatrix_FullDim_Commuting(GramMat, TheFormal.SHV, eCase.ListComm);
+  TotList:=[];
+  for eLine in BigDiscalarMat
+  do
+      for eVal in eLine
+      do
+          Add(TotList, eVal);
+      od;
+  od;
+  Print("|BigDiscalarMat|=", Length(BigDiscalarMat), " |Set(TotList)|=", Length(Set(TotList)), "\n");
   PreGRPpermSHV:=AutomorphismWeightedDigraph(BigDiscalarMat);
   Print("|PreGRPpermSHV|=", Order(PreGRPpermSHV), "\n");
   GRPpermSHV:=Stabilizer(PreGRPpermSHV, TheFormal.eSetSetOrbitShort, OnSetsSets);
@@ -1021,9 +1030,11 @@ end;
 
 GetStabilizerTspace:=function(eCase, TheFormal, GramMat)
     local GRP1, GRP2;
+    SaveDataToFile("RecTspace_StabilizerB", rec(eCase:=eCase, TheFormal:=TheFormal, GramMat:=GramMat));
+    GRP2:=GetStabilizerTspace_GAP(eCase, TheFormal, GramMat);
+    Print("|GRP2|=", Order(GRP2.TheStabMatr), "\n");
     GRP1:=GetStabilizerTspace_CPP(eCase, GramMat);
     Print("|GRP1|=", Order(GRP1), "\n");
-    GRP2:=GetStabilizerTspace_GAP(eCase, TheFormal, GramMat);
     if GRP1<>GRP2.TheStabMatr then
         Error("The computed groups are not the same byt the different methods");
     fi;
@@ -1048,6 +1059,9 @@ TestEquivalenceTspace_CPP:=function(eCase, GramMat1, GramMat2)
   WriteLinSpaceFile(FileTspace, eCase);
   WriteMatrixFile(FileGram1, GramMat1);
   WriteMatrixFile(FileGram2, GramMat2);
+  Exec("cp ", FileTspace, " Equiv.tspace");
+  Exec("cp ", FileGram1, " Equiv.gram1");
+  Exec("cp ", FileGram2, " Equiv.gram2");
   Exec(FileTspaceEquivalence, " ", FileTspace, " ", FileGram1, " ", FileGram2, " GAP ", FileResult);
   TheResult:=ReadAsFunction(FileResult)();
   RemoveFileIfExist(FileTspace);
@@ -1083,11 +1097,7 @@ TestEquivalenceTspace_GAP:=function(eCase, SHV1, GramMat1, SHV2, GramMat2)
     fi;
   od;
   ImgESetSetOrbitShort1:=OnSetsSets(TheFormal1.eSetSetOrbitShort, ePerm);
-  Print("Before AutomorphismWeightedDigraph A\n");
-  SaveDataToFile("eCase1", 1);
-  Print("Before AutomorphismWeightedDigraph B\n");
   PreGRPpermSHV2:=AutomorphismWeightedDigraph(BigDiscalarMat2);
-  Print("We have PreGRPpermSHV2\n");
   test:=RepresentativeAction(PreGRPpermSHV2, ImgESetSetOrbitShort1, TheFormal2.eSetSetOrbitShort, OnSetsSets);
   if test=fail then
     return fail;
@@ -1095,14 +1105,13 @@ TestEquivalenceTspace_GAP:=function(eCase, SHV1, GramMat1, SHV2, GramMat2)
   eCandPerm:=ePerm*test;
   eCandEquiv:=Inverse(FindTransformation(TheFormal1.SHV, TheFormal2.SHV, eCandPerm));
   if eCandEquiv*GramMat1*TransposedMat(eCandEquiv)<>GramMat2 then
-    Error("We stop here for a break");
+    Error("eCanEquiv should map GramMat1 to GramMat2");
   fi;
   if TestBelonging(eCandEquiv)=true then
     eEquivTspace:=EQUIV_TspaceExpression(eCase, eCandEquiv);
     eEquivTspaceTrI:=EQUIV_TspaceExpressionDual(eCase, eCandEquiv);
-    return rec(eEquiv:=eCandEquiv, 
-               eEquivTspace:=eEquivTspace, 
-               eEquivTspaceTrI:=eEquivTspaceTrI);
+    Print("Returning equivalence case 1\n");
+    return rec(eEquiv:=eCandEquiv, eEquivTspace:=eEquivTspace, eEquivTspaceTrI:=eEquivTspaceTrI);
   fi;
   GRPpermSHV2:=Stabilizer(PreGRPpermSHV2, TheFormal2.eSetSetOrbitShort, OnSetsSets);
   #
@@ -1122,9 +1131,8 @@ TestEquivalenceTspace_GAP:=function(eCase, SHV1, GramMat1, SHV2, GramMat2)
         fi;
         Add(eList, pos);
       od;
-      return rec(eEquiv:=eCandEquiv,
-                 eEquivTspace:=eEquivTspace,
-                 eEquivTspaceTrI:=eEquivTspaceTrI);
+      Print("Returning equivalence case 2\n");
+      return rec(eEquiv:=eCandEquiv, eEquivTspace:=eEquivTspace, eEquivTspaceTrI:=eEquivTspaceTrI);
     fi;
   od;
   return fail;
@@ -1182,7 +1190,7 @@ end;
 #   ---commute with all elements of ListComm
 #   ---stabilize the T-space considered
 #
-#   Internally, we have two spaces to consider 
+#   Internally, we have two spaces to consider
 #   ---The Ryshkov space of the perfect forms (Direct)
 #   ---The space of the perfect domain tesselation (Dual)
 #   In Opgenorth, this is done by taking two different subspaces.
@@ -1226,8 +1234,8 @@ Kernel_GetEnumerationPerfectForm:=function(eCaseGen2)
           eEquivInfo:=TestEquivalenceTspace(eCaseGen2, SHVrecord, eRecord.GramMat, SHVdisc, TheNewGram);
           if eEquivInfo<>fail then
             Add(ListGenTotal, eEquivInfo.eEquivTspace);
-            return rec(iRecord:=iRecord, 
-                       eEquivDirect:=eEquivInfo.eEquivTspace, 
+            return rec(iRecord:=iRecord,
+                       eEquivDirect:=eEquivInfo.eEquivTspace,
                        eEquiv:=eEquivInfo.eEquivTspaceTrI);
           fi;
         else
@@ -1244,11 +1252,11 @@ Kernel_GetEnumerationPerfectForm:=function(eCaseGen2)
     SHV:=ShortestVectorDutourVersion(TheNewGram);
     GramMatExpand:=SymmetricMatrixToVector(TheNewGram);
     eSol:=SolutionMat(TheBasisExpand, GramMatExpand);
-    eRecord:=rec(SHV:=SHV, 
-                 eInv:=eInv, 
+    eRecord:=rec(SHV:=SHV,
+                 eInv:=eInv,
                  SHVdisc:=SHVdisc,
-                 GramMat:=TheNewGram, 
-                 eExpressionBasis:=eSol, 
+                 GramMat:=TheNewGram,
+                 eExpressionBasis:=eSol,
                  Status:="NO");
     if IsBound(eCaseGen2.ListExtRays) then
       eRecord.extRaySig:=extRaySig;
@@ -1258,8 +1266,8 @@ Kernel_GetEnumerationPerfectForm:=function(eCaseGen2)
     fi;
     Add(TheTesselation, eRecord);
     Print("Now we have ", Length(TheTesselation), " T-perfect forms\n");
-    return rec(iRecord:=Length(TheTesselation), 
-               eEquivDirect:=IdentityMat(DimSpace), 
+    return rec(iRecord:=Length(TheTesselation),
+               eEquivDirect:=IdentityMat(DimSpace),
                eEquiv:=IdentityMat(DimSpace));
   end;
 #  This function apparently does not work for PGL3_EisInt
@@ -1419,7 +1427,7 @@ Kernel_GetEnumerationPerfectForm:=function(eCaseGen2)
     TheGramMat:=NullMat(n,n);
     for i in [1..DimSpace]
     do
-      TheGramMat:=TheGramMat+eVect[i]*TheBasis[i];
+      TheGramMat:=TheGramMat + eVect[i]*TheBasis[i];
     od;
     if IsPositiveSymmetricMatrix(TheGramMat)=false then
       Error("Error, the matrix should be positive semidefinite");
@@ -1441,7 +1449,7 @@ Kernel_GetEnumerationPerfectForm:=function(eCaseGen2)
     TheGramMat1:=NullMat(n,n);
     for i in [1..DimSpace]
     do
-      TheGramMat1:=TheGramMat1+eVect1[i]*TheBasis[i];
+      TheGramMat1:=TheGramMat1 + eVect1[i]*TheBasis[i];
     od;
     if IsPositiveSymmetricMatrix(TheGramMat1)=false then
       Error("Error, the matrix should be positive semidefinite");
@@ -1526,9 +1534,9 @@ GetEnumerationPerfectFormGspace:=function(eCaseGen1)
   ScalProdMat:=GetScalProdMatrix(TheBasis, eCaseGen1.SuperMat);
   eCaseGen2:=rec(SuperMat:=eCaseGen1.SuperMat,
                  ShortestFunction:=ShortestVectorDutourVersion,
-                 IsAdmissible:=IsPositiveDefiniteSymmetricMatrix, 
+                 IsAdmissible:=IsPositiveDefiniteSymmetricMatrix,
                  Basis:=TheBasis,
-                 ListComm:=[], 
+                 ListComm:=[],
                  ScalProdMatrix:=ScalProdMat,
                  SymmGrpPtWs:=eCaseGen1.TheGroup,
                  TheBasis:=TheBasis);
@@ -1648,7 +1656,7 @@ ReverseBoundary:=function(n, TheBound)
       TheNewStabRot:=Group(ListNewStabGensRot);
       #
       TheNewListElt:=List(TheBound.ListOrbitByRank[iRank][iOrbit].BoundaryImage.ListElt, x->RevTRS_SymmRep(n,x));
-      TheNewBound:=rec(ListIFace:=TheBound.ListOrbitByRank[iRank][iOrbit].BoundaryImage.ListIFace, 
+      TheNewBound:=rec(ListIFace:=TheBound.ListOrbitByRank[iRank][iOrbit].BoundaryImage.ListIFace,
                        ListSign:=TheBound.ListOrbitByRank[iRank][iOrbit].BoundaryImage.ListSign, ListElt:=TheNewListElt);
       NewSer:=rec(TheStab:=TheNewStab,
                   RotationSubgroup:=TheNewStabRot,
@@ -1661,7 +1669,7 @@ ReverseBoundary:=function(n, TheBound)
     return TheBound.FuncSignatureDet(iRank, iFace, TRS_SymmRep(eElt));
   end;
   TheNewIdentityElt:=IdentityMat(n);
-  return rec(ListOrbitByRank:=TheNewListOrbitByRank, 
+  return rec(ListOrbitByRank:=TheNewListOrbitByRank,
              FuncSignatureDet:=TheNewFuncSignatureDet,
              IdentityElt:=TheNewIdentityElt);
 end;
