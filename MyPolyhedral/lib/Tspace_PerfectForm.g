@@ -465,7 +465,6 @@ SearchIntersectionConePositiveDefinite:=function(eMat, ListDir)
       if RankMat(eMatrixSol)<n then
         NSP:=NullspaceMat(eMatrixSol);
         NewVect:=RemoveFraction(NSP[1]);
-        Print("NSP NewVect=", NewVect, "\n");
         FuncInsertVector(NewVect);
       else
         NewVect:=FindNegativeVector(eMatrixSol);
@@ -892,21 +891,20 @@ EQUIV_TspaceExpressionDual:=function(eCase, eEquiv)
 end;
 
 GetStabilizerTspace_CPP:=function(eCase, GramMat)
-  local FileTspace, FileMatrix, FileResult, TheGRP;
+  local FileTspace, FileMatrix, FileResult, FileError, TheGRP;
   FileTspace:=Filename(POLYHEDRAL_tmpdir, "StabComp.tspace");
   FileMatrix:=Filename(POLYHEDRAL_tmpdir, "StabComp.matrix");
   FileResult:=Filename(POLYHEDRAL_tmpdir, "StabComp.result");
-  RemoveFileIfExist(FileTspace);
-  RemoveFileIfExist(FileMatrix);
-  RemoveFileIfExist(FileResult);
+  FileError:=Filename(POLYHEDRAL_tmpdir, "StabComp.error");
   #
   WriteLinSpaceFile(FileTspace, eCase);
   WriteMatrixFile(FileMatrix, GramMat);
-  Exec(FileTspaceStabilizer, " ", FileTspace, " ", FileMatrix, " GAP ", FileResult);
+  Exec(FileTspaceStabilizer, " ", FileTspace, " ", FileMatrix, " GAP ", FileResult, " 2> ", FileError);
   TheGRP:=ReadAsFunction(FileResult)();
   RemoveFileIfExist(FileTspace);
   RemoveFileIfExist(FileMatrix);
   RemoveFileIfExist(FileResult);
+  RemoveFileIfExist(FileError);
   return TheGRP;
 end;
 
@@ -924,9 +922,7 @@ GetStabilizerTspace_GAP:=function(eCase, TheFormal, GramMat)
           Add(TotList, eVal);
       od;
   od;
-  Print("|BigDiscalarMat|=", Length(BigDiscalarMat), " |Set(TotList)|=", Length(Set(TotList)), "\n");
   PreGRPpermSHV:=AutomorphismWeightedDigraph(BigDiscalarMat);
-  Print("|PreGRPpermSHV|=", Order(PreGRPpermSHV), "\n");
   GRPpermSHV:=Stabilizer(PreGRPpermSHV, TheFormal.eSetSetOrbitShort, OnSetsSets);
   ListPermGens:=GeneratorsOfGroup(GRPpermSHV);
   ListMatrGens:=[];
@@ -1011,9 +1007,7 @@ GetStabilizerTspace:=function(eCase, TheFormal, GramMat)
     local GRP1, GRP2;
     SaveDataToFile("RecTspace_StabilizerB", rec(eCase:=eCase, TheFormal:=TheFormal, GramMat:=GramMat));
     GRP2:=GetStabilizerTspace_GAP(eCase, TheFormal, GramMat);
-    Print("|GRP2|=", Order(GRP2.TheStabMatr), "\n");
     GRP1:=GetStabilizerTspace_CPP(eCase, GramMat);
-    Print("|GRP1|=", Order(GRP1), "\n");
     if GRP1<>GRP2.TheStabMatr then
         Error("The computed groups are not the same byt the different methods");
     fi;
@@ -1025,15 +1019,12 @@ end;
 
 
 TestEquivalenceTspace_CPP:=function(eCase, GramMat1, GramMat2)
-  local FileTspace, FileGram1, FileGram2, FileResult, TheResult;
+  local FileTspace, FileGram1, FileGram2, FileResult, FileError, TheResult;
   FileTspace:=Filename(POLYHEDRAL_tmpdir, "StabEqui.tspace");
   FileGram1:=Filename(POLYHEDRAL_tmpdir, "StabEqui.matrix1");
   FileGram2:=Filename(POLYHEDRAL_tmpdir, "StabEqui.matrix2");
   FileResult:=Filename(POLYHEDRAL_tmpdir, "StabEqui.result");
-  RemoveFileIfExist(FileTspace);
-  RemoveFileIfExist(FileGram1);
-  RemoveFileIfExist(FileGram2);
-  RemoveFileIfExist(FileResult);
+  FileError:=Filename(POLYHEDRAL_tmpdir, "StabEqui.error");
   #
   WriteLinSpaceFile(FileTspace, eCase);
   WriteMatrixFile(FileGram1, GramMat1);
@@ -1041,12 +1032,13 @@ TestEquivalenceTspace_CPP:=function(eCase, GramMat1, GramMat2)
   Exec("cp ", FileTspace, " Equiv.tspace");
   Exec("cp ", FileGram1, " Equiv.gram1");
   Exec("cp ", FileGram2, " Equiv.gram2");
-  Exec(FileTspaceEquivalence, " ", FileTspace, " ", FileGram1, " ", FileGram2, " GAP ", FileResult);
+  Exec(FileTspaceEquivalence, " ", FileTspace, " ", FileGram1, " ", FileGram2, " GAP ", FileResult, " 2> ", FileError);
   TheResult:=ReadAsFunction(FileResult)();
   RemoveFileIfExist(FileTspace);
   RemoveFileIfExist(FileGram1);
   RemoveFileIfExist(FileGram2);
   RemoveFileIfExist(FileResult);
+  RemoveFileIfExist(FileError);
   return TheResult;
 end;
 
@@ -1089,7 +1081,6 @@ TestEquivalenceTspace_GAP:=function(eCase, SHV1, GramMat1, SHV2, GramMat2)
   if TestBelonging(eCandEquiv)=true then
     eEquivTspace:=EQUIV_TspaceExpression(eCase, eCandEquiv);
     eEquivTspaceTrI:=EQUIV_TspaceExpressionDual(eCase, eCandEquiv);
-    Print("Returning equivalence case 1\n");
     return rec(eEquiv:=eCandEquiv, eEquivTspace:=eEquivTspace, eEquivTspaceTrI:=eEquivTspaceTrI);
   fi;
   GRPpermSHV2:=Stabilizer(PreGRPpermSHV2, TheFormal2.eSetSetOrbitShort, OnSetsSets);
@@ -1110,7 +1101,6 @@ TestEquivalenceTspace_GAP:=function(eCase, SHV1, GramMat1, SHV2, GramMat2)
         fi;
         Add(eList, pos);
       od;
-      Print("Returning equivalence case 2\n");
       return rec(eEquiv:=eCandEquiv, eEquivTspace:=eEquivTspace, eEquivTspaceTrI:=eEquivTspaceTrI);
     fi;
   od;

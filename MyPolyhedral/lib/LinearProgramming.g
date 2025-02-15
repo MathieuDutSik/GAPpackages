@@ -270,8 +270,8 @@ LinearProgramming_Rational:=function(InequalitySet, ToBeMinimized)
   RemoveFileIfExist(FileLog);
   TheDim:=Length(InequalitySet[1]);
   nbIneq:=Length(InequalitySet);
-  Print("TheDim=", TheDim, " nbIneq=", nbIneq, " RankMat(InequalitySet)=", RankMat(InequalitySet), "\n");
-  
+#  Print("TheDim=", TheDim, " nbIneq=", nbIneq, " RankMat(InequalitySet)=", RankMat(InequalitySet), "\n");
+
   for eVect in InequalitySet
   do
     if Length(eVect)<>TheDim then
@@ -393,10 +393,10 @@ GetPolytopizationInfo:=function(FAC)
     Add(ListIneq, eIneq);
     ToBeMinimized:=ToBeMinimized + eIneq;
   od;
-  Print("ToBeMinimized=", ToBeMinimized, "\n");
-  Print("ListIneq=", ListIneq, "\n");
+#  Print("ToBeMinimized=", ToBeMinimized, "\n");
+#  Print("ListIneq=", ListIneq, "\n");
   TheLP:=LinearProgramming(ListIneq, ToBeMinimized);
-  Print("TheLP=", TheLP, "\n");
+#  Print("TheLP=", TheLP, "\n");
   if IsBound(TheLP.primal_solution)=false then
     Error("Clear inconsistency, maybe the cone is empty");
   fi;

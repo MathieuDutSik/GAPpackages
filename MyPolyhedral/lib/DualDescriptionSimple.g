@@ -361,13 +361,6 @@ __DualDescriptionDoubleDescMethod_Reduction:=function(EXT, GroupExt, ThePath, Th
   FileSupport:=Concatenation(ThePath, "DD_Project.supo");
   FileOutput:=Concatenation(ThePath, "DD_Project.output");
   FileError:=Concatenation(ThePath, "DD_Project.error");
-  RemoveFileIfExist(FileExt);
-  RemoveFileIfExist(FileOut);
-  RemoveFileIfExist(FileFAC);
-  RemoveFileIfExist(FileGroup);
-  RemoveFileIfExist(FileSupport);
-  RemoveFileIfExist(FileOutput);
-  RemoveFileIfExist(FileError);
   #
   output:=OutputTextFile(FileExt, true);;
   eSub:=__ProjectionFrame(EXT);
@@ -390,13 +383,13 @@ __DualDescriptionDoubleDescMethod_Reduction:=function(EXT, GroupExt, ThePath, Th
     Error("TheProg should be CDD or PPL");
   fi;
   if TheProg="CDD" then
-    TheCommand:=Concatenation(FileLCDD, " ", FileExt, " > ", FileOut);
+    TheCommand:=Concatenation(FileLCDD, " ", FileExt, " > ", FileOut, " 2> ", FileError);
   fi;
   if TheProg="PPL" then
-    TheCommand:=Concatenation(FilePPL_LCDD, " ", FileExt, " > ", FileOut);
+    TheCommand:=Concatenation(FilePPL_LCDD, " ", FileExt, " > ", FileOut, " 2> ", FileError);
   fi;
   Exec(TheCommand);
-  Print("Double description computation finished\n");
+#  Print("Double description computation finished\n");
   #
   FACread:=ReadCddRaysOutput(FileOut);
   WriteMatrixFile(FileFAC, FACread);
@@ -411,8 +404,7 @@ __DualDescriptionDoubleDescMethod_Reduction:=function(EXT, GroupExt, ThePath, Th
   if Length(ListInc)=0 then
     Error("Error in DualDescriptionCDD_Reduction");
   fi;
-  Print("Isomorphism reduction finished\n");
-#  Print(NullMat(5));
+#  Print("Isomorphism reduction finished\n");
   RemoveFile(FileExt);
   RemoveFile(FileOut);
   RemoveFile(FileFAC);

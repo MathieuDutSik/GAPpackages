@@ -91,7 +91,11 @@ ReadNautyGroupOutput:=function(FileName)
             fi;
         fi;
     od;
-    return Group(list_gen);
+    if Length(list_gen) > 0 then
+        return Group(list_gen);
+    else
+        return Group(());
+    fi;
 end;
 
 

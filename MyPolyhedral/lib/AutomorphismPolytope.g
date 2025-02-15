@@ -1341,7 +1341,6 @@ LinPolytopeIntegral_Isomorphism_Subspaces:=function(EXT1, EXT2)
     return false;
   fi;
   GRP2:=LinPolytope_Automorphism(EXT2);
-  Print("|GRP2|=", Order(GRP2), "\n");
   return KernelLinPolytopeIntegral_Isomorphism_Subspaces(EXT1, EXT2, GRP2, eEquiv);
 end;
 
