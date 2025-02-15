@@ -250,12 +250,14 @@ LinPolytope_Invariant_CPP:=function(EXT)
     local FileEXT, FileOUT, eInv;
     FileEXT:=Filename(POLYHEDRAL_tmpdir, "Input.ext");
     FileOUT:=Filename(POLYHEDRAL_tmpdir, "Input.out");
+    FileERR:=Filename(POLYHEDRAL_tmpdir, "Input.err");
     WriteMatrixFile(FileEXT, EXT);
     #
-    Exec(FileGRP_LinPolytope_Invariant, " rational ", FileEXT, " GAP ", FileOUT);
+    Exec(FileGRP_LinPolytope_Invariant, " rational ", FileEXT, " GAP ", FileOUT, " 2> ", FileERR);
     eInv:=ReadAsFunction(FileOUT)();
     RemoveFile(FileEXT);
     RemoveFile(FileOUT);
+    RemoveFile(FileERR);
     return eInv;
 end;
 

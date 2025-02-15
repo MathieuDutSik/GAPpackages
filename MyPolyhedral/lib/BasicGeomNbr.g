@@ -1,5 +1,5 @@
 FileVectorSplit_V1:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"VectorSplitting.prog");
-FileVectorSplit_V2:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"GRP_VectorSplitting");
+FileVectorSplit_V2:=GetBinaryFilename("GRP_VectorSplitting");
 FileSeparation:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"Separation");
 
 

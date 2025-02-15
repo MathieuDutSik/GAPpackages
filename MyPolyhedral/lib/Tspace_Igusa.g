@@ -83,7 +83,7 @@ IGUSA_IntegralMinimizationOverTspace:=function(eCase, ListGramInt, LinearFunc)
         Print("Case 2\n");
       else
         IsCorrect:=false;
-        NewVect:=EigenvalueFindNegativeVect(eMatSol);
+        NewVect:=FindNegativeVector(eMatSol);
         Print("NewVect=", NewVect, "\n");
         Add(ListVectTotal, NewVect);
         Add(ListIneqTotal, GetIneq(NewVect));

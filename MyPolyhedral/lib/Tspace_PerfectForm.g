@@ -468,8 +468,7 @@ SearchIntersectionConePositiveDefinite:=function(eMat, ListDir)
         Print("NSP NewVect=", NewVect, "\n");
         FuncInsertVector(NewVect);
       else
-        NewVect:=EigenvalueFindNegativeVect(eMatrixSol);
-#        Print("EIG NewVect=", NewVect, "\n");
+        NewVect:=FindNegativeVector(eMatrixSol);
         FuncInsertVector(NewVect);
       fi;
     fi;
@@ -487,26 +486,6 @@ IsPerfectLattice:=function(GramMat)
   return Length(GetRankBasisPolytope(SHV))=0;
 #  ListEqua:=List(SHV, x->SymmetricMatrixToVector(TransposedMat([x])*[x]));
 #  return RankMat(ListEqua)=n*(n+1)/2;
-end;
-
-
-
-FindNegativeVector:=function(TheGram)
-  local n, TheDiag, RedMat, idx, eVect, fVect;
-  if IsPositiveSymmetricMatrix(TheGram)=true then
-    Error("We cannot find a zero vector for a positive definite matrix");
-  fi;
-  n:=Length(TheGram);
-  TheDiag:=DiagonalizeSymmetricMatrix(TheGram);
-  RedMat:=TheDiag.RedMat;
-  idx:=First([1..n], x->RedMat[x][x]<0);
-  eVect:=ListWithIdenticalEntries(n,0);
-  eVect[idx]:=1;
-  fVect:=eVect*TheDiag.Transform;
-  if fVect*TheGram*fVect >= 0 then
-    Error("We are wrong");
-  fi;
-  return RemoveFraction(fVect);
 end;
 
 

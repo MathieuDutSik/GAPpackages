@@ -698,13 +698,8 @@ SHORT_GetShortZeroOrNegativeVector_General:=function(eMatSec, CritNorm)
     NewVect_short:=GetShortVector(eMatSec, CritNorm);
     Add(List_NewVectCand, NewVect_short);
     #
-    NewVect_float:=EigenvalueFindNegativeVect(eMatSec);
+    NewVect_float:=FindNegativeVector(eMatSec);
     Add(List_NewVectCand, NewVect_float);
-    #
-    StrictIneq:=true;
-    NeedNonZero:=true;
-    NewVect_infinite:=SHORT_GetShortVector_InfinitePrecision(eMatSec, CritNorm, StrictIneq, NeedNonZero);
-    Add(List_NewVectCand, NewVect_infinite);
     #
     List_NormL1:=List(List_NewVectCand, x->Norm_L1(x));
     TheMin:=Minimum(List_NormL1);

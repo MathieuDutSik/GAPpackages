@@ -2519,7 +2519,7 @@ LORENTZ_GetShortPositiveVector:=function(LorMat)
     while(true)
     do
         LorMat_Pert:=ePerturb * LorMat * TransposedMat(ePerturb);
-        uVect_Pert:=EigenvalueFindNegativeVect(-LorMat_Pert);
+        uVect_Pert:=FindNegativeVector(-LorMat_Pert);
         uVect:=uVect_Pert * ePerturb;
         TheVect:=DirectImprovement(uVect);
         eNorm:=TheVect * LorMat * TheVect;
@@ -2581,7 +2581,7 @@ LORENTZ_GetOnePerfect:=function(LorMat, TheOption)
         while(true)
         do
             TheMatPerturb:=ePerturb * TheMat * TransposedMat(ePerturb);
-            uVect:=EigenvalueFindNegativeVect(TheMatPerturb);
+            uVect:=FindNegativeVector(TheMatPerturb);
             RetVect:=uVect * ePerturb * SpannBasis;
             TheNorm:=RetVect * LorMat * RetVect;
             Print("TheNorm=", TheNorm, "\n");
@@ -2698,7 +2698,7 @@ end;
 
 LORENTZ_GetIndependentDirection:=function(LorMat, CritSet)
   local CentralVect, n, rnkCrit, a, eVect, i;
-  CentralVect:=EigenvalueFindNegativeVect(-LorMat);
+  CentralVect:=FindNegativeVector(-LorMat);
   n:=Length(LorMat);
   rnkCrit:=RankMat(CritSet);
   if RankMat(Concatenation(CritSet, [CentralVect]))=rnkCrit+1 then

@@ -1,4 +1,4 @@
-FileNegVect:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"FindNegativeVect");
+FilePositiveVector:=GetBinaryFilename("LATT_FindPositiveVector");
 FileGetShortVector:=GetBinaryFilename("SHORT_GetShortVector");
 FileLattCanonicalization:=GetBinaryFilename("LATT_canonicalize");
 FileLattCanonicalizationMultiple:=GetBinaryFilename("LATT_canonicalizeMultiple");
@@ -362,58 +362,22 @@ SHORT_GetShortVector_InfinitePrecision:=function(TheMat, CritNorm, StrictIneq, N
 end;
 
 
-
-
-
-
-EigenvalueFindNegativeVect_GSL:=function(GramMat)
-  local FileMat, FileRes, output, TheRead, RetVect;
-  if FileNegVect=fail then
-    return GetSomeNegativeVector(GramMat);
-  fi;
-  FileMat:=Filename(POLYHEDRAL_tmpdir,"MatF");
-  FileRes:=Filename(POLYHEDRAL_tmpdir,"ResF");
-  RemoveFileIfExist(FileMat);
-  RemoveFileIfExist(FileRes);
-  output:=OutputTextFile(FileMat, true);;
-  AppendTo(output, Length(GramMat), "\n");
-  WriteMatrix(output, RemoveFractionMatrix(GramMat));
-  CloseStream(output);
-  #
-  Exec(FileNegVect, " ", FileMat, " ", FileRes);
-  TheRead:=ReadAsFunction(FileRes)();
-  if TheRead.pos_semidef=true then
-    if IsPositiveSymmetricMatrix(GramMat)=true then
-      Error("The matrix is positive semidefinite. Cannot work");
-    fi;
-    Print("The matrix has a negative vector but double precision\n");
-    Print("cannot find a negative vector\n");
-    RemoveFileIfExist(FileMat);
-    RemoveFileIfExist(FileRes);
-    return GetSomeNegativeVector(GramMat);
-  fi;
-  RemoveFileIfExist(FileMat);
-  RemoveFileIfExist(FileRes);
-  RetVect:=TheRead.eVect;
-  if RetVect*GramMat*RetVect >= 0 then
-    Print("Probably floating point problem. Wrong norm\n");
-    Print("Using exact arithmetics\n");
-    return GetSomeNegativeVector(GramMat);
-  fi;
-  return RetVect;
-end;
-
-
-EigenvalueFindNegativeVect:=function(GramMat)
-  local StrictIneq, NeedNonZero, CritNorm, opt_chosen;
-  opt_chosen:=1;
-  if opt_chosen=1 then
-    return EigenvalueFindNegativeVect_GSL(GramMat);
-  fi;
-  if opt_chosen=2 then
-    StrictIneq:=true;
-    NeedNonZero:=true;
-    CritNorm:=0;
-    return SHORT_GetShortVector_InfinitePrecision(GramMat, CritNorm, StrictIneq, NeedNonZero);
-  fi;
+FindNegativeVector:=function(TheGram)
+  local n, TheDiag, RedMat, idx, eVect, fVect;
+  FileI:=Filename(POLYHEDRAL_tmpdir,"Negative.input");
+  FileO:=Filename(POLYHEDRAL_tmpdir,"Negative.output");
+  FileE:=Filename(POLYHEDRAL_tmpdir,"Negative.error");
+  RemoveFileIfExist(FileI);
+  RemoveFileIfExist(FileO);
+  RemoveFileIfExist(FileE);
+  WriteMatrixFile(FileI, -M); # The program search for positive.
+  CritNorm:="0";
+  StrictIneq:="T";
+  eCommand:=Concatenation(FilePositiveVector, " gmp ", FileI, " ", CritNorm, " ", StrictIneq, " GAP ", FileO, " 2> ", FileE);
+  Exec(eCommand);
+  TheReply:=ReadAsFunction(FileO)();
+  RemoveFileIfExist(FileI);
+  RemoveFileIfExist(FileO);
+  RemoveFileIfExist(FileE);
+  return TheReply;
 end;
