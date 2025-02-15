@@ -45,7 +45,6 @@ end;
 GetPEV_DataSet:=function(ListSHV, eFile)
   local eFileOut, eList, ListCases, eEnt, eNumber, eIdx, eSHV, eSet, eCase;
   eFileOut:=Filename(POLYHEDRAL_tmpdir,"PEVout");
-#  Print("eFile=", eFile, "\n");
   Exec(FilePEV, " ", eFile, " ", eFileOut);
   #
   eList:=ReadAsFunction(eFileOut)();

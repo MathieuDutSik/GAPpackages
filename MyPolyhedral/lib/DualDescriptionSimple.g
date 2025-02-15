@@ -6,10 +6,38 @@ FilePPL_LCDD:=GetBinaryFilename("ppl_lcdd");
 FileIsoReductionNG:=GetBinaryFilename("GRP_IsomorphismReduction");
 FileGLRS:=GetBinaryFilename("glrs");
 
-FileNudify:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"Nudify");
-FileCddToNauty:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"CddToNauty");
-FileNudifyLRS_reductionNG:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"NudifyLRS.reductionNG");
-FileNautyToGRAPE:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"NautyToGRAPE");
+
+ReadCDD_LRS_output:=function(FileName)
+    local list_lines, FAC, IsInside, line, eFAC, LStr, eStr, eVal;
+    list_lines:=ReadTextFile(FileName);
+    FAC:=[];
+    IsInside:=false;
+    for line in list_lines
+    do
+        if ends_with(line, "rational")<>fail then
+            IsInside:=true;
+        else
+            if line="end" then
+                IsInside:=false;
+            else
+                if IsInside then
+                    eFAC:=[];
+                    LStr:=SplitString(line, " ");
+                    for eStr in LStr
+                    do
+                        if Length(eStr) > 0 then
+                            eVal:=Rat(eStr);
+                            Add(eFAC, eVal);
+                        fi;
+                    od;
+                    Add(FAC, eFAC);
+                fi;
+            fi;
+        fi;
+    od;
+    return FAC;
+end;
+
 
 
 
@@ -37,7 +65,7 @@ end;
 #
 # Pass from one description to the other using RAW cdd program
 DualDescription_Rational:=function(EXT)
-  local FileExt, FileIne, FileIneNude, output, FAC, FileErr, EXTred;
+  local FileExt, FileIne, output, FAC, FileErr, EXTred;
   if Length(Set(List(EXT,Length)))<>1 then
     Error("DualDescription_Rational: Input should be vectors of the same length");
   fi;
@@ -49,8 +77,6 @@ DualDescription_Rational:=function(EXT)
   FileExt:=Filename(POLYHEDRAL_tmpdir,"CDD_Desc.ext");
   FileErr:=Filename(POLYHEDRAL_tmpdir,"CDD_Desc.err");
   FileIne:=Filename(POLYHEDRAL_tmpdir,"CDD_Desc.ine");
-  FileIneNude:=Filename(POLYHEDRAL_tmpdir,"CDD_Desc.ine.Nude"); 
-  RemoveFileIfExist(FileExt);
   output:=OutputTextFile(FileExt, true);;
   AppendTo(output, "V-representation\n");
   AppendTo(output, "begin\n");
@@ -60,15 +86,13 @@ DualDescription_Rational:=function(EXT)
   CloseStream(output);
   #
   Exec(FileLCDD, " ", FileExt, " > ", FileIne, " 2> ", FileErr);
-  Exec(FileNudify, " ", FileIne," > ", FileIneNude);
-  FAC:=List(ReadVectorFile(FileIneNude), RemoveFraction);
+  FAC:=ReadCDD_LRS_output(FileIne);
   if Length(FAC)=0 then
     Error("FAC is empty");
   fi;
   RemoveFile(FileExt);
   RemoveFile(FileErr);
   RemoveFile(FileIne);
-  RemoveFile(FileIneNude);
   return FAC;
 end;
 
@@ -169,22 +193,83 @@ WriteCddInputVertices:=function(FileName, EXT)
   CloseStream(output);
 end;
 
+ReadCddGraph:=function(FileName)
+    local list_lines, IsInside, list_lines_red, line, line_nb, LStr, n_vert, eStr, g, LAdj, LTot, LStrA, LStrB, i, eStrA, eStrB, eVal, eAdj;
+    list_lines:=ReadTextFile(FileName);
+    #
+    IsInside:=false;
+    list_lines_red:=[];
+    for line in list_lines
+    do
+        if line="begin" then
+            IsInside:=true;
+        else
+            if line="end" then
+                IsInside:=false;
+            else
+                if IsInside then
+                    Add(list_lines_red, line);
+                fi;
+            fi;
+        fi;
+    od;
+    #
+    line_nb:=list_lines_red[1];
+    LStr:=SplitString(line_nb, " ");
+    n_vert:=0;
+    for eStr in LStr
+    do
+        if Length(eStr) > 0 then
+            n_vert:=Int(eStr);
+        fi;
+    od;
+    if n_vert=0 then
+        Error("n_vert=0 is not allowed");
+    fi;
+    #
+    g:=NullGraph(Group(()), n_vert);
+    for i in [1..n_vert]
+    do
+        eStrA:=list_lines_red[i+1];
+        LStrA:=SplitString(eStrA, ":");
+        if Length(LStrA)<>2 then
+            Error("LStrA should have length 2");
+        fi;
+        LStrB:=SplitString(LStrA[2], " ");
+        LAdj:=[];
+        for eStrB in LStrB
+        do
+            if Length(eStrB) > 0 then
+                eVal:=Int(eStrB);
+                Add(LAdj, eVal);
+            fi;
+        od;
+        if Length(SplitString(LStrA[1], "-"))=2 then
+            LTot:=Difference([1..n_vert], [i]);
+            LAdj:=Difference(LTot, LAdj);
+        fi;
+        for eAdj in LAdj
+        do
+            AddEdgeOrbit(g, [i, eAdj]);
+        od;
+    od;
+    return g;
+end;
+
+
+
+
 
 
 DualDescriptionAdjacencies:=function(EXT)
-  local FileExt, FileIne, FileLog, FileErr, FileDdl, FileIneNude, FileIad, FileEad, FileIadNauty, FileEadNauty, FileIadGrape, FileEadGrape, output, RidgeGraph, SkeletonGraph, FAC;
+  local FileExt, FileIne, FileLog, FileErr, FileDdl, FileIad, FileEad, output, RidgeGraph, SkeletonGraph, FAC;
   FileExt:=Filename(POLYHEDRAL_tmpdir,"Desc.ext");
   FileIne:=Filename(POLYHEDRAL_tmpdir,"Desc.ine");
   FileLog:=Filename(POLYHEDRAL_tmpdir,"Desc.log");
   FileErr:=Filename(POLYHEDRAL_tmpdir,"Desc.err");
-  FileIneNude:=Filename(POLYHEDRAL_tmpdir,"Desc.ine.Nude");
   FileIad:=Filename(POLYHEDRAL_tmpdir,"Desc.iad");
   FileEad:=Filename(POLYHEDRAL_tmpdir,"Desc.ead");
   FileDdl:=Filename(POLYHEDRAL_tmpdir,"Desc.ddl");
-  FileIadNauty:=Filename(POLYHEDRAL_tmpdir,"Desc.iad.nauty");
-  FileEadNauty:=Filename(POLYHEDRAL_tmpdir,"Desc.ead.nauty");
-  FileIadGrape:=Filename(POLYHEDRAL_tmpdir,"Desc.iad.grape");
-  FileEadGrape:=Filename(POLYHEDRAL_tmpdir,"Desc.ead.grape");
   output:=OutputTextFile(FileExt, true);;
   AppendTo(output, "V-representation\n");
   AppendTo(output, "begin\n");
@@ -195,26 +280,16 @@ DualDescriptionAdjacencies:=function(EXT)
   AppendTo(output, "input_adjacency\n");
   CloseStream(output);
   Exec(FileSCDD, " ", FileExt, " > ", FileLog, " 2> ", FileErr);
-  Exec(FileNudify, " ", FileIne," > ", FileIneNude);
-  Exec(FileCddToNauty, " ", FileIad, " > ", FileIadNauty);
-  Exec(FileNautyToGRAPE, " ", FileIadNauty, " > ", FileIadGrape);
-  RidgeGraph:=ReadAsFunction(FileIadGrape)();
-  Exec(FileCddToNauty, " ", FileEad, " > ", FileEadNauty);
-  Exec(FileNautyToGRAPE, " ", FileEadNauty, " > ", FileEadGrape);
-  SkeletonGraph:=ReadAsFunction(FileEadGrape)();
-  FAC:=List(ReadVectorFile(FileIneNude), RemoveFraction);
+  RidgeGraph:=ReadCddGraph(FileIad);
+  SkeletonGraph:=ReadCddGraph(FileEad);
+  FAC:=ReadCDD_LRS_output(FileIne);
   RemoveFile(FileExt);
   RemoveFile(FileIne);
   RemoveFile(FileLog);
   RemoveFile(FileErr);
   RemoveFile(FileDdl);
-  RemoveFile(FileIneNude);
   RemoveFile(FileIad);
   RemoveFile(FileEad);
-  RemoveFile(FileIadNauty);
-  RemoveFile(FileEadNauty);
-  RemoveFile(FileIadGrape);
-  RemoveFile(FileEadGrape);
   if Length(FAC)=0 then
     Error("Error in DualDescriptionAdjacencies");
   fi;
@@ -241,38 +316,6 @@ __DualDescriptionPoly:=function(EXT, command, ThePath)
     return FAC;
 end;
 
-
-
-ReadLRS_output:=function(FileName)
-    local list_lines, FAC, IsInside, line, eFAC, LStr, eStr, eVal;
-    list_lines:=ReadTextFile(FileName);
-    FAC:=[];
-    IsInside:=false;
-    for line in list_lines
-    do
-        if ends_with(line, "rational")<>fail then
-            IsInside:=true;
-        else
-            if line="end" then
-                IsInside:=false;
-            else
-                if IsInside then
-                    eFAC:=[];
-                    LStr:=SplitString(line, " ");
-                    for eStr in LStr
-                    do
-                        if Length(eStr) > 0 then
-                            eVal:=Rat(eStr);
-                            Add(eFAC, eVal);
-                        fi;
-                    od;
-                    Add(FAC, eFAC);
-                fi;
-            fi;
-        fi;
-    od;
-    return FAC;
-end;
 
 
 __DualDescriptionLRS_Reduction:=function(EXT, GroupExt, ThePath)
@@ -305,7 +348,7 @@ __DualDescriptionLRS_Reduction:=function(EXT, GroupExt, ThePath)
   CloseStream(output);
   #
   Exec(FileGLRS, " ", FileExt, " > ", FileOut);
-  FAC:=ReadLRS_output(FileOut);
+  FAC:=ReadCDD_LRS_output(FileOut);
   WriteMatrixFile(FileFAC, FAC);
   #
   WriteMatrixFile(FileSupport, EXTnew);
