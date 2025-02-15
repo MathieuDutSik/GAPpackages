@@ -24,6 +24,33 @@ CVPdimension1_Integral:=function(GramMat, eV)
   return rec(ListVect:=ListVect, TheNorm:=TheNorm);
 end;
 
+ReadSV_output:=function(FileName)
+    local list_lines, list_vect, n_vect, i, LStrA, LStrB, eVect, eStr, eVal;
+    list_lines:=ReadTextFile(FileName);
+    n_vect:=Int(list_lines[1]);
+    list_vect:=[];
+    for i in [1..n_vect]
+    do
+        LStrA:=SplitString(list_lines[i+1], ":");
+        if Length(LStrA)<>2 then
+            Error("LStrA should have length 2");
+        fi;
+        LStrB:=SplitString(LStrA[2], " ");
+        eVect:=[];
+        for eStr in LStrB
+        do
+            if Length(eStr) > 0 then
+                eVal:=Int(eStr);
+                Add(eVect, eVal);
+            fi;
+        od;
+        Add(list_vect, eVect);
+    od;
+    return list_vect;
+end;
+
+
+
 
 Kernel_CVPVallentinProgramIntegral:=function(GramMat, eV, recOption)
   local eFileIn, FilePreIn, FileOut, FileGap, FileErr, test, n, output, i, j, reply, iVect, eNorm, TheNorm, ListVect, TheReply, eReply, eVint, eVdiff, TheOption, CommSV, TheComm, TheReturn, opt, eStr, fStr;
@@ -62,8 +89,7 @@ Kernel_CVPVallentinProgramIntegral:=function(GramMat, eV, recOption)
   fi;
   TheComm:=Concatenation(CommSV, " -M -c < ", eFileIn, " > ", FileOut, " 2> ", FileErr);
   Exec(TheComm);
-  Exec(FileSVRead, " ", FileOut, " > ", FileGap);
-  reply:=ReadAsFunction(FileGap)();
+  reply:=ReadSV_output(FileOut);
   for iVect in [1..Length(reply)]
   do
     eReply:=reply[iVect];
@@ -222,8 +248,7 @@ Kernel_ClosestAtDistanceVallentinProgram:=function(GramMat, eV, TheDist, recOpti
   #
   #
   #
-  Exec(FileSVRead, " ", FileOut, " > ", FileGap);
-  reply:=ReadAsFunction(FileGap)();
+  reply:=ReadSV_output(FileOut);
   Print("|reply|=", Length(reply), "\n");
   ListVect:=[];
   if eV*eV=0 then

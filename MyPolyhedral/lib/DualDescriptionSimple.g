@@ -6,11 +6,9 @@ FilePPL_LCDD:=GetBinaryFilename("ppl_lcdd");
 FileIsoReductionNG:=GetBinaryFilename("GRP_IsomorphismReduction");
 FileGLRS:=GetBinaryFilename("glrs");
 
-FileNudifyLRS:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"NudifyLRS");
 FileNudify:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"Nudify");
 FileCddToNauty:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"CddToNauty");
 FileNudifyLRS_reductionNG:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"NudifyLRS.reductionNG");
-FileNudifyCDD_reductionNG:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"NudifyCDD.reductionNG");
 FileNautyToGRAPE:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"NautyToGRAPE");
 
 
@@ -245,10 +243,40 @@ end;
 
 
 
+ReadLRS_output:=function(FileName)
+    local list_lines, FAC, IsInside, line, eFAC, LStr, eStr, eVal;
+    list_lines:=ReadTextFile(FileName);
+    FAC:=[];
+    IsInside:=false;
+    for line in list_lines
+    do
+        if ends_with(line, "rational")<>fail then
+            IsInside:=true;
+        else
+            if line="end" then
+                IsInside:=false;
+            else
+                if IsInside then
+                    eFAC:=[];
+                    LStr:=SplitString(line, " ");
+                    for eStr in LStr
+                    do
+                        if Length(eStr) > 0 then
+                            eVal:=Rat(eStr);
+                            Add(eFAC, eVal);
+                        fi;
+                    od;
+                    Add(FAC, eFAC);
+                fi;
+            fi;
+        fi;
+    od;
+    return FAC;
+end;
 
 
 __DualDescriptionLRS_Reduction:=function(EXT, GroupExt, ThePath)
-  local eSub, EXT2, EXT3, FileExt, FileOut, FileFAC, FileGroup, FileSupport, FileOutput, FileError, output, DimEXT, test, EXTnew, ListInc;
+  local eSub, EXT2, EXT3, FileExt, FileOut, FileFAC, FAC, FileGroup, FileSupport, FileOutput, FileError, output, DimEXT, test, EXTnew, ListInc;
 #  Print("Entering polyhedral function LRS_Reduction |GRP|=", Order(GroupExt), "\n");
   FileExt:=Concatenation(ThePath, "LRS_Project.ext");
   FileOut:=Concatenation(ThePath, "LRS_Project.out");
@@ -257,13 +285,6 @@ __DualDescriptionLRS_Reduction:=function(EXT, GroupExt, ThePath)
   FileSupport:=Concatenation(ThePath, "LRS_Project.supo");
   FileOutput:=Concatenation(ThePath, "LRS_Project.output");
   FileError:=Concatenation(ThePath, "LRS_Project.error");
-  RemoveFileIfExist(FileExt);
-  RemoveFileIfExist(FileOut);
-  RemoveFileIfExist(FileFAC);
-  RemoveFileIfExist(FileGroup);
-  RemoveFileIfExist(FileSupport);
-  RemoveFileIfExist(FileOutput);
-  RemoveFileIfExist(FileError);
   #
   output:=OutputTextFile(FileExt, true);
   eSub:=__ProjectionFrame(EXT);
@@ -284,7 +305,8 @@ __DualDescriptionLRS_Reduction:=function(EXT, GroupExt, ThePath)
   CloseStream(output);
   #
   Exec(FileGLRS, " ", FileExt, " > ", FileOut);
-  Exec(FileNudifyLRS_reductionNG, " ", FileFAC, " < ", FileOut);
+  FAC:=ReadLRS_output(FileOut);
+  WriteMatrixFile(FileFAC, FAC);
   #
   WriteMatrixFile(FileSupport, EXTnew);
   #

@@ -1,4 +1,3 @@
-FileCompCovDens:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"ComputeCoveringDensity");
 FileCompEngelSymbol:=GetBinaryFilename("POLY_ComputeEngelSymbol");
 FileFaceLattice:=GetBinaryFilename("POLY_FaceLatticeDirect");
 
@@ -6036,26 +6035,54 @@ end;
 
 
 ComputeCoveringDensityFromDimDetCov:=function(TheDim, TheDet, TheCov)
-  local TheFileInput, TheFileOutput, output, TheCommand, TheResult;
-  TheFileInput:=Filename(POLYHEDRAL_tmpdir,"covdensityInput.txt");
-  TheFileOutput:=Filename(POLYHEDRAL_tmpdir,"covdensityOutput.txt");
-  RemoveFileIfExist(TheFileInput);
-  RemoveFileIfExist(TheFileOutput);
-  output:=OutputTextFile(TheFileInput, true);
-  AppendTo(output, TheDim, "\n");
-  AppendTo(output, TheDet, "\n");
-  AppendTo(output, TheCov, "\n");
-  CloseStream(output);
-  #
-  TheCommand:=Concatenation(FileCompCovDens, " ", TheFileInput, " ", TheFileOutput);
-  Exec(TheCommand);
-  TheResult:=ReadAsFunction(TheFileOutput)();
-  RemoveFileIfExist(TheFileInput);
-  RemoveFileIfExist(TheFileOutput);
-  TheResult.TheDim:=TheDim;
-  TheResult.TheDet:=TheDet;
-  TheResult.TheCov:=TheCov;
-  return TheResult;
+    local TheCovRad, TheDetLattice, val, i, quot, red, pi, res, half_d, powpi, fact, VolumeBall, CovDens;
+    TheCovRad:=Sqrt(TheCov + 0.0);
+    TheDetLattice:=Sqrt(TheDet + 0.0);
+    #
+    val:=1.0;
+    for i in [1..TheDim]
+    do
+        val:=val * TheCov;
+    od;
+    quot:=val / TheDet;
+    red:=Sqrt(quot);
+    #
+    pi:=4 * Atan(1.0);
+    res:=TheDim mod 2;
+    if res=0 then
+        half_d:=TheDim/2;
+        powpi:=1.0;
+        fact:=1.0;
+        for i in [1..half_d]
+        do
+            powpi:=powpi * pi;
+            fact:=fact * i;
+        od;
+        VolumeBall:=powpi / fact;
+    else
+        half_d:=(TheDim - 1)/2;
+        powpi:=1.0;
+        for i in [1..half_d]
+        do
+            powpi:=powpi * pi;
+        od;
+        fact:=1.0;
+        for i in [0..half_d]
+        do
+            fact:=fact * (0.5 + i);
+        od;
+        VolumeBall:=powpi / fact;
+    fi;
+    #
+    CovDens:=red * VolumeBall;
+    return rec(CovDensityNormalized:=red,
+               CovDensity:=CovDens,
+               CoveringRadius:=TheCovRad,
+               DeterminantLattice:=TheDetLattice,
+               VolumeBall:=VolumeBall,
+               TheDim:=TheDim,
+               TheDet:=TheDet,
+               TheCov:=TheCov);
 end;
 
 GetCentralDelaunay:=function(TheGramMat, InvariantBasis, PointGRP)
@@ -6400,7 +6427,8 @@ DelaunayComputationStandardFunctions:=function(TheGramMat)
   n:=Length(TheGramMat);
   InvariantBasis:=__ExtractInvariantZBasisShortVectorNoGroup(TheGramMat);
   Print("DelaunayComputationStandardFunctions, |InvariantBasis|=", Length(InvariantBasis), " det=", AbsInt(DeterminantMat(BaseIntMat(InvariantBasis))), "\n");
-  PointGRP:=ArithmeticAutomorphismMatrixFamily_HackSouvignier_V2("", [TheGramMat], InvariantBasis);
+  PointGRP:=ArithmeticAutomorphismGroup([TheGramMat]);
+#  PointGRP:=ArithmeticAutomorphismMatrixFamily_HackSouvignier_V2("", [TheGramMat], InvariantBasis);
   RecSVR:=GetRecSVR(TheGramMat, PointGRP);
   ThePrefix:=Filename(POLYHEDRAL_tmpdir, "DualDesc/");
   Exec("mkdir -p ", ThePrefix);
