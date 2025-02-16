@@ -200,13 +200,39 @@ AdjacencyComputation:=function(EXT)
 end;
 
 
+ReadRedcheckOutput:=function(FileName, n_vert)
+    local list_lines, line, LStrA, LRed, LStrB, eStrB, val, LIrred;
+    list_lines:=ReadTextFile(FileName);
+    for line in list_lines
+    do
+        LStrA:=SplitString(line, ":");
+        if Length(LStrA)=2 then
+            if LStrA[1]="Redundant rows are" then
+                LRed:=[];
+                LStrB:=SplitString(LStrA[2], " ");
+                for eStrB in LStrB
+                do
+                    if Length(eStrB) > 0 then
+                        val:=Int(eStrB);
+                        Add(LRed, val);
+                    fi;
+                od;
+                LIrred:=Difference([1..n_vert], LRed);
+                return LIrred;
+            fi;
+        fi;
+    od;
+end;
+
+
+
+
 
 RedundancyCheckOriginal_Rational:=function(EXTinp)
-  local EXT, FileExt, FileError, FileRed, FileRead, output, TheRet;
+  local EXT, FileExt, FileError, FileRed, output, TheRet;
   FileExt:=Filename(POLYHEDRAL_tmpdir,"Desc.ext");
   FileError:=Filename(POLYHEDRAL_tmpdir,"Desc.error");
   FileRed:=Filename(POLYHEDRAL_tmpdir,"Desc.redcheck");
-  FileRead:=Filename(POLYHEDRAL_tmpdir,"Desc.read");
   EXT:=RemoveFractionMatrix(EXTinp);
   RemoveFileIfExist(FileExt);
   output:=OutputTextFile(FileExt, true);;
@@ -218,13 +244,11 @@ RedundancyCheckOriginal_Rational:=function(EXTinp)
   CloseStream(output);
   #
   Exec(FileRedcheck, " ", FileExt, " 2> ", FileError, " > ", FileRed);
-  Exec(FileRedcheckRead, " ", FileRed," > ", FileRead);
-  TheRet:=ReadAsFunction(FileRead)();
+  TheRet:=ReadRedcheckOutput(FileRed, Length(EXT));
   RemoveFile(FileExt);
   RemoveFile(FileError);
   RemoveFile(FileRed);
-  RemoveFile(FileRead);
-  return Difference([1..Length(EXT)], TheRet);
+  return TheRet;
 end;
 
 
