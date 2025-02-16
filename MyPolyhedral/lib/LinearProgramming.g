@@ -12,7 +12,6 @@ FileLpsolve:=GetBinaryFilename("lp_solve");
 
 Filelpcddcleaner:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"lpcddcleaner");
 FileRedcheckRead:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"redcheckRead");
-FileAdjacencyRead:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"adjacencyRead");
 FileLpsolveExtractSolution:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"LPSOLVE_ExtractSolution");
 FileGLPSOL_ExtractXsol:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"GLPSOL_ExtractXsol");
 
@@ -108,14 +107,82 @@ CPP_RedundancyReductionClarksonBlocks:=function(EXT, ListBlocks)
 end;
 
 
+ReadCddAdjacency:=function(FileName)
+    local list_lines, IsInside, list_lines_red, n_begin, line, line_nb, LStr, n_vert, eStr, g, LAdj, LTot, LStrA, LStrB, i, eStrA, eStrB, eVal, eAdj;
+    list_lines:=ReadTextFile(FileName);
+    #
+    IsInside:=false;
+    list_lines_red:=[];
+    n_begin:=0;
+    for line in list_lines
+    do
+        if line="begin" then
+            n_begin:=n_begin + 1;
+            if n_begin=3 then
+                IsInside:=true;
+            fi;
+        else
+            if line="end" then
+                IsInside:=false;
+            else
+                if IsInside then
+                    Add(list_lines_red, line);
+                fi;
+            fi;
+        fi;
+    od;
+    #
+    line_nb:=list_lines_red[1];
+    LStr:=SplitString(line_nb, " ");
+    n_vert:=0;
+    for eStr in LStr
+    do
+        if Length(eStr) > 0 then
+            n_vert:=Int(eStr);
+        fi;
+    od;
+    if n_vert=0 then
+        Error("n_vert=0 is not allowed");
+    fi;
+    #
+    g:=NullGraph(Group(()), n_vert);
+    for i in [1..n_vert]
+    do
+        eStrA:=list_lines_red[i+1];
+        LStrA:=SplitString(eStrA, ":");
+        if Length(LStrA)<>2 then
+            Error("LStrA should have length 2");
+        fi;
+        LStrB:=SplitString(LStrA[2], " ");
+        LAdj:=[];
+        for eStrB in LStrB
+        do
+            if Length(eStrB) > 0 then
+                eVal:=Int(eStrB);
+                Add(LAdj, eVal);
+            fi;
+        od;
+        if Length(SplitString(LStrA[1], "-"))=2 then
+            LTot:=Difference([1..n_vert], [i]);
+            LAdj:=Difference(LTot, LAdj);
+        fi;
+        for eAdj in LAdj
+        do
+            AddEdgeOrbit(g, [i, eAdj]);
+        od;
+    od;
+    return g;
+end;
+
+
+
 
 
 AdjacencyComputation:=function(EXT)
-  local FileExt, FileError, FileRed, FileRead, output, TheRet;
+  local FileExt, FileError, FileRed, output, TheRet;
   FileExt:=Filename(POLYHEDRAL_tmpdir,"Desc.ext");
   FileError:=Filename(POLYHEDRAL_tmpdir,"Desc.error");
   FileRed:=Filename(POLYHEDRAL_tmpdir,"Desc.redcheck");
-  FileRead:=Filename(POLYHEDRAL_tmpdir,"Desc.read");
   #
   output:=OutputTextFile(FileExt, true);;
   AppendTo(output, "V-representation\n");
@@ -126,11 +193,10 @@ AdjacencyComputation:=function(EXT)
   CloseStream(output);
   #
   Exec(FileAdjacency, " ", FileExt, " 2> ", FileError, " > ", FileRed);
-  Exec(FileAdjacencyRead, " ", FileRed," > ", FileRead);
-  TheRet:=ReadAsFunction(FileRead)();
+  TheRet:=ReadCddAdjacency(FileRed);
   RemoveFile(FileExt);
   RemoveFile(FileError);
-  RemoveFile(FileRed);  RemoveFile(FileRead);
+  RemoveFile(FileRed);
   return TheRet;
 end;
 
