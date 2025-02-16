@@ -741,12 +741,12 @@ CanonicalRepresentativeVertexColoredGraphAdjList:=function(ListAdjacency, ThePar
   if IsExistingFile(FileDR)=false or IsExistingFile(FileError)=false then
       Error("We have FileDR or FileError missing");
   fi;
+  if IsEmptyFile(FileError)=false then
+    Error("Nonempty error file in CanonicalRepresentativeVertexColoredGraphAdjList");
+  fi;
   Exec(FileNautyReadCanon, " < ", FileDR, " > ", FileRead);
   if IsExistingFile(FileRead)=false then
       Error("We have FileRead missing");
-  fi;
-  if IsEmptyFile(FileError)=false then
-    Error("Nonempty error file in CanonicalRepresentativeVertexColoredGraphAdjList");
   fi;
   CanonicalEList:=ReadAsFunction(FileRead)();
   CanonicalList:=List(CanonicalEList, x->x+1);
