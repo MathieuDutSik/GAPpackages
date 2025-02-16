@@ -1,5 +1,4 @@
 BindGlobal("POLYHEDRAL_tmpdir", DirectoryTemporary());
-FileConvertListFileAsVector:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"ConvListFile");
 
 
 
@@ -460,12 +459,7 @@ LSoperation:=function(TheComm)
   TheCommFull:=Concatenation(TheComm, " > ", FileList);
   Exec(TheCommFull);
   #
-  FileFinal:=Filename(POLYHEDRAL_tmpdir, "ListFinal");
-  TheCommand:=Concatenation(FileConvertListFileAsVector, " ", FileList, " > ", FileFinal);
-  Exec(TheCommand);
-  #
-  TheListFinal:=ReadAsFunction(FileFinal)();
-  RemoveFileIfExist(FileFinal);
+  TheListFinal:=ReadTextFile(FileList);
   RemoveFileIfExist(FileList);
   return TheListFinal;
 end;
