@@ -10,7 +10,6 @@ FileGlpsol:=GetBinaryFilename("glpsol");
 FileLpsolve:=GetBinaryFilename("lp_solve");
 
 
-Filelpcddcleaner:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"lpcddcleaner");
 FileRedcheckRead:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"redcheckRead");
 FileLpsolveExtractSolution:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"LPSOLVE_ExtractSolution");
 FileGLPSOL_ExtractXsol:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"GLPSOL_ExtractXsol");
@@ -1125,11 +1124,6 @@ TestAdjacency:=function(V1, V2, EXT, BoundingSet)
     return true;
   fi;
   return false;
-#  if A="non zero optimum\n" then
-#    return true;
-#  else
-#    return false;
-#  fi;
 end;
 
 
@@ -1166,13 +1160,11 @@ end;
 
 __RepresentativeOrbitTwoSet:=function(GroupExt, ConsideredSet)
   local ListORB, OrbitEdgeSet, Stab, eVert, iOrb, jOrb, PartialListCand, FuncInsert, U, eO2, nbORB, fVert;
-#  Print("Beginning of __RepresentativeOrbitTwoSet\n");
   ListORB:=Orbits(GroupExt, ConsideredSet, OnPoints);
   nbORB:=Length(ListORB);
   OrbitEdgeSet:=[];
   for iOrb in [1..nbORB]
   do
-#    Print("iOrb=", iOrb, " / ", nbORB, "\n");
     eVert:=ListORB[iOrb][1];
     Stab:=Stabilizer(GroupExt, eVert, OnPoints);
     for jOrb in [iOrb..nbORB]
@@ -1463,9 +1455,7 @@ KernelLinearDeterminedByInequalities:=function(FAC)
   local n, nbFac, eReply, ListIdx, NSP, FACproj, FACprojCor, TheSpann, TheSpannHigh;
   n:=Length(FAC[1]);
   nbFac:=Length(FAC);
-#  Print("Before call to SearchPositiveRelationSimple\n");
   eReply:=SearchPositiveRelationSimple(FAC);
-#  Print("After call to SearchPositiveRelationSimple\n");
   if eReply=false then
     return IdentityMat(n);
   else
@@ -1802,15 +1792,9 @@ GLPK_LinearProgrammingPlusEqua_General_SparseMat:=function(Aspmat, ListAconst, B
   CloseStream(output);
   #
   TheCommand1:=Concatenation(FileGlpsol, RecOpt.optimString, " --output ", FileOut, " --math ", FileMath, " > ", FileErr1, " 2> ", FileErr2);
-#  Print("TheCommand1=", TheCommand1, "\n");
   Exec(TheCommand1);
-#  Print(NullMat(5));
   #
   TheCommand2:=Concatenation(FileGLPSOL_ExtractXsol, " ", FileOut, " > ", FileOutRes);
-#  Print("TheCommand2=", TheCommand2, "\n");
-#  if StrType="integer" then
-#    Print(NullMat(5));
-#  fi;
   Exec(TheCommand2);
   #
   TheResult:=ReadAsFunction(FileOutRes)();
@@ -1992,7 +1976,6 @@ GLPK_IntegerLinearProgramming:=function(ListIneq, ToBeMinimized)
   if IsBound(TheLP2.eVect) then
     TheLP2.TheVert:=Concatenation([1], TheLP2.eVect);
   fi;
-#  Print(NullMat(5));
   return TheLP2;
 end;
 
@@ -2016,7 +1999,6 @@ LPSOLVE_LinearProgramming:=function(ListIneq, ToBeMinimized)
 
   nbVar:=Length(ToBeMinimizedRed)-1;
   nbIneq:=Length(ListIneqRed);
-#  Print("nbVar=", nbVar, "  nbIneq=", nbIneq, "\n");
   output:=OutputTextFile(FileIn, true);
   AppendTo(output, "min: ");
   for iVar in [1..nbVar]
@@ -2243,7 +2225,6 @@ GetBestSolution_L1_version2:=function(ListXweight, TheMat, TheVect)
   if TheMat.nbCol<>dimB then
     Error("Wrong input matrices");
   fi;
-#  Print("V2: dimX=", dimX, " dimB=", dimB, "\n");
   if Norm_L1(TheVect)=0 then
     return ListWithIdenticalEntries(dimX, 0);
   fi;
@@ -2303,9 +2284,6 @@ GetAMPSolution_ListNonZero:=function(TheMat, TheVect)
   FileSpMat:=Filename(POLYHEDRAL_tmpdir,"AMP_solver_spmat");
   FileVect:=Filename(POLYHEDRAL_tmpdir,"AMP_solver_vect");
   FileOut:=Filename(POLYHEDRAL_tmpdir,"AMP_solver_out");
-#  Print("FileSpMat=", FileSpMat, "\n");
-#  Print("FileVect=", FileVect, "\n");
-#  Print("FileOut=", FileOut, "\n");
   RemoveFileIfExist(FileSpMat);
   RemoveFileIfExist(FileVect);
   RemoveFileIfExist(FileOut);
@@ -2456,6 +2434,5 @@ FractionalChromaticNumber:=function(GRA)
   Print("Linear program has been formed\n");
   TheRes:=GLPK_LinearProgramming_Secure(ListIneq, ToBeMinimized);
 #  TheRes:=LinearProgramming_Rational(ListIneq, ToBeMinimized);
-#  Print(NullMat(5));
   return TheRes;
 end;

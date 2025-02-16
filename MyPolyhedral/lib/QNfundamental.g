@@ -1,7 +1,3 @@
-FileTestlp2_QN:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"testlp2_QN");
-FileRedcheck_QN:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"redcheck_QN");
-FilelpcddcleanerQN:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"lpcddcleanerQN");
-
 # we use here the presentation of the field Q(\sqrt(N)) as
 # a set of pairs [p,q] corresponding to p+q\sqrt(N)
 
