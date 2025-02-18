@@ -208,12 +208,13 @@ INDEF_FORM_EichlerCriterion_TwoHyperplanesEven:=function(Qmat)
     ListClasses:=GetTranslationClasses(Gmat);
     GRPstart:=Group([IdentityMat(n)]);
     SetListClassesOrbitwise:=function(GRPmatr)
-        local ListClassesExt, ListMatrGens, iMatr, GetPosition, ListPermGens, eMatrGen, eList, GRPperm, O, ListRepr;
+        local nb_class, ListClassesExt, ListMatrGens, iMatr, GetPosition, ListPermGens, eMatrGen, eList, GRPperm, O, ListRepr, ePerm;
         GRPstart:=GRPmatr;
         ListClassesExt:=List(ListClasses, x->Concatenation([0,0,0,0],x));
+        nb_class:=Length(ListClassesExt);
         GetPosition:=function(eVect)
             local i;
-            for i in [1..Length(ListClassesExt)]
+            for i in [1..nb_class]
             do
                 if SolutionIntMat(Qmat, ListClassesExt[i] - eVect)<>fail then
                     return i;
@@ -227,8 +228,12 @@ INDEF_FORM_EichlerCriterion_TwoHyperplanesEven:=function(Qmat)
         do
             Print("iMatr=", iMatr, " / ", Length(ListMatrGens), "\n");
             eMatrGen:=ListMatrGens[iMatr];
-            eList:=List(ListClassesExt, x->GetPosition(x * eMatrGen));
-            Add(ListPermGens, PermList(eList));
+            if eMatrGen * Qmat * TransposedMat(eMatrGen) <> Qmat then
+                Error("eMatrGen does not preserve Qmat");
+            fi;
+            eList:=List(ListClassesExt, x->GetPosition(x * TransposedMat(eMatrGen)));
+            ePerm:=PermList(eList);
+            Add(ListPermGens, ePerm);
         od;
         GRPperm:=Group(ListPermGens);
         O:=Orbits(GRPperm, [1..Length(ListClasses)], OnPoints);
@@ -539,25 +544,61 @@ end;
 
 
 
+IsEichlerReduced:=function(Qmat)
+    local n, i, j, LIdx, jCrit;
+    n:=Length(Qmat);
+    for i in [1..4]
+    do
+        for j in [5..n]
+        do
+            if Qmat[i][j]<>0 then
+                return false;
+            fi;
+        od;
+    od;
+    LIdx:=[2,1,4,3];
+    for i in [1..4]
+    do
+        jCrit:=LIdx[i];
+        for j in [1..4]
+        do
+            if j<>jCrit then
+                if Qmat[i][j]<>0 then
+                    return false;
+                fi;
+            fi;
+        od;
+    od;
+    return true;
+end;
+
+
+
 
 GetEichlerHyperplaneBasis:=function(Qmat)
-    local Basis1, NSP, Qmat2, Basis2, HyperBasis, NSP2, FullBasis;
+    local test_eichler, n, Basis1, NSP, Qmat2, Basis2, HyperBasis, NSP2, FullBasis;
+    test_eichler:=IsEichlerReduced(Qmat);
+    Print("GetEichlerHyperplaneBasis, test_eichler=", test_eichler, "\n");
+    if test_eichler then
+        n:=Length(Qmat);
+        return IdentityMat(n);
+    fi;
     Print("GetEichlerHyperplaneBasis, step 1\n");
     PrintArray(Qmat);
 #    PrintArray(Qmat);
     Basis1:=GetHyperbolicPlane(Qmat);
-#    Print("GetEichlerHyperplaneBasis, step 2\n");
+    Print("GetEichlerHyperplaneBasis, step 2\n");
     NSP:=NullspaceIntMat(TransposedMat(Basis1 * Qmat));
-#    Print("GetEichlerHyperplaneBasis, step 3\n");
+    Print("GetEichlerHyperplaneBasis, step 3\n");
     Qmat2:=NSP * Qmat * TransposedMat(NSP);
-#    Print("GetEichlerHyperplaneBasis, step 4\n");
-#    PrintArray(Qmat2);
+    Print("GetEichlerHyperplaneBasis, step 4\n");
+    PrintArray(Qmat2);
     Basis2:=GetHyperbolicPlane(Qmat2);
-#    Print("GetEichlerHyperplaneBasis, step 5\n");
+    Print("GetEichlerHyperplaneBasis, step 5\n");
     HyperBasis:=Concatenation(Basis1, Basis2 * NSP);
-#    Print("GetEichlerHyperplaneBasis, step 6\n");
+    Print("GetEichlerHyperplaneBasis, step 6\n");
     NSP2:=NullspaceIntMat(TransposedMat(HyperBasis * Qmat));
-#    Print("GetEichlerHyperplaneBasis, step 7\n");
+    Print("GetEichlerHyperplaneBasis, step 7\n");
     FullBasis:=Concatenation(HyperBasis, NSP2);
     Print("GetEichlerHyperplaneBasis, step 8\n");
     return FullBasis;

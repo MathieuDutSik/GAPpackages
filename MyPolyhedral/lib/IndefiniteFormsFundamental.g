@@ -59,7 +59,11 @@ INDEF_FindIsotropic:=function(M)
     RemoveFileIfExist(FileI);
     RemoveFileIfExist(FileO);
     RemoveFileIfExist(FileE);
-    return TheReply;
+    if TheReply.has_isotropic then
+        return TheReply.V;
+    else
+        return fail;
+    fi;
 end;
 
 
