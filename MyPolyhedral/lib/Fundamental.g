@@ -2275,9 +2275,20 @@ ReadMatrixFile:=function(eFile)
     end;
     file:=InputTextFile(eFile);
     line:=ReadLineRed(file);
+    if line=fail then
+        Error("We should have been able to read a line");
+    fi;
     LStr:=SplitString(line, " ");
+    if Length(LStr)<>2 then
+        Print("line=", line, " |LStr|=", Length(LStr), "\n");
+        Error("LStr should have length 2");
+    fi;
     nbRow:=Int(LStr[1]);
     nbCol:=Int(LStr[2]);
+    if nbRow=fail or nbCol=fail then
+        Print("nbRow=", nbRow, " nbCol=", nbCol, "\n");
+        Error("Failed to read the nbRow / nbCol correctly");
+    fi;
     TheMat:=[];
     for iRow in [1..nbRow]
     do
@@ -2297,6 +2308,7 @@ ReadMatrixFile:=function(eFile)
         fi;
         Add(TheMat, eLine);
     od;
+    CloseStream(file);
     return TheMat;
 end;
 
