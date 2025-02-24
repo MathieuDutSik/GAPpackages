@@ -2314,8 +2314,7 @@ end;
 
 
 
-
-SYMPOL_PrintGroupStream:=function(output, n, GRP)
+WriteGroup:=function(output, n, GRP)
   local ListGen, eGen, i, j;
   ListGen:=GeneratorsOfGroup(GRP);
   AppendTo(output, n, " ", Length(ListGen), "\n");
@@ -2338,7 +2337,7 @@ SYMPOL_PrintGroup:=function(eFile, n, GRP)
     local output;
     RemoveFileIfExist(eFile);
     output:=OutputTextFile(eFile, true);
-    SYMPOL_PrintGroupStream(output, n, GRP);
+    WriteGroup(output, n, GRP);
     CloseStream(output);
 end;
 

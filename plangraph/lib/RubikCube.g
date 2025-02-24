@@ -1,5 +1,5 @@
 RubikCubeFormalism:=function(PL)
-  local ListFaces, FuncCreateGenerators, List1, List2, List3, List4, GRP1, GRP2, GRP3, GRP4, phi12, phi23, phi34;
+  local ListFaces, FuncCreateGenerators, List1, List2, List3, List4, GRP1, GRP2, GRP3, GRP4, phi12, phi23, phi34, eRec1, eRec2, eRec3, eRec4, nb1, nb2, nb3, nb4;
   ListFaces:=__FaceSet(PL);
   FuncCreateGenerators:=function(TheVect)
     local ListVertex, iFac, eFace, iDE, eDE, rDE, FuncFind, ListGenerators, LV1, LV2, LV3, LV4, LV5, LV6, LV7, fFace, eList, iVertex, i;
@@ -96,16 +96,28 @@ RubikCubeFormalism:=function(PL)
       od;
       Add(ListGenerators, PermList(eList));
     od;
-    return ListGenerators;
+    return rec(ListGenerators:=ListGenerators, nb:=Length(ListVertex));
   end;
-  List1:=FuncCreateGenerators([1,1,0,0]);
+  eRec1:=FuncCreateGenerators([1,1,0,0]);
+  List1:=eRec1.ListGenerators;
+  nb1:=eRec1.nb;
   GRP1:=Group(List1);
-  List2:=FuncCreateGenerators([1,0,1,0]);
+  #
+  eRec2:=FuncCreateGenerators([1,0,1,0]);
+  List2:=eRec2.ListGenerators;
+  nb2:=eRec2.nb;
   GRP2:=Group(List2);
-  List3:=FuncCreateGenerators([1,0,0,0]);
+  #
+  eRec3:=FuncCreateGenerators([1,0,0,0]);
+  List3:=eRec3.ListGenerators;
+  nb3:=eRec3.nb;
   GRP3:=Group(List3);
-  List4:=FuncCreateGenerators([0,0,0,1]);
+  #
+  eRec4:=FuncCreateGenerators([0,0,0,1]);
+  List4:=eRec4.ListGenerators;
+  nb4:=eRec4.nb;
   GRP4:=Group(List4);
+  #
   phi12:=GroupHomomorphismByImages(GRP1, GRP2, List1, List2);
   phi23:=GroupHomomorphismByImages(GRP2, GRP3, List2, List3);
   phi34:=GroupHomomorphismByImages(GRP3, GRP4, List3, List4);
@@ -113,6 +125,10 @@ RubikCubeFormalism:=function(PL)
              GRP2:=GRP2,
              GRP3:=GRP3,
              GRP4:=GRP4,
+             nb1:=nb1,
+             nb2:=nb2,
+             nb3:=nb3,
+             nb4:=nb4,
              phi12:=phi12,
              phi23:=phi23,
              phi34:=phi34);
