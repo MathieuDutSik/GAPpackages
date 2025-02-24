@@ -2269,8 +2269,11 @@ ReadMatrixFile:=function(eFile)
     ReadLineRed:=function(file)
         local line, n_char, lineRed;
         line:=ReadLine(file);
-        n_char:=Length(line) - 1;
-        lineRed:=line{[1..n_char]};
+        n_char:=Length(line);
+        if line[n_char]<>'\n' then
+            return line;
+        fi;
+        lineRed:=line{[1..n_char-1]};
         return lineRed;
     end;
     file:=InputTextFile(eFile);
@@ -2303,6 +2306,9 @@ ReadMatrixFile:=function(eFile)
             fi;
         od;
         if Length(eLine)<>nbCol then
+            Print("eFile=", eFile, "\n");
+            Print("iRow=", iRow, "\n");
+            Print("line=", line, "\n");
             Print("|eLine|=", Length(eLine), " nbCol=", nbCol, "\n");
             Error("Inconsistent length of vector");
         fi;
