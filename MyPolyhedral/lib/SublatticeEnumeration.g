@@ -1,4 +1,3 @@
-FileGraysonDiagram:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"GraysonDiagram");
 # returns the Hermite constant at the n-th power.
 # that is the minimum of min(A)^n/det(A).
 GetHermitePower:=function(n)
@@ -665,18 +664,56 @@ ProcEnum_SublatticeEnumeration:=function()
 end;
 
 
-CreateFileDiagram:=function(n, ListDet, eFileOUT)
-  local eFileIN, output, i;
-  eFileIN:=Filename(POLYHEDRAL_tmpdir,"Grayson.in");
-  RemoveFileIfExist(eFileIN);
-  output:=OutputTextFile(eFileIN, true);;
-  AppendTo(output, n, "\n");
-  for i in [1..n]
-  do
-    AppendTo(output, ListDet[i], "\n");
-  od;
-  CloseStream(output);
-  Exec(FileGraysonDiagram, " ", eFileIN," > ", eFileOUT);
+CreateDataDiagram:=function(n, ListDet)
+    local eDetTotal, ListQuant, eQuant, IsStable, i, eDetI, ListInfo, eVis, j, strVis, eVal, eInfo;
+    eDetTotal:=ListDet[n];
+    ListQuant:=[];
+    IsStable:=true;
+    for i in [0..n]
+    do
+        if i=0 then
+            eQuant:=0;
+        else
+            eDetI:=ListDet[i];
+            eQuant:=Log(eDetI + 0.0) / i - Log(eDetTotal + 0.0) / n;
+        fi;
+        if IsStable < 0.0 then
+            IsStable:=false;
+        fi;
+        Add(ListQuant, eQuant);
+    od;
+    #
+    ListInfo:=[];
+    for i in [0..n]
+    do
+        if i > 0 and i < n then
+            eVis:=true;
+            for j in [1..i-1]
+            do
+                eVal:=ListQuant[i+1] * (j / i);
+                if ListQuant[j+1] < eVal then
+                    eVis:=false;
+                fi;
+            od;
+            for j in [i+1..n-1]
+            do
+                eVal:=ListQuant[i+1] * ((n - j) / (n - i));
+                if ListQuant[j+1] < eVal then
+                    eVis:=false;
+                fi;
+            od;
+            if eVis then
+                strVis:="visible";
+            else
+                strVis:="not visible";
+            fi;
+        else
+            strVis:="irr";
+        fi;
+        eInfo:=rec(visible:=strVis, eQuant:=ListQuant[i+1], i:=i);
+        Add(ListInfo, eInfo);
+    od;
+    return rec(ListInfo:=ListInfo, IsStable:=IsStable);
 end;
 
 
