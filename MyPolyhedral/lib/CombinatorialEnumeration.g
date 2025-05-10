@@ -1,5 +1,5 @@
 FileEnumKset:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"COMB_EnumerationKset");
-FileLibexactSolve:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"libexact_solve");
+FileLibexactSolve:=GetBinaryFilename("libexact_solve");
 FileLibexactConvertGAP:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"libexact_convertGAP");
 
 #

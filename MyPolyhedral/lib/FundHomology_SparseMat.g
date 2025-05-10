@@ -1,16 +1,16 @@
 # The "smith" program is obtained by compiling the example smith.C
 # in linbox-1.3.2
-FileCompLinboxSmith:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"smith");
-FileCompLinboxRank:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"rank");
-FileCompLinboxSolve:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"solve");
-FileCompLinboxSmithvalence:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"smithvalence");
+FileCompLinboxSmith:=GetBinaryFilename("smith");
+FileCompLinboxRank:=GetBinaryFilename("rank");
+FileCompLinboxSolve:=GetBinaryFilename("solve");
+FileCompLinboxSmithvalence:=GetBinaryFilename("smithvalence");
+FileCompLinboxNullspace:=GetBinaryFilename("nullspacebasis");
+FileCompLinboxNullspaceRat:=GetBinaryFilename("nullspacebasis_rat");
+FileCompLinboxNullspaceRank:=GetBinaryFilename("nullspacebasis_rank");
 FileCompLinboxSmithToGap:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"SmithToGap");
 FileCompLinboxRankToGap:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"RankToGap");
 FileCompLinboxSmithvalenceToGap:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"SmithvalenceToGap");
-FileCompLinboxNullspace:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"nullspacebasis");
-FileCompLinboxNullspaceRat:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"nullspacebasis_rat");
 FileCompLinboxNullspaceRead:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"nullspacebasisToGap");
-FileCompLinboxNullspaceRank:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"nullspacebasis_rank");
 
 
 
