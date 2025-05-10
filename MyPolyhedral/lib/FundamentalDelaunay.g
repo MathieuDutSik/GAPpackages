@@ -1,5 +1,3 @@
-FileNullspaceMat:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"NullspaceMat.prog");
-
 FindDelaunayPolytope_Rational:=function(GramMat)
   local GramMatInt, n, ListCosetRed, ListCosetDiff, ListRelevantPoints, i, V, DefiningInequality, TheRandomDirection, TheLP, eVect, TheNorm, TheCVP, ListInequalities, eEnt, RetEXT;
   Print("Beginning of FindDelaunayPolytope\n");
@@ -275,31 +273,6 @@ end;
 
 
 
-
-#
-# actually we put a transposed here
-GetTransposeNullspaceMat:=function(EXT)
-  local TheDim, FileInput, FileOutput, output, TheRead, ListMat;
-  TheDim:=Length(EXT[1]);
-  FileInput:=Filename(POLYHEDRAL_tmpdir,"NullSpa.input");
-  FileOutput:=Filename(POLYHEDRAL_tmpdir,"NullSpa.output");
-  RemoveFileIfExist(FileInput);
-  RemoveFileIfExist(FileOutput);
-  TheDim:=Length(EXT[1]);
-  output:=OutputTextFile(FileInput, true);
-  AppendTo(output, TheDim, "\n");
-  AppendTo(output, Length(EXT), "\n");
-  WriteMatrix(output, EXT);
-  CloseStream(output);
-  #
-  Exec(FileNullspaceMat, " ", FileInput, " ", FileOutput);
-  TheRead:=ReadAsFunction(FileOutput)();
-  RemoveFile(FileInput);
-  RemoveFile(FileOutput);
-  return TheRead;
-end;
-
-
 #
 #
 # Get the nullspace, i.e. the family of matrices M
@@ -315,7 +288,7 @@ GetRankBasisPolytope:=function(EXT)
     eMat:=TransposedMat([eEXT])*[eEXT];
     Add(EXTinp, SymmetricMatrixToVector(eMat));
   od;
-  TheSpace:=GetTransposeNullspaceMat(EXTinp);
+  TheSpace:=NullspaceMat(TransposedMat(EXTinp));
   ListMat:=[];
   for eVector in TheSpace
   do

@@ -1,8 +1,5 @@
 FileISOM_CPP:=GetBinaryFilename("LATT_Isomorphism");
 FileAUTO_CPP:=GetBinaryFilename("LATT_Automorphism");
-FileMatrix_TYP_Aut_Grp:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"Matrix_TYP_AutGrp_to_GAP");
-FileZ_equiv:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"Z_equiv");
-FileZ_equiv_toGAP:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"Z_equiv_toGAP");
 FileAutoVectorFamily:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"AutomorphismGroupVectorFamily");
 
 SuccessiveMinima_DirectMethod:=function(GramMat)

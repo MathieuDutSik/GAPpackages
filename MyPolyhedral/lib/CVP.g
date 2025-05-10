@@ -1,5 +1,4 @@
 FileSV_exact:=GetBinaryFilename("sv_exact");
-FileSVRead:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"svRead");
 
 
 CVPdimension1_Integral:=function(GramMat, eV)

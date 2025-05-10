@@ -10,7 +10,6 @@ FileGlpsol:=GetBinaryFilename("glpsol");
 FileLpsolve:=GetBinaryFilename("lp_solve");
 
 
-FileRedcheckRead:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"redcheckRead");
 FileLpsolveExtractSolution:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"LPSOLVE_ExtractSolution");
 FileGLPSOL_ExtractXsol:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"GLPSOL_ExtractXsol");
 
