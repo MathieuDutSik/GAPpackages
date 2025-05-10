@@ -966,7 +966,7 @@ RankinPerfectionRank_V1:=function(TheGramMat, GRPmat, ListCases)
       Add(ListSymmetricMatrix, eSymmVect);
     od;
   od;
-  TheSpace:=GetTransposeNullspaceMat(ListSymmetricMatrix);
+  TheSpace:=NullspaceMat(TransposedMat(ListSymmetricMatrix));
   return Length(TheSpace);
 end;
 

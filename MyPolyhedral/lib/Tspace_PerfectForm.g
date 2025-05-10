@@ -101,7 +101,7 @@ GetSubspace:=function(SHV)
     H1:=SymmetricMatrixToVector(SymMat1-SymMat2);
     Add(ListEqua, H1);
   od;
-  NSP:=GetTransposeNullspaceMat(ListEqua);
+  NSP:=NullspaceMat(TransposedMat(ListEqua));
   if Length(NSP)<>1 then
     Error("The vector configuration put as input is not perfect");
   fi;

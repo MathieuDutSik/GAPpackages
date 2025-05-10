@@ -3,7 +3,7 @@ FilePolyDualDescription:=GetBinaryFilename("POLY_dual_description");
 FileLCDD:=GetBinaryFilename("lcdd_gmp");
 FileSCDD:=GetBinaryFilename("scdd_gmp");
 FilePPL_LCDD:=GetBinaryFilename("ppl_lcdd");
-FileIsoReductionNG:=GetBinaryFilename("GRP_IsomorphismReduction");
+FileGRP_IsomorphismReduction:=GetBinaryFilename("GRP_IsomorphismReduction");
 FileGLRS:=GetBinaryFilename("glrs");
 
 
@@ -355,7 +355,7 @@ __DualDescriptionLRS_Reduction:=function(EXT, GroupExt, ThePath)
   #
   SYMPOL_PrintGroup(FileGroup, Length(EXTnew), GroupExt);
   #
-  Exec(FileIsoReductionNG, " ", FileSupport, " ", FileFAC, " ", FileGroup, " ", FileOutput, "2>", FileError);
+  Exec(FileGRP_IsomorphismReduction, " ", FileSupport, " ", FileFAC, " ", FileGroup, " ", FileOutput, "2>", FileError);
   ListInc:=ReadAsFunction(FileOutput)();
   if Length(ListInc)=0 then
     Error("Error in DualDescriptionLRS_Reduction");
@@ -463,7 +463,7 @@ __DualDescriptionDoubleDescMethod_Reduction:=function(EXT, GroupExt, ThePath, Th
   #
   SYMPOL_PrintGroup(FileGroup, Length(EXTnew), GroupExt);
   #
-  TheCommand:=Concatenation(FileIsoReductionNG, " ", FileSupport, " ", FileFAC, " ", FileGroup, " ", FileOutput, " 2>", FileError);
+  TheCommand:=Concatenation(FileGRP_IsomorphismReduction, " ", FileSupport, " ", FileFAC, " ", FileGroup, " ", FileOutput, " 2>", FileError);
   Exec(TheCommand);
   ListInc:=ReadAsFunction(FileOutput)();
   if Length(ListInc)=0 then

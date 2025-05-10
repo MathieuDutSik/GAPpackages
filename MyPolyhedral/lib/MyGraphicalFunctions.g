@@ -2,7 +2,6 @@ FileDR2:=GetBinaryFilename("dreadnaut");
 FileAMTOG:=GetBinaryFilename("amtog");
 FileGENG:=GetBinaryFilename("geng");
 FileLISTG:=GetBinaryFilename("listg");
-FileNautyReadCanon:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"NautyReadCanon");
 
 
 ReadNautyGroupOutput:=function(FileName)
@@ -765,13 +764,49 @@ end;
 
 
 
+ReadCanonicalOutput:=function(eFile)
+    local file, WeAdd, CanonicalLabel, line, line_red, eVal, LStr, eEnt;
+    file:=InputTextFile(eFile);
+    WeAdd:=false;
+    CanonicalLabel:=[];
+    while(true)
+    do
+        line:=ReadLine(file);
+        if line=fail then
+            Error("line has not been read correctly");
+        fi;
+        if starts_with(line, "canupdates")<>fail then
+            WeAdd:=true;
+        else
+            if WeAdd then
+                LStr:=SplitString(line, ":");
+                if Length(LStr)=2 then
+                    # The end of the operation
+                    CloseStream(file);
+                    return CanonicalLabel;
+                fi;
+                line_red:=line{[1..Length(line)-1]};
+                LStr:=SplitString(line_red, " ");
+                for eEnt in LStr
+                do
+                    if Length(eEnt) > 0 then
+                        eVal:=Int(eEnt);
+                        Add(CanonicalLabel, eVal);
+                    fi;
+                od;
+            fi;
+        fi;
+    od;
+end;
+
+
+
 
 
 CanonicalRepresentativeVertexColoredGraphAdjList:=function(ListAdjacency, ThePartition)
-  local FileNauty, FileDR, FileRead, FileError, n, output, CanonicalEList, CanonicalDesc, i, iV, Ladj, kV, DirectImg, ReverseImg, CanonicalList, CanonicalRevList, j;
+  local FileNauty, FileDR, FileError, n, output, CanonicalEList, CanonicalDesc, i, iV, Ladj, kV, DirectImg, ReverseImg, CanonicalList, CanonicalRevList, j;
   FileNauty:=Filename(POLYHEDRAL_tmpdir, "GraphInput");
   FileDR:=Filename(POLYHEDRAL_tmpdir, "GraphDRout");
-  FileRead:=Filename(POLYHEDRAL_tmpdir, "GraphRead");
   FileError:=Filename(POLYHEDRAL_tmpdir, "GraphError");
   n:=Length(ListAdjacency);
   output:=OutputTextFile(FileNauty, true);
@@ -789,11 +824,8 @@ CanonicalRepresentativeVertexColoredGraphAdjList:=function(ListAdjacency, ThePar
   if IsEmptyFile(FileError)=false then
     Error("Nonempty error file in CanonicalRepresentativeVertexColoredGraphAdjList");
   fi;
-  Exec(FileNautyReadCanon, " < ", FileDR, " > ", FileRead);
-  if IsExistingFile(FileRead)=false then
-      Error("We have FileRead missing");
-  fi;
-  CanonicalEList:=ReadAsFunction(FileRead)();
+  CanonicalEList:=ReadCanonicalOutput(FileDR);
+  Print("CanonicalEList=", CanonicalEList, "\n");
   CanonicalList:=List(CanonicalEList, x->x+1);
   CanonicalRevList:=ListWithIdenticalEntries(n,0);
   for i in [1..n]
@@ -821,7 +853,6 @@ CanonicalRepresentativeVertexColoredGraphAdjList:=function(ListAdjacency, ThePar
   od;
   RemoveFile(FileNauty);
   RemoveFile(FileDR);
-  RemoveFile(FileRead);
   RemoveFile(FileError);
   return rec(CanonicalDesc:=CanonicalDesc,
              CanonicalList:=CanonicalList,
