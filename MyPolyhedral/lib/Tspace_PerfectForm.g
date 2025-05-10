@@ -998,9 +998,13 @@ GetStabilizerTspace:=function(eCase, TheFormal, GramMat)
     local GRP1, GRP2;
     SaveDataToFile("RecTspace_StabilizerB", rec(eCase:=eCase, TheFormal:=TheFormal, GramMat:=GramMat));
     GRP2:=GetStabilizerTspace_GAP(eCase, TheFormal, GramMat);
-    GRP1:=GetStabilizerTspace_CPP(eCase, GramMat);
-    if GRP1<>GRP2.TheStabMatr then
-        Error("The computed groups are not the same byt the different methods");
+    if IsBound(eCase.check_cpp) then
+        if eCase.check_cpp then
+            GRP1:=GetStabilizerTspace_CPP(eCase, GramMat);
+            if GRP1<>GRP2.TheStabMatr then
+                Error("The computed groups are not the same byt the different methods");
+            fi;
+        fi;
     fi;
     return GRP2;
 end;
@@ -1101,11 +1105,15 @@ end;
 
 TestEquivalenceTspace:=function(eCase, SHV1, GramMat1, SHV2, GramMat2)
     local Result1, Result2;
-    Result1:=TestEquivalenceTspace_CPP(eCase, GramMat1, GramMat2);
     Result2:=TestEquivalenceTspace_GAP(eCase, SHV1, GramMat1, SHV2, GramMat2);
-    if Result1=fail or Result2=fail then
-        if Result1<>Result2 then
-            Error("The computed equivalences are not matching");
+    if IsBound(eCase.check_cpp) then
+        if eCase.check_cpp then
+            Result1:=TestEquivalenceTspace_CPP(eCase, GramMat1, GramMat2);
+            if Result1=fail or Result2=fail then
+                if Result1<>Result2 then
+                    Error("The computed equivalences are not matching");
+                fi;
+            fi;
         fi;
     fi;
     return Result2;
