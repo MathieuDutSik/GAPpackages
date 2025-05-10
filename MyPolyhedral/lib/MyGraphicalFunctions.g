@@ -562,13 +562,73 @@ __SetValue_ScalarMat:=function(ScalarMat)
 end;
 
 
+ReadGraphsFromFile:=function(eFile)
+    local file, ReadOneGraph, ListG, eG;
+    file:=InputTextFile(eFile);
+    ReadOneGraph:=function()
+        local line1, line2, LStr, orderStr1, orderStr2, n_vert, eG, i_vert, line3, LvertStr1, LvertStr2, LAdj, eEnt;
+        line1:=ReadLine(file);
+        if line1=fail then
+            return fail;
+        fi;
+        line2:=ReadLine(file);
+        if line2=fail then
+            return fail;
+        fi;
+        LStr:=SplitString(line2, " ");
+        if Length(LStr)<>4 then
+            Print("line2=", line2, "\n");
+            Error("line2 is not as we expect it to be");
+        fi;
+        orderStr1:=LStr[4];
+        orderStr2:=orderStr1{[1..Length(orderStr1)-2]};
+        n_vert:=Int(orderStr2);
+        eG:=[];
+        for i_vert in [1..n_vert]
+        do
+            line3:=ReadLine(file);
+            if line3=fail then
+                return fail;
+            fi;
+            LStr:=SplitString(line3, ":");
+            if Length(LStr)<>2 then
+                Print("line3=", line2, "\n");
+                Error("line3 is not as we expect it to be");
+            fi;
+            LvertStr1:=LStr[2];
+            LvertStr2:=LvertStr1{[1..Length(LvertStr1)-2]};
+            LStr:=SplitString(LvertStr2, " ");
+            LAdj:=[];
+            for eEnt in LStr
+            do
+                if Length(eEnt) > 0 then
+                    Add(LAdj, Int(eEnt));
+                fi;
+            od;
+            Add(eG, LAdj);
+        od;
+        return eG;
+    end;
+    ListG:=[];
+    while(true)
+    do
+        eG:=ReadOneGraph();
+        if eG=fail then
+            CloseStream(file);
+            return ListG;
+        fi;
+        Add(ListG, eG);
+    od;
+end;
+
+
 GetIsomorphismTypeGraph:=function(n)
   local TheCommand, ListG, FileResult;
   FileResult:=Filename(POLYHEDRAL_tmpdir, "res");
   RemoveFileIfExist(FileResult);
-  TheCommand:=Concatenation(FileGENG, " ", String(n), " | ", FileLISTG, " | ", FileLISTGtoGAP, " > ", FileResult);
+  TheCommand:=Concatenation(FileGENG, " ", String(n), " | ", FileLISTG, " > ", FileResult);
   Exec(TheCommand);
-  ListG:=ReadAsFunction(FileResult)();
+  ListG:=ReadGraphsFromFile(FileResult);
   RemoveFileIfExist(FileResult);
   return ListG;
 end;
@@ -578,9 +638,9 @@ GetIsomorphismTypeGraphSpecEdges:=function(n, nbEdge)
   local TheCommand, ListG, FileResult;
   FileResult:=Filename(POLYHEDRAL_tmpdir, "res");
   RemoveFileIfExist(FileResult);
-  TheCommand:=Concatenation(FileGENG, " ", String(n), " ", String(nbEdge), " | ", FileLISTG, " | ", FileLISTGtoGAP, " > ", FileResult);
+  TheCommand:=Concatenation(FileGENG, " ", String(n), " ", String(nbEdge), " | ", FileLISTG, " > ", FileResult);
   Exec(TheCommand);
-  ListG:=ReadAsFunction(FileResult)();
+  ListG:=ReadGraphsFromFile(FileResult);
   RemoveFileIfExist(FileResult);
   return ListG;
 end;
@@ -590,9 +650,9 @@ GetIsomorphismTypeGraphOption:=function(n, strOpt)
   local TheCommand, ListG, FileResult;
   FileResult:=Filename(POLYHEDRAL_tmpdir, "res");
   RemoveFileIfExist(FileResult);
-  TheCommand:=Concatenation(FileGENG, " ", String(n), " ", strOpt, " | ", FileLISTG, " | ", FileLISTGtoGAP, " > ", FileResult);
+  TheCommand:=Concatenation(FileGENG, " ", String(n), " ", strOpt, " | ", FileLISTG, " > ", FileResult);
   Exec(TheCommand);
-  ListG:=ReadAsFunction(FileResult)();
+  ListG:=ReadGraphsFromFile(FileResult);
   RemoveFileIfExist(FileResult);
   return ListG;
 end;
