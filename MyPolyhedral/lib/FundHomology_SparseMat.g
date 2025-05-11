@@ -979,6 +979,25 @@ MatrixToSparse:=function(eMat)
 end;
 
 
+GetDenseMat:=function(RecSparseMat)
+    local nbLine, nbCol, TheMat, iLine, ListEnt, nbEnt, iEnt;
+    nbLine:=RecSparseMat.nbLine;
+    nbCol:=RecSparseMat.nbCol;
+    TheMat:=NullMat(nbLine, nbCol);
+    for iLine in [1..nbLine]
+    do
+        ListEnt:=RecSparseMat.ListEntries[iLine];
+        nbEnt:=Length(ListEnt.ListCol);
+        for iEnt in [1..nbEnt]
+        do
+            TheMat[iLine][ListEnt.ListCol[iEnt]]:=ListEnt.ListVal[iEnt];
+        od;
+    od;
+    return TheMat;
+end;
+
+
+
 
 GetFactorDescSparse:=function(RecSparseMat)
   local TheMat, nbLine, nbCol, SNF, alpha, iDim, eEnt, TheTorsion, rankFree, iLine, eLine, UpperRank, ListEnt, iEnt, nbEnt, ElemDiv;

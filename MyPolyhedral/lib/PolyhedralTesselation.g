@@ -15,7 +15,7 @@ GetGroupIdentifications:=function(TheBound)
     return Length(ListGroups);
   end;
   ListGroupSymbol:=[ [] ];
-  TheLen:=Length(TheBound.ListOrbitByRank); 
+  TheLen:=Length(TheBound.ListOrbitByRank);
   for i in [2..TheLen]
   do
     nbOrbit:=Length(TheBound.ListOrbitByRank[i]);
@@ -682,7 +682,7 @@ Face_GetFaceFromIOrbit:=function(TheTessel, iOrbit)
     Append(ListFacets, TheOrb);
   od;
   TheInteriorPt:=GetSpaceInteriorPoint(ListEqua, ListFacets, eStab);
-  return rec(ListIOrbit:=[iOrbit], 
+  return rec(ListIOrbit:=[iOrbit],
              ListSets:=[ [] ],
              ListMats:=[IdentityMat(n)],
              ListStabs:=[eStab],
@@ -690,7 +690,7 @@ Face_GetFaceFromIOrbit:=function(TheTessel, iOrbit)
              TheSpa:=IdentityMat(n),
              TheSpaDual:=[],
              TheStab:=eStab,
-             TheStabSpa:=eStab, 
+             TheStabSpa:=eStab,
              InteriorPt:=TheInteriorPt);
 end;
 
@@ -763,8 +763,8 @@ Face_GetAllTotalInvariantRays:=function(TheTessel, eFace)
   od;
   EXTpossibleMapped:=EXTpossible*Inverse(eFace.ListMats[1]);
   return rec(EXTpossible:=EXTpossible,
-             iOrbit:=eFace.ListIOrbit[1], 
-             ListRank:=ListRank, 
+             iOrbit:=eFace.ListIOrbit[1],
+             ListRank:=ListRank,
              EXTpossibleMapped:=EXTpossibleMapped);
 end;
 
@@ -995,7 +995,7 @@ Generic_BoundaryOperatorsFromPolyhedralTesselation:=function(OrbitwiseTesselatio
       IsFinished:=true;
       nbOrb:=Length(ListStatus);
       for iOrb in [1..nbOrb]
-      do 
+      do
         if ListStatus[iOrb]="NO" then
           ListStatus[iOrb]:="YES";
           iOrbit:=ListRecord[iOrb].iOrbit;
@@ -1087,7 +1087,7 @@ Generic_BoundaryOperatorsFromPolyhedralTesselation:=function(OrbitwiseTesselatio
                ListOrbSizes:=ListOrbSizes,
                eInfo:=eInfoRet,
                eInv:="unset",
-               testRetract:=testRetract, 
+               testRetract:=testRetract,
                TheSpa:=TheSpaRef,
                TheSpaDual:=TheSpaDualRef,
                TheStab:=TotalStab,
@@ -1323,11 +1323,11 @@ Generic_BoundaryOperatorsFromPolyhedralTesselation:=function(OrbitwiseTesselatio
   GetResolution:=function(GRP, kLevel)
     return ResolutionComingFromHAP(GRP, kLevel);
   end;
-  return rec(IsCorrect:=true, 
+  return rec(IsCorrect:=true,
              ListOrbitByRank:=ListOrbitByRank,
              FuncSignatureDet:=FuncSignatureDet,
-             FuncDeterminant:=FuncDeterminant, 
-             IdentityElt:=IdentityMat(TheDim), 
+             FuncDeterminant:=FuncDeterminant,
+             IdentityElt:=IdentityMat(TheDim),
              GetResolution:=GetResolution);
 end;
 
@@ -1345,7 +1345,7 @@ end;
 
 
 #
-# Here we use a determination method for the signs 
+# Here we use a determination method for the signs
 # It is explained in Elbaz-Vincent et al paper Perfect forms
 # and the cohomology of the modular group.
 GetBoundaryDual_CohomologySequenceStyle:=function(OrbitwiseTesselation, FuncDoRetraction, eRecIAI, RecOptionDual)
@@ -1432,7 +1432,7 @@ GetBoundaryDual_CohomologySequenceStyle:=function(OrbitwiseTesselation, FuncDoRe
       eInteriorPt:=Sum(EXT);
       TheSpa:=RowReduction(EXT).EXT;
       testRetract:=FuncDoRetraction(eInteriorPt);
-      eInv:=rec(eInvShort:=LinPolytope_Invariant(EXT), 
+      eInv:=rec(eInvShort:=LinPolytope_Invariant(EXT),
                 eInvIAI:=eRecIAI.FuncInvariant(eInteriorPt));
       eFace1:=rec(iOrbitMain:=iOrbitMain, eSetMain:=eSetMain, EXT:=EXT, InteriorPt:=eInteriorPt, TheSpa:=TheSpa, eInv:=eInv, testRetract:=testRetract);
       for iOrbit in [1..Length(NewListOrbit)]
@@ -1529,11 +1529,11 @@ GetBoundaryDual_CohomologySequenceStyle:=function(OrbitwiseTesselation, FuncDoRe
   GetResolution:=function(GRP, kLevel)
     return ResolutionComingFromHAP(GRP, kLevel);
   end;
-  return rec(IsCorrect:=true, 
+  return rec(IsCorrect:=true,
              ListOrbitByRank:=ListOrbitByRank,
              FuncSignatureDet:=FuncSignatureDet,
-             FuncDeterminant:=FuncDeterminant, 
-             IdentityElt:=IdentityMat(TheDim), 
+             FuncDeterminant:=FuncDeterminant,
+             IdentityElt:=IdentityMat(TheDim),
              GetResolution:=GetResolution);
 end;
 
@@ -1592,7 +1592,7 @@ ContractingHomotopyPolyhedralTesselation:=function(OrbitwiseTesselation, TheBoun
             fElt:=TheBoundary.ListOrbitByRank[iRank][iOrbit].ListElt[pos];
             ReturnElt:=Inverse(fElt)*ReturnElt;
             iCompSearch:=iComp;
-          fi;          
+          fi;
         fi;
       od;
       if IsFound=false then
@@ -2192,7 +2192,7 @@ end;
 
 #
 #
-# 
+#
 MappingToSubgroupPolyhedralTesselation:=function(OrbitwiseTesselation, SplittingInfo)
   local n, ListInvariantVect, eOrbit, ListRepFacets, eInvVect, eIdent, GetSubgroup, nbOrbitOld, NewListOrbit, IsEquivalent, ListReducedStab, ListSymbol, iOrbit, TheStab, TheStabRed, ListDBL, nbSymbol, FuncFindSymbol, NewOrbitwiseTesselation, eSymbol, iSymbol, eCos, eCosInv, NewListGens, NewListAdj, eNewFac, eEquiv, eInfo, TheMatrixStab, eNewRec, eAdj, eNewAdj, FindTheDoubleCosets, eDCS, eMatr, TheMatrixStabSma, phi, ThePermStabBig, ThePermStabSma, TheStabFac, pos, NewListPermGensSma, NewListPermGensBig, ListFacets, TheMatrixStabBig, NewListMatrGensBig, NewListMatrGensSma, AllInfo;
   AllInfo:=GetListListAll(OrbitwiseTesselation);
@@ -2353,18 +2353,18 @@ MapPolyhedralTesselationByMapping:=function(eRecordTessel, TheFCT)
   end;
   MapBoundary:=function(eBound)
     if IsBound(eBound.ListSign) then
-      return rec(ListIFace:=eBound.ListIFace, 
-                 ListSign:=eBound.ListSign, 
+      return rec(ListIFace:=eBound.ListIFace,
+                 ListSign:=eBound.ListSign,
                  ListElt:=List(eBound.ListElt, TheFCT));
     else
-      return rec(ListIFace:=eBound.ListIFace, 
+      return rec(ListIFace:=eBound.ListIFace,
                  ListElt:=List(eBound.ListElt, TheFCT));
     fi;
   end;
   for iOrbit in [1..nbOrbit]
   do
     eRec:=eRecordTessel.ListOrbitByRank[2][iOrbit];
-    fRec:=rec(TheStab:=MapGroup(eRec.TheStab), 
+    fRec:=rec(TheStab:=MapGroup(eRec.TheStab),
               BoundaryImage:=MapBoundary(eRec.BoundaryImage));
     if IsBound(eRec.RotationSubgroup) then
       fRec.RotationSubgroup:=MapGroup(eRec.RotationSubgroup);
@@ -2379,7 +2379,7 @@ MapPolyhedralTesselationByMapping:=function(eRecordTessel, TheFCT)
     for iOrbit in [1..nbOrbit]
     do
       eRec:=eRecordTessel.ListOrbitByRank[iP][iOrbit];
-      fRec:=rec(TheStab:=MapGroup(eRec.TheStab), 
+      fRec:=rec(TheStab:=MapGroup(eRec.TheStab),
                 BoundaryImage:=MapBoundary(eRec.BoundaryImage));
       if IsBound(eRec.RotationSubgroup) then
         fRec.RotationSubgroup:=MapGroup(eRec.RotationSubgroup);
@@ -2388,7 +2388,7 @@ MapPolyhedralTesselationByMapping:=function(eRecordTessel, TheFCT)
     od;
     Add(NewListOrbitByRank, NewList);
   od;
-  return rec(ListOrbitByRank:=NewListOrbitByRank, 
+  return rec(ListOrbitByRank:=NewListOrbitByRank,
              IdentityElt:=eRecordTessel.IdentityElt);
 end;
 
@@ -2604,7 +2604,7 @@ CheckDecomposition:=function(eRecordTessel, eCase)
   for eRepr in eCase.ListRepresentent
   do
     SetEXT:=Set(eRepr.EXT);
-    # now testing that dual 
+    # now testing that dual
     if Length(SetEXT)<>Length(eRepr.EXT) then
       Error("Repetition in eCase.ListRepresentent");
     fi;
@@ -2681,7 +2681,7 @@ CheckFacenessOfDecomposition:=function(eRecordTessel, eCase)
       od;
     od;
   od;
-  return rec(ListViolator:=ListViolator, 
+  return rec(ListViolator:=ListViolator,
              ListListColl:=ListListColl);
 end;
 
@@ -2697,10 +2697,10 @@ GetCompleteAndTotalDecomposition:=function(EXT, eStabPerm, FunctionFaceDecomposi
     Add(NewListOrbitByRank, []);
   od;
   Print("GetCompleteAndTotalDecomposition, |eStabPerm|=", Order(eStabPerm), "\n");
-  Add(NewListOrbitByRank, [rec(EXT:=EXT, 
+  Add(NewListOrbitByRank, [rec(EXT:=EXT,
         TheStab:=eStabPerm,
         eSet:=[1..Length(EXT)],
-        ePermElt:=(), 
+        ePermElt:=(),
         Nature:="new",
         eKey:="irrel")]);
   FuncInsertSpecifiedRank:=function(iRankTarget, eNewFace)
@@ -2789,9 +2789,9 @@ GetCompleteAndTotalDecomposition:=function(EXT, eStabPerm, FunctionFaceDecomposi
         if Position(eSetFace, fail)<>fail then
           Error("Please debug from here eSetFace");
         fi;
-        eRec:=rec(eKey:=eKey, EXT:=EXTreo, 
-                  ePermElt:=eNewElt, 
-                  eSet:=eSetFace, 
+        eRec:=rec(eKey:=eKey, EXT:=EXTreo,
+                  ePermElt:=eNewElt,
+                  eSet:=eSetFace,
                   Nature:=TheNewList.ListNature[iLB],
                   iOrbitOld:=TheNewList.ListIOrbitOld[iLB],
                   eElt:=TheNewList.ListElt[iLB]);
@@ -2827,9 +2827,9 @@ GetCompleteAndTotalDecomposition:=function(EXT, eStabPerm, FunctionFaceDecomposi
             Error("Bookkeeping error 2");
           fi;
           eRecFace:=rec(EXT:=EXTtileB,
-                        eSet:=eSetB, 
+                        eSet:=eSetB,
                         iOrbitOld:=iFaceB,
-                        eElt:=eNewElt, 
+                        eElt:=eNewElt,
                         Nature:="old");
           eRecIns:=FuncInsertSpecifiedRank(iRank-1, eRecFace);
           Add(NewListIFace, eRecIns.iOrbit);
@@ -2941,7 +2941,7 @@ GetCompleteAndTotalDecomposition:=function(EXT, eStabPerm, FunctionFaceDecomposi
           LSet:=DualDescriptionSets(EXTred);
           LSetExp:=List(LSet, x->eSetRM{x});
 # ListSetsM2[11] is a problematic face. It is contained only
-# in one of ListSetsM1. Is it in LSetExp? No contained two times, 
+# in one of ListSetsM1. Is it in LSetExp? No contained two times,
 # in 2 and 4 (of [1..5])
 # 2 corresponds to 5 and 6.
 # 4 corresponds to 4.
@@ -2997,7 +2997,7 @@ DoClotureOperation:=function(TheBound, eCase)
         ePerm:=RepresentativeAction(eStabPerm, eSetConv, eRecConv.eSetConv, OnSets);
         if ePerm<>fail then
           Add(ListListConv[jRank+1][iRecConv].ListAtt, rec(iOrbit:=eRec.iOrbit, eMat:=eRec.eMat*PreImagesRepresentative(phi, ePerm)));
-          return;          
+          return;
         fi;
       od;
       Add(ListListConv[jRank+1], rec(eSetConv:=eSetConv, ListAtt:=[eRec]));
@@ -3228,7 +3228,7 @@ DoClotureOperation_NextGeneration:=function(TheBound, eCase)
         ePerm:=RepresentativeAction(eStabPermMain, eSetConv, eRecConv.eSetConv, OnSets);
         if ePerm<>fail then
           Add(ListListConv[jRank+1][iRecConv].ListAtt, rec(iOrbit:=eRec.iOrbit, eMat:=eRec.eMat*PreImagesRepresentative(phi, ePerm)));
-          return;          
+          return;
         fi;
       od;
       Add(ListListConv[jRank+1], rec(eSetConv:=eSetConv, ListAtt:=[eRec]));
@@ -3692,9 +3692,9 @@ PolyhedralTesselationDecomposeCells:=function(eRecordTessel, eRecIAI, ListCellDe
           Add(ListElt, eElt);
           Add(ListIOrbitOld, eNewRec.iOrbit);
         od;
-        eRecIns:=rec(eSetConv:=eNewRec.eSetConv, 
-                     ListEXT:=ListEXT, 
-                     ListElt:=ListElt, 
+        eRecIns:=rec(eSetConv:=eNewRec.eSetConv,
+                     ListEXT:=ListEXT,
+                     ListElt:=ListElt,
                      ListIOrbitOld:=ListIOrbitOld);
         Add(TheNewList, eRecIns);
       end;
@@ -3859,7 +3859,7 @@ PolyhedralTesselationDecomposeCells:=function(eRecordTessel, eRecIAI, ListCellDe
   end;
   # we need to determine if eFaceNew is part of the puzzle of a face
   # and resolve the puzzle later on.
-  # 
+  #
   IsFacePuzzle:=function(EXTbig, EXTsmall)
     local FACbig, eEXT, pos;
     FACbig:=DualDescription(EXTbig);
@@ -3933,7 +3933,7 @@ PolyhedralTesselationDecomposeCells:=function(eRecordTessel, eRecIAI, ListCellDe
             do
               eEltN:=eRecOrbitC.ListElement[iOrbC]*eProdInv;
               EXTn:=eFaceNew.EXT*eEltN;
-              eRecOrigin:=rec(iRepr:=MainRecOrigin.iRepr, 
+              eRecOrigin:=rec(iRepr:=MainRecOrigin.iRepr,
                               iOrbC:=iOrbC, posChg:=posChg);
               FuncInsertPiecePuzzle(posChg2, eRecOrigin, EXTn, iOrbitN, eEltN);
             od;
@@ -4012,8 +4012,8 @@ PolyhedralTesselationDecomposeCells:=function(eRecordTessel, eRecIAI, ListCellDe
               fi;
             fi;
             return rec(ListEXT:=NewListEXT,
-                       ListElt:=NewListElt, 
-                       ListNature:=NewListNature, 
+                       ListElt:=NewListElt,
+                       ListNature:=NewListNature,
                        ListIOrbitOld:=NewListIOrbitOld);
           fi;
         od;
@@ -4054,10 +4054,10 @@ PolyhedralTesselationDecomposeCells:=function(eRecordTessel, eRecIAI, ListCellDe
   FuncSignatureDet:=function(iRank, iOrbit, eElt)
     if not(eElt in NewListOrbitByRank[iRank+2][iOrbit].TheStab) then
       Error("Element is not in stabilizer, this is illegal");
-    fi;    
+    fi;
     if eElt in NewListOrbitByRank[iRank+2][iOrbit].RotationSubgroup then
       return 1;
-    fi;    
+    fi;
     return -1;
   end;
   Print("Checking correctness by volume and covering arguments\n");
@@ -4249,7 +4249,7 @@ end;
 # When puzzles are constructed, we are adding vertices. Hence, we may actually
 # add vertices to all the faces in which they are contained.
 # This vertex addition takes place at all times via the DoCloture_NextGeneration
-# 
+#
 PolyhedralTesselationDecomposeCells_NextGeneration:=function(eRecordTessel, eRecIAI, ListCellDecompose)
   local ListGens, FunctionFaceDecomposition, ListListEXT, ListListFAC, ListListPermGRP, ListDecomposition, IsFinished, iCase, ListStatusInsert, eRec, pos, ListCellChanges, iRank, eBound, jOrbit, iOrbit, nbCase, eCase, ListEXT, ListFAC, GRPperm, TotalListBoundary, eRecDecomp, eStabPerm, EXT, eList, ListPermGens, ListMatrGens, ListBoundInfo, TheActionFace, eStabBig, FAC, eRepr, eSelect, eNewList, TheStab, eGen, eStab, TestIsomorphism, NewListCells, eNewRec, TheDimension, nbOrbit, ListPermGRP, FuncInsertInList, phi, eRecIns, eFaceNew, TheRotSub, eRecF, nbRepr, iRepr, eNewBound, FuncSignatureDet, NewListOrbitByRank, NewListElt, NewListSign, NewListIFace, eSign, fSign, eElt, iFace, eOrigin, eNature, ListListListListRecIns, ListListListRecIns, ListListRecIns, ListRecIns, iBound, nbBound, SetEXT, eFaceIrr, ListDecompositionCell, IsFacePuzzle, ListListPhi, ListPhi, lenBound, ListOccuringCoefficients, eMulSign, eAddElt, ListElementM2, iBoundB, TheBoundary, iOrbitAsk, ListSetsM2, eSet, EXTimage, iFaceM2, eEltM2, lenBoundB, iFaceM1, eEltB, eProd, posChg, ListPuzzleFaceInclusion, lenB, iB, iOrbitB, GetPositionOld, eRecChg, eBoundOld, len, EXTn, eEltN, iOrbitN, PuzzleDatabaseUpdate, FuncInsertPiecePuzzle, posChg2, iL, nbOldOrbit, iRankBis, iOrbitBis, nbOrbitBis, iCaseOrig, iReprOrig, iRankOrig, iOrbitOrig, ListListPhiNew, ListPhiNew, ePosOld, ThePermStab, ePerm, iOrbitOld, GetStabilizerAndRotation, EXTpuzzle, EXTmain, GetLinearMerge, ListLinearDecomposition, TheFindInLinearMerge, eRecBound, Ofac, ListDebugInfo, DebugEXT, eEXTspec, DebugListIBound, DebugListSets, DebugListSetsAtt, DebugGRP, DebugEXT2, DebugGRP2, DebugRecBound, EXTdiff, eSetDiff, EXTimageB, DebugListEXTM1, DebugGRA, eIntEXT, i, j, DebugListSetsByBound, DebugSetsByBound, DebugListListEXTimage, DebugListEXTimage, eIntSet, DebugListListAdjSet, DebugListAdjSet, MainRecOrigin;
   TheActionFace:=function(x, g)
@@ -4491,9 +4491,9 @@ PolyhedralTesselationDecomposeCells_NextGeneration:=function(eRecordTessel, eRec
           Add(ListElt, eElt);
           Add(ListIOrbitOld, eNewRec.iOrbit);
         od;
-        eRecIns:=rec(eSetConv:=eNewRec.eSetConv, 
-                     ListEXT:=ListEXT, 
-                     ListElt:=ListElt, 
+        eRecIns:=rec(eSetConv:=eNewRec.eSetConv,
+                     ListEXT:=ListEXT,
+                     ListElt:=ListElt,
                      ListIOrbitOld:=ListIOrbitOld);
         Add(TheNewList, eRecIns);
       end;
@@ -4658,7 +4658,7 @@ PolyhedralTesselationDecomposeCells_NextGeneration:=function(eRecordTessel, eRec
   end;
   # we need to determine if eFaceNew is part of the puzzle of a face
   # and resolve the puzzle later on.
-  # 
+  #
   IsFacePuzzle:=function(EXTbig, EXTsmall)
     local FACbig, eEXT, pos;
     FACbig:=DualDescription(EXTbig);
@@ -4732,7 +4732,7 @@ PolyhedralTesselationDecomposeCells_NextGeneration:=function(eRecordTessel, eRec
             do
               eEltN:=eRecOrbitC.ListElement[iOrbC]*eProdInv;
               EXTn:=eFaceNew.EXT*eEltN;
-              eRecOrigin:=rec(iRepr:=MainRecOrigin.iRepr, 
+              eRecOrigin:=rec(iRepr:=MainRecOrigin.iRepr,
                               iOrbC:=iOrbC, posChg:=posChg);
               FuncInsertPiecePuzzle(posChg2, eRecOrigin, EXTn, iOrbitN, eEltN);
             od;
@@ -4811,8 +4811,8 @@ PolyhedralTesselationDecomposeCells_NextGeneration:=function(eRecordTessel, eRec
               fi;
             fi;
             return rec(ListEXT:=NewListEXT,
-                       ListElt:=NewListElt, 
-                       ListNature:=NewListNature, 
+                       ListElt:=NewListElt,
+                       ListNature:=NewListNature,
                        ListIOrbitOld:=NewListIOrbitOld);
           fi;
         od;
@@ -4853,10 +4853,10 @@ PolyhedralTesselationDecomposeCells_NextGeneration:=function(eRecordTessel, eRec
   FuncSignatureDet:=function(iRank, iOrbit, eElt)
     if not(eElt in NewListOrbitByRank[iRank+2][iOrbit].TheStab) then
       Error("Element is not in stabilizer, this is illegal");
-    fi;    
+    fi;
     if eElt in NewListOrbitByRank[iRank+2][iOrbit].RotationSubgroup then
       return 1;
-    fi;    
+    fi;
     return -1;
   end;
   Print("Checking correctness by volume and covering arguments\n");
@@ -5703,8 +5703,8 @@ InvarSplitting:=function(TheBound, iRank, iOrbit)
       ListOrbits:=List(O, x->x[1]);
       Add(ListListOrbits, ListOrbits);
     od;
-    return rec(ListVert:=ListVert, eSetTot:=eSetTot, 
-               ListListOrbits:=ListListOrbits, 
+    return rec(ListVert:=ListVert, eSetTot:=eSetTot,
+               ListListOrbits:=ListListOrbits,
                ListListFaces:=ListListFaces);
   end;
   GetTotallyInvariantHyperplane:=function(eGroup)
@@ -5755,7 +5755,7 @@ InvarSplitting:=function(TheBound, iRank, iOrbit)
       ePairPM:=rec(LPlus:=LPlus, LMinus:=LMinus);
       Add(ListSetPair, ePairPM);
       EXTcand:=EXT{LPos};
-      PreSplitting:=rec(iRank:=iRank, iOrbit:=iOrbit, LPos:=LPos, 
+      PreSplitting:=rec(iRank:=iRank, iOrbit:=iOrbit, LPos:=LPos,
          ListRepresentent:=[rec(EXT:=EXTcand)]);
       Add(ListPreSplitting, PreSplitting);
     od;
@@ -5781,11 +5781,11 @@ InvarSplitting:=function(TheBound, iRank, iOrbit)
       od;
       return ListFound;
     end;
-    return rec(ListPreSplitting:=ListPreSplitting, 
-               HyperplaneUnion:=HyperplaneUnion, 
+    return rec(ListPreSplitting:=ListPreSplitting,
+               HyperplaneUnion:=HyperplaneUnion,
                ListSets:=ListSets,
                ListLPos:=ListLPos,
-               ListSetPair:=ListSetPair, 
+               ListSetPair:=ListSetPair,
                GetVertexPartition:=GetVertexPartition,
                ListVectZero:=ListVectZero);
   end;
@@ -5963,57 +5963,57 @@ InvarSplitting:=function(TheBound, iRank, iOrbit)
                     GRPmatr:=GRPmatr);
       Add(ListInfos, eRecInfo);
     od;
-    return rec(ListInfos:=ListInfos, 
+    return rec(ListInfos:=ListInfos,
                ListProjector:=ListProjector,
-               ListMultiplicity:=ListMultiplicity, 
+               ListMultiplicity:=ListMultiplicity,
                ListGRPind:=ListGRPind,
                ListNSP:=ListNSP,
                CJ:=CJ, eIrr:=eIrr);
   end;
-  return rec(eRay:=eRay, 
-             eV:=eV, 
-             eSol:=eSol, 
+  return rec(eRay:=eRay,
+             eV:=eV,
+             eSol:=eSol,
              Overt:=Overt,
              ListCandHyperplaneSplitIrred:=ListCandHyperplaneSplitIrred,
              MatrixAdjacencies:=MatrixAdjacencies,
              GRAfacConv:=GRAfacConv,
-             FACsetConv:=FACsetConv, 
+             FACsetConv:=FACsetConv,
              GRAfac:=GRAfac,
-             TheStab:=TheStab, 
+             TheStab:=TheStab,
              TheStabPerm:=TheStabPerm,
              TheStabPermIrred:=TheStabPermIrred,
              TheStabPermBisIrred:=TheStabPermBisIrred,
              TheSelectIrred:=TheSelectIrred,
              TheSelectBisIrred:=TheSelectBisIrred,
-             ListRankVertex:=ListRankVertex, 
-             eSetDimReduce:=eSetDimReduce, 
-             NSP:=NSP, 
+             ListRankVertex:=ListRankVertex,
+             eSetDimReduce:=eSetDimReduce,
+             NSP:=NSP,
              EXTproj:=EXTproj,
              EXTprojIrred:=EXTprojIrred,
              EXT:=EXT,
-             FACset:=FAC, 
-             FAClin:=FAClin, 
-             FAClinSet:=FAClinSet, 
-             EXTprojBis:=EXTprojBis, 
-             EXTprojBisIrred:=EXTprojBisIrred, 
+             FACset:=FAC,
+             FAClin:=FAClin,
+             FAClinSet:=FAClinSet,
+             EXTprojBis:=EXTprojBis,
+             EXTprojBisIrred:=EXTprojBisIrred,
              EXTprojIrred:=EXTprojIrred,
              PreEXTprojBisIrred:=PreEXTprojBisIrred,
              FACproj:=FACproj,
              GetVertexOrbitsRepresentationDecomposition:=GetVertexOrbitsRepresentationDecomposition,
              GetPolyhedralNormalizer:=GetPolyhedralNormalizer,
-             Ofac:=Ofac, 
+             Ofac:=Ofac,
              ListColorsFAC:=ListColorsFAC,
-             ListColorFACconv:=ListColorFACconv, 
+             ListColorFACconv:=ListColorFACconv,
              FACprojSets:=FACprojSets,
              Oset:=Oset,
              ListSubFacs:=ListSubFacs,
              ListStabsFac:=ListStabsFac,
-             GRPmatrBis:=GRPmatrBis, 
-             GetCoxeterInformation:=GetCoxeterInformation, 
-             eCentFace:=eCentFace, 
+             GRPmatrBis:=GRPmatrBis,
+             GetCoxeterInformation:=GetCoxeterInformation,
+             eCentFace:=eCentFace,
              TheCoxeterSubgroup:=TheCoxeterSubgroup,
-             IsCoxeterSituation:=IsCoxeterSituation, 
-             GetCentralSplitting:=GetCentralSplitting, 
+             IsCoxeterSituation:=IsCoxeterSituation,
+             GetCentralSplitting:=GetCentralSplitting,
              GetCentralSplittingConvex:=GetCentralSplittingConvex,
              GetSomeHyperplaneSplitting:=GetSomeHyperplaneSplitting,
              GetTotallyInvariantHyperplane:=GetTotallyInvariantHyperplane,
@@ -6104,7 +6104,7 @@ DoAllComputations_Perf_Complex_Matrix_SNF:=function(eCaseGen2, SavingPrefix)
         ListStabSize:=[];
         for eOrbit in TheBound[jPos]
         do
-          eSize:=Order(eOrbit.TheStab); # This needs to be corrected to get same size as in 
+          eSize:=Order(eOrbit.TheStab); # This needs to be corrected to get same size as in
                                         # the paper
           eStabSize:=eSize*eOrd;
           Add(ListStabSize, eStabSize);
@@ -6166,7 +6166,7 @@ DoAllComputations_Perf_Complex_Matrix_SNF:=function(eCaseGen2, SavingPrefix)
   end;
   return rec(GetBoundDual:=GetBoundDual,
              GetCoho:=GetCoho,
-             GetMatrices:=GetMatrices, 
+             GetMatrices:=GetMatrices,
              PrintResult:=PrintResult,
              PrintLatexResult:=PrintLatexResult);
 end;
