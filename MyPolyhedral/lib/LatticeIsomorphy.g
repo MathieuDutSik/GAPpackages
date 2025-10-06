@@ -375,7 +375,7 @@ __ExtractInvariantZBasisShortVectorNoGroup_UsingCVP:=function(GramMat)
       Error("The vector eSolSub should be integral");
     fi;
     eGspann:=TheSpann * GramMat * TransposedMat(TheSpann);
-    RecCVP:=CVPVallentinProgram(eGspann, eSolSpann);
+    RecCVP:=NearestVectors(eGspann, eSolSpann);
     ListReturn:=[];
     for eV in RecCVP.ListVect
     do

@@ -27,7 +27,7 @@ FindDelaunayPolytope_Rational:=function(GramMat)
     od;
     TheNorm:=eVect*GramMatInt*eVect;
     Print("TheNorm=", TheNorm, "\n");
-    TheCVP:=CVPVallentinProgram_Rational(GramMatInt, eVect);
+    TheCVP:=NearestVectors(GramMatInt, eVect);
     if TheCVP.TheNorm=TheNorm then
       RetEXT:=List(TheCVP.ListVect, x->Concatenation([1], x));
       Print("Ending of FindDelaunayPolytope |RetEXT|=", Length(RetEXT), "\n");
@@ -170,7 +170,7 @@ FindAdjacentDelaunayPolytope:=function(GramMat, EXT, ListInc)
   do
 #    Print("Iterating in FindAdjacentDelaunayPolytope\n");
     CP:=GetCenterRadius(SelectedVertex);
-    reply:=CVPVallentinProgram(GramMat, CP.Center{[2..n+1]});
+    reply:=NearestVectors(GramMat, CP.Center{[2..n+1]});
     if reply.TheNorm=CP.SquareRadius then
       break;
     fi;
@@ -202,7 +202,7 @@ oldFunctions_FindAdjacentDelaunayPolytope:=function(GramMat, EXT, ListInc)
     VSet:=Concatenation(IndependentBasis, [SelectedVertex]);
     CP:=CenterRadiusDelaunayPolytopeGeneral(GramMat, VSet);
     Vcent:=CP.Center{[2..n+1]};
-    reply:=CVPVallentinProgram(GramMat, Vcent);
+    reply:=NearestVectors(GramMat, Vcent);
     if reply.TheNorm=CP.SquareRadius then
       break;
     else
@@ -899,7 +899,7 @@ IsPerfectDelaunay:=function(EXT)
   fi;
   EXT2:=GetPresentationGeneratingDelaunay(EXT);
   INF:=FuncExtreme(EXT2);
-  reply:=CVPVallentinProgram(INF.GramMatrix, INF.TheCent);
+  reply:=NearestVectors(INF.GramMatrix, INF.TheCent);
   EXTtest:=List(reply.ListVect, x->Concatenation([1], x));
   return Set(EXT2)=Set(EXTtest);
 end;
@@ -922,7 +922,7 @@ ListExtensionOfGivenDelaunay:=function(EXT, TheMod, GramMat)
       EXTbig:=EXT*eInvBasis;
       eCenterBig:=CP.Center*eInvBasis;
       eCenterBigRed:=eCenterBig{[2..n+1]};
-      CVP:=CVPVallentinProgram(NewGramMat, eCenterBigRed);
+      CVP:=NearestVectors(NewGramMat, eCenterBigRed);
       if CVP.TheNorm=CP.SquareRadius and Length(CVP.ListVect)<>Length(EXT) then
         Add(ListSolutionsSameRadius, NewGramMat);
       fi;
@@ -963,7 +963,7 @@ GetExtensionOfPerfectDelaunay:=function(EXTinp, TheMod)
     EXTbig:=EXT*eInvMat;
     eCenterBig:=CP.Center*eInvMat;
     eCenterBigRed:=eCenterBig{[2..n+1]};
-    CVP:=CVPVallentinProgram(NewGramMat, eCenterBigRed);
+    CVP:=NearestVectors(NewGramMat, eCenterBigRed);
     if CVP.TheNorm=CP.SquareRadius and Length(CVP.ListVect)<>Length(EXT) then
       Add(ListSolutionsSameRadius, NewGramMat);
     fi;
@@ -1046,7 +1046,7 @@ AntisymmetryConstruction:=function(EXT, GramMat)
       break;
     fi;
     Print("LowerEst insufficient\n");
-    TheCVP:=CVPVallentinProgram(GramMat, NewCent);
+    TheCVP:=NearestVectors(GramMat, NewCent);
     EXT1:=List(TheCVP.ListVect, x->Concatenation([1], x, [i-1]));
     EXT2:=List(EXT1, x->2*NewCenter-x);
     EXTnew:=Concatenation(EXT1, EXT2);
@@ -1076,7 +1076,7 @@ AntisymmetryConstruction:=function(EXT, GramMat)
     NSP:=Rational_BaseIntMat(TheSpann);
     eCenter:=SolutionMat(NSP, -Vcent);
     NewGramMat:=NSP*GramMat*TransposedMat(NSP);
-    TheCVP:=CVPVallentinProgram(NewGramMat, eCenter);
+    TheCVP:=NearestVectors(NewGramMat, eCenter);
     NewEXT:=List(TheCVP.ListVect, x->Concatenation([1],x));
     return rec(GramMat:=NewGramMat, EXT:=NewEXT, eCase:=1);
   else

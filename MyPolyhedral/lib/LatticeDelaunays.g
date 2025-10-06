@@ -497,7 +497,7 @@ FuncMethod6_SVR:=function(GramMat, InvariantBasis, AffBas, EXT, typecall, NeedAf
     EXTwork:=EXT;
   else
     Vcent:=TheCenter{[2..n+1]};
-    reply:=CVPVallentinProgram(GramMat, Vcent);
+    reply:=NearestVectors(GramMat, Vcent);
     EXTwork:=List(reply.ListVect, x->Concatenation([1], x));
   fi;
   SVR_EXT:=[];
@@ -1855,7 +1855,7 @@ ForKernel_DataLatticePolyhedralDatabase:=function(TheGramMat, PointGRP, ThePrefi
     return EXTadj;
   end;
   FindClosestElement:=function(eVect)
-    return CVPVallentinProgram(TheGramMat, eVect);
+    return NearestVectors(TheGramMat, eVect);
   end;
   if ThePrefix[Length(ThePrefix)]<>'/' then
     Error("Last character of ThePrefix=", ThePrefix, " should be /");
@@ -2515,7 +2515,7 @@ Periodic_ClosestVector:=function(GramMat, ListCosetRed, eVect)
   ListNorm:=[];
   for eCos in ListCosetRed
   do
-    reply:=CVPVallentinProgram(GramMat, eVect-eCos);
+    reply:=NearestVectors(GramMat, eVect-eCos);
     Add(ListSolution, reply.ListVect);
     Add(ListNorm, reply.TheNorm);
   od;
@@ -5931,7 +5931,7 @@ end;
 CheckCoherencySingleDelaunaySimple:=function(GramMat, EXT)
   local FindClosestElement;
   FindClosestElement:=function(eVect)
-    return CVPVallentinProgram(GramMat, eVect);
+    return NearestVectors(GramMat, eVect);
   end;
   return CheckCoherencySingleDelaunay(GramMat, EXT, FindClosestElement);
 end;
@@ -6015,7 +6015,7 @@ end;
 CheckCoherencyDelaunayDecompositionGramMatDelCO:=function(GramMat, DelCO)
   local DataLattice, DelaunayDatabase, FindClosestElement, TestBelonging;
   FindClosestElement:=function(eVect)
-    return CVPVallentinProgram(GramMat, eVect);
+    return NearestVectors(GramMat, eVect);
   end;
   TestBelonging:=function(eBigMat)
     local eMat;
@@ -6122,7 +6122,7 @@ GetCentralDelaunay:=function(TheGramMat, InvariantBasis, PointGRP)
     eVect:=eOrb.eVect;
     if eVect*eVect > 0 then
       eCent:=eVect/2;
-      reply:=CVPVallentinProgram(TheGramMat, eCent);
+      reply:=NearestVectors(TheGramMat, eCent);
       EXT:=List(reply.ListVect, x->Concatenation([1], x));
       TheDimDel:=RankMat(EXT)-1;
       for aVect in reply.ListVect

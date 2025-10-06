@@ -1,4 +1,5 @@
 FileSV_exact:=GetBinaryFilename("sv_exact");
+FileLATT_near:=GetBinaryFilename("LATT_near");
 
 
 CVPdimension1_Integral:=function(GramMat, eV)
@@ -48,145 +49,11 @@ ReadSV_output:=function(FileName)
     return list_vect;
 end;
 
-
-
-
-Kernel_CVPVallentinProgramIntegral:=function(GramMat, eV, recOption)
-  local eFileIn, FilePreIn, FileOut, FileGap, FileErr, test, n, output, i, j, reply, iVect, eNorm, TheNorm, ListVect, TheReply, eReply, eVint, eVdiff, TheOption, CommSV, TheComm, TheReturn, opt, eStr, fStr;
-  FilePreIn:=Filename(POLYHEDRAL_tmpdir, "SVvallentin.prein");
-  FileOut:=Filename(POLYHEDRAL_tmpdir, "SVvallentin.out");
-  FileGap:=Filename(POLYHEDRAL_tmpdir, "SVvallentin.Gap");
-  FileErr:=Filename(POLYHEDRAL_tmpdir, "SVvallentin.err");
-  RemoveFileIfExist(FilePreIn);
-  RemoveFileIfExist(FileOut);
-  RemoveFileIfExist(FileGap);
-  n:=Length(GramMat);
-  output:=OutputTextFile(FilePreIn, true);;
-  AppendTo(output, n , "\n");
-  for i in [1..n]
-  do
-    fStr:="";
-    for j in [1..i]
-    do
-      fStr:=Concatenation(fStr, " ", String(GramMat[i][j]));
-    od;
-    fStr:=Concatenation(fStr, "\n");
-    WriteAll(output, fStr);
-  od;
-  fStr:="";
-  for i in [1..n]
-  do
-    fStr:=Concatenation(fStr, " ", String(-eV[i]));
-  od;
-  fStr:=Concatenation(fStr, "\n");
-  WriteAll(output, fStr);
-  CloseStream(output);
-  eFileIn:=FilePreIn;
-  CommSV:=FileSV_exact;
-  if IsBound(recOption.MaxVector) then
-    CommSV:=Concatenation(CommSV, " -s", String(recOption.MaxVector));
-  fi;
-  TheComm:=Concatenation(CommSV, " -M -c < ", eFileIn, " > ", FileOut, " 2> ", FileErr);
-  Exec(TheComm);
-  reply:=ReadSV_output(FileOut);
-  for iVect in [1..Length(reply)]
-  do
-    eReply:=reply[iVect];
-    eNorm:=(eV-eReply)*GramMat*(eV-eReply);
-    if iVect=1 then
-      ListVect:=[eReply];
-      TheNorm:=eNorm;
-    else
-      if TheNorm=eNorm then
-        Add(ListVect, eReply);
-      else
-        if eNorm<TheNorm then
-          ListVect:=[eReply];
-          TheNorm:=eNorm;
-        fi;
-      fi;
-    fi;
-  od;
-  TheReturn:=rec(ListVect:=ListVect, TheNorm:=TheNorm);
-  RemoveFileIfExist(FilePreIn);
-  RemoveFileIfExist(FileOut);
-  RemoveFileIfExist(FileGap);
-  RemoveFileIfExist(FileErr);
-  return TheReturn;
-end;
-
-
-
-
-General_CVPVallentinProgram_Rational:=function(GramMatIn, eV, recOption)
-  local INF, GramMat, n, res, TheRemainder, TheTransform, InvTrans, eVP, eVPnear, eVPdiff, TheRecSol, ListVectRet, TheNorm;
-  INF:=RemoveFractionMatrixPlusCoef(GramMatIn);
-  GramMat:=INF.TheMat;
-  if IsIntegralMat(GramMat)=false then
-    Error("The input matrix should be integral");
-  fi;
-  if IsPositiveDefiniteSymmetricMatrix(GramMat)=false then
-    Error("Matrix should be positive definite");
-  fi;
-  if Length(GramMat)<>Length(eV) then
-    Error("Dimension error in the CVP program");
-  fi;
-  if First(eV, x->IsRat(x)=false)<>fail then
-    Error("Calling with nonrational eV");
-  fi;
-  n:=Length(GramMat);
-  if IsIntegralVector(eV) then
-    return rec(ListVect:=[eV], TheNorm:=0);
-  fi;
-  if n=1 then
-    return CVPdimension1_Integral(GramMatIn, eV);
-  fi;
-  res:=LLLReducedGramMat(GramMat);
-  TheRemainder:=res.remainder;
-  TheTransform:=res.transformation;
-  InvTrans:=Inverse(TheTransform);
-  if InvTrans*TheRemainder*TransposedMat(InvTrans)<>GramMat then
-    Error("Error in LLL computation");
-  fi;
-  eVP:=eV*InvTrans;
-  eVPnear:=List(eVP, NearestInteger);
-  eVPdiff:=eVP - eVPnear;
-  TheRecSol:=Kernel_CVPVallentinProgramIntegral(TheRemainder, eVPdiff, recOption);
-  ListVectRet:=List(TheRecSol.ListVect, x->(x+eVPnear)*TheTransform);
-  TheNorm:=TheRecSol.TheNorm;
-  if First(ListVectRet, x->(x-eV)*GramMat*(x-eV) <> TheNorm)<>fail then
-    Error("Closest neighbor computation failed\n");
-  fi;
-  return rec(ListVect:=ListVectRet, TheNorm:=TheNorm/INF.TheMult);
-end;
-
-CVPVallentinProgram_Rational:=function(GramMatIn, eV)
-  local recOption;
-  recOption:=rec();
-  return General_CVPVallentinProgram_Rational(GramMatIn, eV, recOption);
-end;
-
-
-
-
-CVPVallentinProgram:=function(GramMat, eV)
-  local Nval;
-  if IsMatrixRational(GramMat) and IsVectorRational(eV) then
-    return CVPVallentinProgram_Rational(GramMat, eV);
-  fi;
-  Error("You have to build your own arithmetic");
-end;
-
-
-
-
 # This function should return the solutions of the equation
 # (x - eV) G (x - eV) <= TheDist.
 #
 Kernel_ClosestAtDistanceVallentinProgram:=function(GramMat, eV, TheDist, recOption)
   local FileIn, FilePreIn, FileOut, FileGap, FileErr, test, n, output, i, j, reply, eVect, TheNorm, ListVect, eVwork, eInfoRed, TheOption, CommSV, TheComm, opt, fStr, eNorm, md5_in, md5_out, md5_gap, ListNorm, RealV;
-#  Print("------------------------------------------------------------\n");
-#  SaveDebugInfo("Kernel_ClosestAtDistanceVallentinProgram", rec(GramMat:=GramMat, eV:=eV, TheDist:=TheDist));
   if IsPositiveDefiniteSymmetricMatrix(GramMat)=false then
     Error("Matrix should be positive definite");
   fi;
@@ -211,7 +78,6 @@ Kernel_ClosestAtDistanceVallentinProgram:=function(GramMat, eV, TheDist, recOpti
   else
     eVwork:=eV;
   fi;
-  Print("eVwork=", eVwork, "\n");
   for i in [1..n]
   do
     fStr:="";
@@ -242,17 +108,13 @@ Kernel_ClosestAtDistanceVallentinProgram:=function(GramMat, eV, TheDist, recOpti
     CommSV:=Concatenation(CommSV, " -s", String(recOption.MaxVector));
   fi;
   TheComm:=Concatenation(CommSV, " -M -l < ", FileIn, " > ", FileOut, " 2> ", FileErr);
-  Print("TheComm=", TheComm, "\n");
   Exec(TheComm);
   #
   #
   #
   reply:=ReadSV_output(FileOut);
-  Print("|reply|=", Length(reply), "\n");
   ListVect:=[];
   if eV*eV=0 then
-    Print("CVP Case 1 eVwork=", eVwork, " TheDist=", TheDist, "\n");
-    Print("Iso(reply)=", Isobarycenter(reply), "\n");
     ListNorm:=[];
     for eVect in reply
     do
@@ -282,9 +144,7 @@ Kernel_ClosestAtDistanceVallentinProgram:=function(GramMat, eV, TheDist, recOpti
         Error("Please debug");
       fi;
     od;
-    Print("Collected(ListNorm)=", Collected(ListNorm), "\n");
   fi;
-  Print("|ListVect|=", Length(ListVect), "\n");
   RemoveFileIfExist(FilePreIn);
   RemoveFileIfExist(FileOut);
   RemoveFileIfExist(FileGap);
@@ -322,23 +182,16 @@ General_ClosestAtDistanceVallentinProgram:=function(GramMat, eV, TheDist, recOpt
   TheRemainder:=res.remainder;
   TheTransform:=res.transformation;
   InvTrans:=Inverse(TheTransform);
-#  Print("TheRemainder=\n");
-#  PrintArray(TheRemainder);
   if InvTrans*TheRemainder*TransposedMat(InvTrans)<>GramMat then
     Error("Error in LLL computation");
   fi;
   eVP:=eV*InvTrans;
   eVPnear:=List(eVP, NearestInteger);
   eVPdiff:=eVP - eVPnear;
-#  Print("TheRemainder=\n");
-#  PrintArray(TheRemainder);
-#  Print("eVPdiff=", eVPdiff, "\n");
   TheSol:=Kernel_ClosestAtDistanceVallentinProgram(TheRemainder, eVPdiff, TheDist, recOption);
-  if Length(TheSol)=0 then
+  if Length(TheSol) = 0 then
     return [];
   fi;
-#  Print("TheTransform=\n");
-#  PrintArray(TheTransform);
   TheSolRet:=List(TheSol, x->(x+eVPnear)*TheTransform);
   if First(TheSolRet, x->(x-eV)*GramMat*(x-eV) > TheDist)<>fail then
     Error("Short neighbor computation failed\n");
@@ -348,9 +201,40 @@ end;
 
 
 ClosestAtDistanceVallentinProgram:=function(GramMat, eV, TheDist)
-  local recOption;
-  recOption:=rec();
-  return General_ClosestAtDistanceVallentinProgram(GramMat, eV, TheDist, recOption);
+    local FileGram, FileV, FileOut, FileErr, choice, command, result;
+    FileGram:=Filename(POLYHEDRAL_tmpdir, "LATT_near.gram");
+    FileV:=Filename(POLYHEDRAL_tmpdir, "LATT_near.vect");
+    FileOut:=Filename(POLYHEDRAL_tmpdir, "LATT_near.out");
+    FileErr:=Filename(POLYHEDRAL_tmpdir, "LATT_near.err");
+    WriteMatrixFile(FileGram, GramMat);
+    WriteVectorFile(FileV, eV);
+    choice:=Concatenation("near=", String(TheDist));
+    command:=Concatenation(FileLATT_near, " gmp ", choice, " ", FileGram, " ", FileV, " GAP ", FileOut, " 2> ", FileErr);
+    Exec(command);
+    result:=ReadAsFunction(FileOut)();
+    RemoveFile(FileGram);
+    RemoveFile(FileV);
+    RemoveFile(FileOut);
+    RemoveFile(FileErr);
+    return result;
 end;
 
-
+NearestVectors:=function(GramMat, eV)
+    local FileGram, FileV, FileOut, FileErr, command, ListVect, eDiff, TheNorm;
+    FileGram:=Filename(POLYHEDRAL_tmpdir, "LATT_near.gram");
+    FileV:=Filename(POLYHEDRAL_tmpdir, "LATT_near.vect");
+    FileOut:=Filename(POLYHEDRAL_tmpdir, "LATT_near.out");
+    FileErr:=Filename(POLYHEDRAL_tmpdir, "LATT_near.err");
+    WriteMatrixFile(FileGram, GramMat);
+    WriteVectorFile(FileV, eV);
+    command:=Concatenation(FileLATT_near, " gmp nearest ", FileGram, " ", FileV, " GAP ", FileOut, " 2> ", FileErr);
+    Exec(command);
+    ListVect:=ReadAsFunction(FileOut)();
+    RemoveFile(FileGram);
+    RemoveFile(FileV);
+    RemoveFile(FileOut);
+    RemoveFile(FileErr);
+    eDiff:=eV - ListVect[1];
+    TheNorm:=eDiff * GramMat * eDiff;
+    return rec(TheNorm:=TheNorm, ListVect:=ListVect);
+end;

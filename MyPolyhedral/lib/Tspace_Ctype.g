@@ -6,7 +6,7 @@ CTYP_GetLinearEqualities:=function(GramMat)
   for eVect in BuildSet(n, [0,1/2])
   do
     if Sum(eVect)>0 then
-      ListNeigh:=CVPVallentinProgram(GramMat, eVect).ListVect;
+      ListNeigh:=NearestVectors(GramMat, eVect).ListVect;
       eList:=List(ListNeigh, x->Position(ListNeigh, 2*eVect-x));
       ListIdx:=Filtered([1..Length(ListNeigh)], x->eList[x]>x);
       eIdx1:=ListIdx[1];
@@ -81,7 +81,7 @@ CTYP_GetCtypeFromDelaunayTesselation:=function(GramMat, MatrixGRP, eCase)
   ListCoset:=Filtered(BuildSet(n, [0,1/2]), x->Sum(x)>0);
   for eVect in ListCoset
   do
-    TheCVP:=CVPVallentinProgram(GramMat, eVect);
+    TheCVP:=NearestVectors(GramMat, eVect);
     EXTclos:=List(TheCVP.ListVect, x->Concatenation([1], x));
     eV2:=EXTclos[1]{[2..n+1]} - eVect;
     ListRec:=LFC.GetAllContainingCells(eVect);

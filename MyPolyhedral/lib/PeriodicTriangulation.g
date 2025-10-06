@@ -499,7 +499,7 @@ TRIG_TestDelaunayNessOfPeriodicTriangulation:=function(RecPeriodicTriang)
     eGramMat:=eGramMat + eInterior[i]*eCase.Basis[i];
   od;
   FindClosestElement:=function(eVect)
-    return CVPVallentinProgram(eGramMat, eVect);
+    return NearestVectors(eGramMat, eVect);
   end;
   for eTrig in RecPeriodicTriang.ListTrig
   do

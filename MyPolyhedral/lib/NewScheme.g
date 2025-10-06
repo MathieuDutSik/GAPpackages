@@ -390,7 +390,7 @@ InfDel_GetZeroSetKernel:=function(eQuadFunction)
   hVectRed:=hVect{[1..p]};
   cCentRed:=-hVectRed*Inverse(RedQuadForm);
   rSquareRed:=cCentRed*RedQuadForm*cCentRed-NewQuadFuncRed[1][1];
-  TheCVP:=CVPVallentinProgram(RedQuadForm, cCentRed);
+  TheCVP:=NearestVectors(RedQuadForm, cCentRed);
   if TheCVP.TheNorm<rSquareRed then
     eVect:=Concatenation([1], TheCVP.ListVect[1], ListWithIdenticalEntries(n-p,0))*AffBasis;
     if eVect*eQuadFunction*eVect >= 0 then
@@ -1445,7 +1445,7 @@ InfDel_GetNegCVPVector:=function(NewQuadFunction, TheDelaunay)
     eEXTred:=eRenEXT{[1..p1+1]};
     TheSQR:=eEXTred*TheQuadFunc*eEXTred;
     cCentRed:=-eEXTred*TheSideMat*Inverse(RedQuadForm);
-    TheCVP:=CVPVallentinProgram(RedQuadForm, cCentRed);
+    TheCVP:=NearestVectors(RedQuadForm, cCentRed);
     eNewEXT:=Concatenation(eEXTred, TheCVP.ListVect[1], ListWithIdenticalEntries(p3diff, 0));
     eVal:=eNewEXT*RenormQuadFunction*eNewEXT;
     if eVal<0 then
@@ -1549,7 +1549,7 @@ InfDel_GetDefiningAdjacentVertices:=function(TheDelaunay1, TheDelaunay2)
       return Concatenation([1], ListWithIdenticalEntries(dim1, 0), w);
     fi;
     c:=-(w*B32+b2)*Inverse(B22);
-    TheCVP:=CVPVallentinProgram(B22, c);
+    TheCVP:=NearestVectors(B22, c);
     return Concatenation([1], ListWithIdenticalEntries(dim1, 0), TheCVP.ListVect[1], w);
   end;
   eSubset:=Concatenation([1], [dim1+dim2+2..n+1]);
@@ -2041,7 +2041,7 @@ InfDel_GetRecord:=function(EXT, eOrbit, TheSuperQuadFunction)
     hVect:=TheNewQuadFunction[1]{[2..n+1]};
     cCent:=-hVect*Inverse(TheNewQuadForm);
     rSquare:=cCent*TheNewQuadForm*cCent-TheNewQuadFunction[1][1];
-    TheCVP:=CVPVallentinProgram(TheNewQuadForm, cCent);
+    TheCVP:=NearestVectors(TheNewQuadForm, cCent);
     TheCVPext:=List(TheCVP.ListVect, x->Concatenation([1], x));
     if TheCVP.TheNorm=rSquare and Set(TheCVPext)=Set(EXT{eOrbit}) then
       break;
@@ -2535,7 +2535,7 @@ GetAllNegativePoints:=function(TheFunc, UpperLimit)
   hVect:=TheFunc[1]{[2..n+1]};
   cCent:= - hVect*Inverse(QuadForm);
   rSquare:=cCent*QuadForm*cCent - TheFunc[1][1];
-  recOption:=rec(MaxVector:=UpperLimit, UseExactArithmetic:=true);
+  recOption:=rec(MaxVector:=UpperLimit);
   return General_ClosestAtDistanceVallentinProgram(QuadForm, cCent, rSquare, recOption);
 end;
 
@@ -2547,7 +2547,7 @@ GetLowestPoints:=function(TheFunc)
   hVect:=TheFunc[1]{[2..n+1]};
   cCent:= - hVect*Inverse(QuadForm);
   rSquare:=cCent*QuadForm*cCent - TheFunc[1][1];
-  return CVPVallentinProgram_Rational(QuadForm, cCent).ListVect;
+  return NearestVectors(QuadForm, cCent).ListVect;
 end;
 
 
