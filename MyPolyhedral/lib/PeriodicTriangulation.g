@@ -1925,7 +1925,7 @@ TRIG_EnumeratePossiblePairsSimplices_General:=function(TheSimplex, TheDist, Save
   GetStringPair:=function(ePair)
     return Concatenation("(", String(ePair.eVert), " idx=", String(ePair.idx), ")");
   end;
-  ListVert:=ClosestAtDistanceVallentinProgram(TheGram, TheCent, TheDist);
+  ListVert:=CloseVectors(TheGram, TheCent, TheDist);
   nbPoss:=Length(ListVert);
   Print("|ListVert|=", nbPoss, "\n");
   ListAcceptableAnswer:=[];

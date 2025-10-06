@@ -1,29 +1,6 @@
 FileSV_exact:=GetBinaryFilename("sv_exact");
 FileLATT_near:=GetBinaryFilename("LATT_near");
 
-
-CVPdimension1_Integral:=function(GramMat, eV)
-  local x, a, b, r, x1, x2, eNorm1, eNorm2, TheNorm, ListVect, alpha;
-  x:=eV[1];
-  a:=DenominatorRat(x);
-  b:=NumeratorRat(x);
-  r:=b mod a;
-  x1:=(b-r)/a;
-  x2:=(b-r+a)/a;
-  alpha:=GramMat[1][1];
-  eNorm1:=(x1-x)*alpha*(x1-x);
-  eNorm2:=(x2-x)*alpha*(x2-x);
-  TheNorm:=Minimum([eNorm1, eNorm2]);
-  ListVect:=[];
-  if TheNorm=eNorm1 then
-    Add(ListVect, [x1]);
-  fi;
-  if TheNorm=eNorm2 then
-    Add(ListVect, [x2]);
-  fi;
-  return rec(ListVect:=ListVect, TheNorm:=TheNorm);
-end;
-
 ReadSV_output:=function(FileName)
     local list_lines, list_vect, n_vect, i, LStrA, LStrB, eVect, eStr, eVal;
     list_lines:=ReadTextFile(FileName);
@@ -200,7 +177,7 @@ General_ClosestAtDistanceVallentinProgram:=function(GramMat, eV, TheDist, recOpt
 end;
 
 
-ClosestAtDistanceVallentinProgram:=function(GramMat, eV, TheDist)
+CloseVectors:=function(GramMat, eV, TheDist)
     local FileGram, FileV, FileOut, FileErr, choice, command, result;
     FileGram:=Filename(POLYHEDRAL_tmpdir, "LATT_near.gram");
     FileV:=Filename(POLYHEDRAL_tmpdir, "LATT_near.vect");

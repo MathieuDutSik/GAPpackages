@@ -1687,7 +1687,7 @@ LORENTZ_ListVectorFixedDistancePattern:=function(GramMat, ListVect, DistVector)
   eCentRed:=eCent{[2..TheDim+1]};
   ListSolutionSet:=[];
   GramMatSpec:=TheBasis*GramMat*TransposedMat(TheBasis);
-  for eSolRed in ClosestAtDistanceVallentinProgram(GramMatSpec, eCentRed, eSquareDistDiff)
+  for eSolRed in CloseVectors(GramMatSpec, eCentRed, eSquareDistDiff)
   do
     eDist:=(eSolRed-eCentRed)*GramMatSpec*(eSolRed-eCentRed);
     if eDist=eSquareDistDiff then
@@ -1758,7 +1758,7 @@ LORENTZ_FindPositiveVectors:=function(LorMat, eVect, MaxScal, TheOption, OnlySho
     eSquareDist:=alpha*alpha*eNorm;
     Print("alpha=", alpha, " eNorm=", eNorm, "\n");
     Print("eVal=", eVal, " eSquareDist=", eSquareDist, " det(GramMat)=", DeterminantMat(GramMat), "\n");
-    ListSol:=ClosestAtDistanceVallentinProgram(GramMat, -eSol, eSquareDist);
+    ListSol:=CloseVectors(GramMat, -eSol, eSquareDist);
     for eSolA in ListSol
     do
       eSolB:=eSolA*Ubasis;

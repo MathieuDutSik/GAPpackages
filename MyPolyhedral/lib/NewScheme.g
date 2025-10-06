@@ -2521,7 +2521,7 @@ GetAllNegativePoints:=function(TheFunc)
   hVect:=TheFunc[1]{[2..n+1]};
   cCent:= - hVect*Inverse(QuadForm);
   rSquare:=cCent*QuadForm*cCent - TheFunc[1][1];
-  return ClosestAtDistanceVallentinProgram(QuadForm, cCent, rSquare);
+  return CloseVectors(QuadForm, cCent, rSquare);
 end;
 
 

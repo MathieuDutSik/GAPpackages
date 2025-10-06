@@ -280,7 +280,7 @@ IsAdmissibleConstrainedDelaunay:=function(TranslationClassesPolytope, TheGramMat
   CP:=CenterRadiusDelaunayPolytopeGeneral(TheGramMat, TheEXT);
   eCent:=CP.Center{[2..n+1]};
   TheDist:=CP.SquareRadius;
-  reply:=ClosestAtDistanceVallentinProgram(TheGramMat, eCent, TheDist);
+  reply:=CloseVectors(TheGramMat, eCent, TheDist);
   replyRed:=[];
   ListDisc:=[];
   for eVect in reply
