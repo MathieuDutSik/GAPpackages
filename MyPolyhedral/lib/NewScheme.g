@@ -2525,21 +2525,6 @@ GetAllNegativePoints:=function(TheFunc)
 end;
 
 
-GetAllNegativePoints:=function(TheFunc, UpperLimit)
-  local n, QuadForm, hVect, cCent, rSquare, recOption;
-  n:=Length(TheFunc)-1;
-  QuadForm:=List(TheFunc{[2..n+1]}, x->x{[2..n+1]});
-  if IsPositiveDefiniteSymmetricMatrix(QuadForm)=false then
-    Error("The matrx should be positive definite");
-  fi;
-  hVect:=TheFunc[1]{[2..n+1]};
-  cCent:= - hVect*Inverse(QuadForm);
-  rSquare:=cCent*QuadForm*cCent - TheFunc[1][1];
-  recOption:=rec(MaxVector:=UpperLimit);
-  return General_ClosestAtDistanceVallentinProgram(QuadForm, cCent, rSquare, recOption);
-end;
-
-
 GetLowestPoints:=function(TheFunc)
   local n, QuadForm, hVect, cCent, rSquare;
   n:=Length(TheFunc)-1;
@@ -2746,8 +2731,7 @@ TestRealizabilityDelaunay_Space:=function(EXT, TheBasis)
       TheReply:=InfDel_GetZeroSetKernel(TheFuncInt);
       if IsBound(TheReply.error)=true then
         if TheReply.error="There are points with negative value at integral points" then
-          UpperLimit:=10000;
-          ListVect:=GetAllNegativePoints(TheFuncInt, UpperLimit);
+          ListVect:=GetAllNegativePoints(TheFuncInt);
           ListVert:=[];
           for NewVect in ListVect
           do
