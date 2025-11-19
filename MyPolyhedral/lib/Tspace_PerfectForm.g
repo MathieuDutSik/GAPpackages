@@ -909,7 +909,7 @@ end;
 
 
 GetStabilizerTspace_GAP:=function(eCase, TheFormal, GramMat)
-  local n, GRP, ListMatrGens, ListPermGens, eGen, eList, ListSets, eGroup, eSetSet, phi, TheStab, TheStabMatr, GRPpermSetIneq, GRPpermSHV, ListTspaceMatrGens, TheTspaceMatrStab, TheMat, eVect, eSol, ListPermGensSetIneq, eSet, TheBasisExpand, eMatBasis, eExprBasis, TheMatTrans, TheTspaceMatrStabTrans, eSolTrans, ThePreStab, eElt, FuncInsertElt, DimSpace, IsStabilizing, test, ListMatrGensStabTrans, SHVimg, fSet, eMatTrans, BigDiscalarMat, PreGRPpermSHV, GRPnew, ListGensNew, eMatrGen, ePermGen, eCommGen, ePerm, TestBelonging;
+  local n, GRP, ListMatrGens, ListPermGens, eGen, eList, ListSets, eGroup, eSetSet, phi, TheStab, TheStabMatr, GRPpermSetIneq, GRPpermSHV, ListTspaceMatrGens, TheTspaceMatrStab, TheMat, eVect, eSol, ListPermGensSetIneq, eSet, TheBasisExpand, eMatBasis, eExprBasis, TheMatTrans, TheTspaceMatrStabTrans, eSolTrans, ThePreStab, eElt, FuncInsertElt, DimSpace, IsStabilizing, test, ListMatrGensStabTrans, SHVimg, fSet, eMatTrans, BigDiscalarMat, PreGRPpermSHV, GRPnew, ListGensNew, eMatrGen, ePermGen, eCommGen, ePerm, TestBelonging, ListGens, phi_tspace, phi_tspace_tr;
   n:=Length(eCase.Basis[1]);
   DimSpace:=Length(eCase.Basis);
   BigDiscalarMat:=GeneralWeightMatrix_FullDim_Commuting(GramMat, TheFormal.SHV, eCase.ListComm);
@@ -968,7 +968,8 @@ GetStabilizerTspace_GAP:=function(eCase, TheFormal, GramMat)
   ListPermGensSetIneq:=[];
   ListTspaceMatrGens:=[];
   ListMatrGensStabTrans:=[];
-  for eGen in GeneratorsOfGroup(GRP)
+  ListGens:=GeneratorsOfGroup(GRP);
+  for eGen in ListGens
   do
     eList:=[];
     for eSet in TheFormal.ListGroups
@@ -980,17 +981,24 @@ GetStabilizerTspace_GAP:=function(eCase, TheFormal, GramMat)
     ePerm:=PermList(eList);
     Add(ListPermGensSetIneq, ePerm);
     TheMat:=EQUIV_TspaceExpression(eCase, eGen);
-    Add(ListTspaceMatrGens, TheMat);
+    Add(ListTspaceMatrGens, Inverse(TheMat));
     eMatTrans:=EQUIV_TspaceExpressionDual(eCase, eGen);
-    Add(ListMatrGensStabTrans, eMatTrans);
+    Add(ListMatrGensStabTrans, Inverse(eMatTrans));
   od;
   GRPpermSetIneq:=Group(ListPermGensSetIneq);
   TheTspaceMatrStabTrans:=Group(ListMatrGensStabTrans);
   TheTspaceMatrStab:=Group(ListTspaceMatrGens);
+  phi_tspace_tr:=GroupHomomorphismByImages(GRP, TheTspaceMatrStabTrans, ListGens, ListMatrGensStabTrans);
+  phi_tspace:=GroupHomomorphismByImages(GRP, TheTspaceMatrStab, ListGens, ListTspaceMatrGens);
+  if phi_tspace=fail or phi_tspace_tr=fail then
+      Error("We have phi_tspace=fail or phi_tspace_tr=fail");
+  fi;
   return rec(TheTspaceMatrStab:=TheTspaceMatrStab,
              TheTspaceMatrStabTrans:=TheTspaceMatrStabTrans,
              GRPpermSetIneq:=GRPpermSetIneq,
-             TheStabMatr:=GRP);
+             TheStabMatr:=GRP,
+             phi_tspace:=phi_tspace,
+             phi_tspace_tr:=phi_tspace_tr);
 end;
 
 
@@ -1203,16 +1211,18 @@ Kernel_GetEnumerationPerfectForm:=function(eCaseGen2)
           if eEquivInfo<>fail then
             Add(ListGenTotal, eEquivInfo.eEquivTspace);
             return rec(iRecord:=iRecord,
+                       eEquivGRP:=eEquivInfo.eEquiv,
                        eEquivDirect:=eEquivInfo.eEquivTspace,
-                       eEquiv:=eEquivInfo.eEquivTspaceTrI);
+                       eEquivDual:=eEquivInfo.eEquivTspaceTrI);
           fi;
         else
           test:=RepresentativeAction(RecExtRay.PermGrpExtRays, extRaySig, eRecord.extRaySig, Permuted);
           if test<>fail then
             eEquivDirect:=PreImage(RecExtRay.phiExtRays, test);
             return rec(iRecord:=iRecord,
+                       eEquivGRP:="unset",
                        eEquivDirect:=eEquivDirect,
-                       eEquiv:="unset");
+                       eEquivDual:="unset");
           fi;
         fi;
       fi;
@@ -1308,8 +1318,8 @@ Kernel_GetEnumerationPerfectForm:=function(eCaseGen2)
         ListOrbit:=DualDescriptionStandard(TheFormal.SetIneq, GRPpermSetIneq);
         TheTesselation[iRecord].ListIneq:=TheFormal.SetIneq;
         TheTesselation[iRecord].PermGRP:=SingleOrbInfo.GRPpermSetIneq;
-        TheTesselation[iRecord].MatrixStabDirect:=SingleOrbInfo.TheTspaceMatrStab;
-        TheTesselation[iRecord].MatrixStab:=SingleOrbInfo.TheTspaceMatrStabTrans;
+        TheTesselation[iRecord].MatrixStabDirect:=rec(phi:=SingleOrbInfo.phi_tspace, TheStab:=SingleOrbInfo.TheTspaceMatrStab);
+        TheTesselation[iRecord].MatrixStab:=rec(phi:=SingleOrbInfo.phi_tspace_tr, TheStab:=SingleOrbInfo.TheTspaceMatrStabTrans);
         ListAdj:=[];
         nbOrb:=Length(ListOrbit);
         for iOrb in [1..nbOrb]
@@ -1351,7 +1361,7 @@ Kernel_GetEnumerationPerfectForm:=function(eCaseGen2)
         Error("We have an inconsistency in FuncAutomorphismDirect");
       fi;
     od;
-    return StabInfo.TheTspaceMatrStab;
+    return rec(phi:=StabInfo.phi_tspace, TheStab:=StabInfo.TheTspaceMatrStab);
   end;
   FuncIsomorphismDirect:=function(eVect1, eVect2)
     local i, TheGramMat1, SHV1, TheFormal1, TheGramMat2, SHV2, TheFormal2, eEquivInfo;
@@ -1373,7 +1383,7 @@ Kernel_GetEnumerationPerfectForm:=function(eCaseGen2)
         Print("We have an inconsistency in FuncIsomorphismDirect\n");
         Print(NullMat(4));
       fi;
-      return eEquivInfo.eEquivTspace;
+      return rec(eEquivGRP:=eEquivInfo.eEquiv, eEquivTspace:=eEquivInfo.eEquivTspace);
     fi;
     return fail;
   end;
@@ -1388,8 +1398,9 @@ Kernel_GetEnumerationPerfectForm:=function(eCaseGen2)
     return GeneralWeightMatrix_FullDim_Commuting_Invariant(TheGramMat, SHV, eCaseGen2.ListComm);
   end;
   eRecIAIdirect:=rec(FuncIsomorphism:=FuncIsomorphismDirect,
-       FuncAutomorphism:=FuncAutomorphismDirect,
-       FuncInvariant:=FuncInvariantDirect);
+                     FuncAutomorphism:=FuncAutomorphismDirect,
+                     FuncInvariant:=FuncInvariantDirect,
+                     n:=n);
   FuncAutomorphismDual:=function(eVect)
     local TheGramMat, i, SHV, TheFormal, StabInfo, Hmat;
     TheGramMat:=NullMat(n,n);
@@ -1410,7 +1421,7 @@ Kernel_GetEnumerationPerfectForm:=function(eCaseGen2)
         Error("We have an inconsistency in FuncAutomorphismDual");
       fi;
     od;
-    return StabInfo.TheTspaceMatrStabTrans;
+    return rec(phi:=StabInfo.phi_tspace_tr, TheStab:=StabInfo.TheTspaceMatrStabTrans);
   end;
   FuncIsomorphismDual:=function(eVect1, eVect2)
     local i, TheGramMat1, SHV1, TheFormal1, TheGramMat2, SHV2, TheFormal2, eEquivInfo, Hmat1, Hmat2;
@@ -1441,7 +1452,7 @@ Kernel_GetEnumerationPerfectForm:=function(eCaseGen2)
         Print("We have an inconsistency in FuncIsomorphismDual\n");
         Print(NullMat(4));
       fi;
-      return eEquivInfo.eEquivTspaceTrI;
+      return rec(eEquivGRP:=eEquivInfo.eEquiv, eEquivTspace:=eEquivInfo.eEquivTspaceTrI);
     fi;
     return fail;
   end;
@@ -1457,8 +1468,9 @@ Kernel_GetEnumerationPerfectForm:=function(eCaseGen2)
     return GeneralWeightMatrix_FullDim_Commuting_Invariant(Hmat, SHV, eCaseGen2.ListComm);
   end;
   eRecIAIdual:=rec(FuncIsomorphism:=FuncIsomorphismDual,
-       FuncAutomorphism:=FuncAutomorphismDual,
-       FuncInvariant:=FuncInvariantDual);
+                   FuncAutomorphism:=FuncAutomorphismDual,
+                   FuncInvariant:=FuncInvariantDual,
+                   n:=n);
   return rec(eRecIAIdirect:=eRecIAIdirect,
              eRecIAIdual:=eRecIAIdual,
              TheTesselation:=TheTesselation,

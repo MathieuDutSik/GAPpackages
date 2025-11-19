@@ -1343,6 +1343,21 @@ SignFunction:=function(eVal)
   return -1;
 end;
 
+GetPreImage:=function(phi, eImg)
+    local source;
+    sourceGRP:=Source(phi);
+    for eElt in sourceGRP
+    do
+        eEltImg:=Image(phi, eElt);
+        if eEltImg=eImg then
+            return eElt;
+        fi;
+    od;
+    return fail;
+end;
+
+
+
 
 #
 # Here we use a determination method for the signs
@@ -1350,25 +1365,28 @@ end;
 # and the cohomology of the modular group.
 GetBoundaryDual_CohomologySequenceStyle:=function(OrbitwiseTesselation, FuncDoRetraction, eRecIAI, RecOptionDual)
   local TheDim, eOrbit, ListStabGens, ListPermGensEXT, eGen, eList, PermGRP, phiEXT, FuncSignatureDet, nbOrbit, TheBound, pos, GetResolution, ListPhiEXT, ListEXT, ListOrbitByRank, iOrbitMain, ListOrbDomains, ListPermGroupsEXT, FuncDeterminant, RepresentativeEquivalenceTesselation_EXT, iOrbit, TheSpa, iRank, TheBoundary, i2, len2, ListOccuringCoefficients, eMulSign, ListSign, iOrb, nbOrb, TheRec, TheInteriorPt, FuncInsert, eInteriorPt, NewListOrbit, EXT, ListPermGens, eMatrGen, eIns, IsOrientable, eRotSubgroup, GRPsym, ListSignGens, len, eStab, eDet, ListMatrGens, eAddElt, eSign2, ListElementM2, eVect2img, ListVectsM2, eElt, eElt2, ListOrb, eSetMain1, TheOrbSmall, eOrb, eSetMain, i, iFace, iFace2, eVect2, testRetract, TheSpaF, TheSpaImg, TheTot, eMatRed, eSign, eVect, TheStab;
+  n:=eRecIAI.n;
   TheDim:=Length(OrbitwiseTesselation[1].ListAdj[1].eFac);
   ListEXT:=[];
   ListPermGroupsEXT:=[];
   ListPhiEXT:=[];
+  ListPhiMatr:=[];
   Print("DoRetracted=", RecOptionDual.DoRetracted, "\n");
   for eOrbit in OrbitwiseTesselation
   do
-    ListStabGens:=GeneratorsOfGroup(eOrbit.MatrixStab);
+    ListStabGens:=GeneratorsOfGroup(eOrbit.MatrixStab.TheStab);
     Add(ListEXT, eOrbit.EXT);
     ListPermGensEXT:=[];
-    for eGen in GeneratorsOfGroup(eOrbit.MatrixStab)
+    for eGen in ListStabGens
     do
       eList:=List(eOrbit.EXT, x->Position(eOrbit.EXT, x*eGen));
       Add(ListPermGensEXT, PermList(eList));
     od;
     PermGRP:=PersoGroupPerm(ListPermGensEXT);
-    phiEXT:=GroupHomomorphismByImagesNC(PermGRP, eOrbit.MatrixStab, ListPermGensEXT, ListStabGens);
+    phiEXT:=GroupHomomorphismByImagesNC(PermGRP, eOrbit.MatrixStab.TheStab, ListPermGensEXT, ListStabGens);
     Add(ListPermGroupsEXT, PermGRP);
     Add(ListPhiEXT, phiEXT);
+    Add(ListPhiMatr, eOrbit.MatrixStab.phi);
   od;
   FuncSignatureDet:=function(iRank, iFace, eElt)
     local NewMat, TheSpa;
@@ -1399,17 +1417,19 @@ GetBoundaryDual_CohomologySequenceStyle:=function(OrbitwiseTesselation, FuncDoRe
       if test=fail then
         return fail;
       fi;
-      eMatr:=Image(ListPhiEXT[iOrbitMain], test);
-      return eMatr;
+      eEquivTspace:=Image(ListPhiEXT[iOrbitMain], test);
+      eEquivGRP:=PreImagesRepresentative(ListPhiMatr[iOrbitMain], eEquivTspace);
+      return rec(eEquivGRP:=eEquiv, eEquivTspce:=eEquivTspace);
     fi;
-    eMatr:=eRecIAI.FuncIsomorphism(eFace1.InteriorPt, eFace2.InteriorPt);
-    if eMatr=fail then
+    eMatrRec:=eRecIAI.FuncIsomorphism(eFace1.InteriorPt, eFace2.InteriorPt);
+    if eMatrRec=fail then
       return fail;
     fi;
-    if First(eFace1.EXT, x->Position(eFace2.EXT, x*eMatr)=fail)<>fail then
+    if First(eFace1.EXT, x->Position(eFace2.EXT, x*eMatrRec.eEquivTspace)=fail)<>fail then
       Error("Some bug here");
     fi;
-    return eMatr;
+    # Need to generate the second matrix.
+    return eMatrRec;
   end;
   ListOrbitByRank:=[];
   ListOrbDomains:=[];
@@ -1418,7 +1438,7 @@ GetBoundaryDual_CohomologySequenceStyle:=function(OrbitwiseTesselation, FuncDoRe
     eOrbit:=OrbitwiseTesselation[iOrbit];
     TheInteriorPt:=Sum(eOrbit.EXT);
     TheSpa:=RowReduction(eOrbit.EXT).EXT;
-    TheRec:=rec(iOrbitMain:=iOrbit, eSetMain:=[1..Length(eOrbit.EXT)], TheStab:=eOrbit.MatrixStab, InteriorPt:=TheInteriorPt, EXT:=eOrbit.EXT, TheSpa:=TheSpa, TheStab:=eOrbit.MatrixStab);
+    TheRec:=rec(iOrbitMain:=iOrbit, eSetMain:=[1..Length(eOrbit.EXT)], TheStab:=eOrbit.MatrixStab, InteriorPt:=TheInteriorPt, EXT:=eOrbit.EXT, TheSpa:=TheSpa);
     Add(ListOrbDomains, TheRec);
   od;
   Add(ListOrbitByRank, ListOrbDomains);
@@ -1444,7 +1464,8 @@ GetBoundaryDual_CohomologySequenceStyle:=function(OrbitwiseTesselation, FuncDoRe
       od;
       eFace1.TheStab:=eRecIAI.FuncAutomorphism(eInteriorPt);
       Add(NewListOrbit, eFace1);
-      return rec(iOrbit:=Length(NewListOrbit), eEquiv:=IdentityMat(TheDim));
+      eEquiv:=rec(eEquivGRP:=IdentityMat(n), eEquivTspace:=IdentityMat(TheDim));
+      return rec(iOrbit:=Length(NewListOrbit), eEquiv:=eEquiv);
     end;
     nbOrbit:=Length(ListOrbitByRank[iRank-1]);
     for iOrbit in [1..nbOrbit]
@@ -1454,7 +1475,7 @@ GetBoundaryDual_CohomologySequenceStyle:=function(OrbitwiseTesselation, FuncDoRe
       iOrbitMain:=ListOrbitByRank[iRank-1][iOrbit].iOrbitMain;
       eSetMain1:=ListOrbitByRank[iRank-1][iOrbit].eSetMain;
       TheStab:=ListOrbitByRank[iRank-1][iOrbit].TheStab;
-      ListMatrGens:=GeneratorsOfGroup(TheStab);
+      ListMatrGens:=GeneratorsOfGroup(TheStab.TheStab);
       ListPermGens:=[];
       for eMatrGen in ListMatrGens
       do
@@ -1464,7 +1485,7 @@ GetBoundaryDual_CohomologySequenceStyle:=function(OrbitwiseTesselation, FuncDoRe
       PermGRP:=Group(ListPermGens);
       ListOrb:=DualDescriptionStandard(EXT, PermGRP);
       #
-      TheBound:=rec(ListIFace:=[], ListElt:=[], ListSign:=[]);
+      TheBound:=rec(ListIFace:=[], ListElt:=[], ListEltGRP:=[], ListSign:=[]);
       eVect:=Sum(EXT);
       for eOrb in ListOrb
       do
@@ -1473,14 +1494,17 @@ GetBoundaryDual_CohomologySequenceStyle:=function(OrbitwiseTesselation, FuncDoRe
         testRetract:=FuncDoRetraction(eInteriorPt);
         if RecOptionDual.DoRetracted=true or testRetract=false then
           eIns:=FuncInsert(iOrbitMain, eSetMain);
-          TheOrbSmall:=OrbitWithAction(TheStab, eInteriorPt, OnPoints);
+          TheOrbSmall:=OrbitWithAction(TheStab.TheStab, eInteriorPt, OnPoints);
           Append(TheBound.ListIFace, ListWithIdenticalEntries(Length(TheOrbSmall.ListElement), eIns.iOrbit));
           TheSpaF:=NewListOrbit[eIns.iOrbit].TheSpa;
-          for eElt in TheOrbSmall.ListElement
+          for eEltTspace in TheOrbSmall.ListElement
           do
-            eAddElt:=eIns.eEquiv*eElt;
-            Add(TheBound.ListElt, eAddElt);
-            TheSpaImg:=TheSpaF*eAddElt;
+            eEltGRP:=PreImagesRepresentative(TheStab.phi, eEltTspace);
+            eAddEltTspace:=eIns.eEquiv.eEquivTspace * eEltTspace;
+            eAddEltGRP:=eIns.eEquiv.eEquivGRP * eEltGRP;
+            Add(TheBound.ListElt, eAddEltTspace);
+            Add(TheBound.ListEltGRP, eAddEltGRP);
+            TheSpaImg:=TheSpaF * eAddEltTspace;
 #            eVect:=First(TheSpa, x->SolutionMat(TheSpaImg, x)=fail);
             TheTot:=Concatenation(TheSpaImg, [eVect]);
             eMatRed:=List(TheTot, x->SolutionMat(TheSpa, x));
@@ -1507,7 +1531,7 @@ GetBoundaryDual_CohomologySequenceStyle:=function(OrbitwiseTesselation, FuncDoRe
     for iOrb in [1..nbOrb]
     do
       eStab:=ListOrbitByRank[iRank][iOrb].TheStab;
-      ListMatrGens:=GeneratorsOfGroup(eStab);
+      ListMatrGens:=GeneratorsOfGroup(eStab.TheStab);
       ListSignGens:=[];
       IsOrientable:=true;
       for eGen in ListMatrGens
@@ -1521,8 +1545,10 @@ GetBoundaryDual_CohomologySequenceStyle:=function(OrbitwiseTesselation, FuncDoRe
         fi;
       od;
       GRPsym:=Group([(1,2)]);
-      eRotSubgroup:=GetKernelOfMapping(eStab, GRPsym, ListMatrGens, ListSignGens);
+      eRotSubgroup:=GetKernelOfMapping(eStab.TheStab, GRPsym, ListMatrGens, ListSignGens);
+      eRotSubgroupGRP:=PreImage(eStab.phi, eRotSubgroup);
       ListOrbitByRank[iRank][iOrb].RotationSubgroup:=eRotSubgroup;
+      ListOrbitByRank[iRank][iOrb].RotationSubgroupGRP:=eRotSubgroupGRP;
       ListOrbitByRank[iRank][iOrb].IsOrientable:=IsOrientable;
     od;
   od;
@@ -6104,8 +6130,8 @@ DoAllComputations_Perf_Complex_Matrix_SNF:=function(eCaseGen2, SavingPrefix)
         ListStabSize:=[];
         for eOrbit in TheBound[jPos]
         do
-          eSize:=Order(eOrbit.TheStab); # This needs to be corrected to get same size as in
-                                        # the paper
+          eSize:=Order(eOrbit.TheStab.TheStab); # This needs to be corrected to get same size as in
+                                                # the paper
           eStabSize:=eSize*eOrd;
           Add(ListStabSize, eStabSize);
         od;
