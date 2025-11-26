@@ -1150,13 +1150,6 @@ CPP_WriteMatrix:=function(output, eMat)
   od;
 end;
 
-WriteMatrixFile:=function(eFile, eMat)
-    local output;
-    output:=OutputTextFile(eFile, true);
-    CPP_WriteMatrix(output, eMat);
-    CloseStream(output);
-end;
-
 WriteListMatrix:=function(output, LMat)
     local eMat;
     AppendTo(output, Length(LMat), "\n");
@@ -2908,5 +2901,16 @@ IntegralLinearSpace:=function(Avect, Bmat)
     return rec(x0:=x0, BasisInt:=BasisInt);
 end;
 
+WriteMatrixFile:=function(eFile, eMat)
+    local output;
+    output:=OutputTextFile(eFile, true);
+    CPP_WriteMatrix(output, eMat);
+    CloseStream(output);
+end;
 
-
+WriteVectorFile:=function(eFile, eV)
+    local output;
+    output:=OutputTextFile(eFile, true);
+    WriteVector(output, eV);
+    CloseStream(output);
+end;

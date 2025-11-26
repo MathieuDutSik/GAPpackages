@@ -1344,7 +1344,7 @@ SignFunction:=function(eVal)
 end;
 
 GetPreImage:=function(phi, eImg)
-    local source;
+    local sourceGRP, eElt, eEltImg;
     sourceGRP:=Source(phi);
     for eElt in sourceGRP
     do
@@ -1364,7 +1364,7 @@ end;
 # It is explained in Elbaz-Vincent et al paper Perfect forms
 # and the cohomology of the modular group.
 GetBoundaryDual_CohomologySequenceStyle:=function(OrbitwiseTesselation, FuncDoRetraction, eRecIAI, RecOptionDual)
-  local TheDim, eOrbit, ListStabGens, ListPermGensEXT, eGen, eList, PermGRP, phiEXT, FuncSignatureDet, nbOrbit, TheBound, pos, GetResolution, ListPhiEXT, ListEXT, ListOrbitByRank, iOrbitMain, ListOrbDomains, ListPermGroupsEXT, FuncDeterminant, RepresentativeEquivalenceTesselation_EXT, iOrbit, TheSpa, iRank, TheBoundary, i2, len2, ListOccuringCoefficients, eMulSign, ListSign, iOrb, nbOrb, TheRec, TheInteriorPt, FuncInsert, eInteriorPt, NewListOrbit, EXT, ListPermGens, eMatrGen, eIns, IsOrientable, eRotSubgroup, GRPsym, ListSignGens, len, eStab, eDet, ListMatrGens, eAddElt, eSign2, ListElementM2, eVect2img, ListVectsM2, eElt, eElt2, ListOrb, eSetMain1, TheOrbSmall, eOrb, eSetMain, i, iFace, iFace2, eVect2, testRetract, TheSpaF, TheSpaImg, TheTot, eMatRed, eSign, eVect, TheStab;
+  local TheDim, eOrbit, ListStabGens, ListPermGensEXT, eGen, eList, PermGRP, phiEXT, FuncSignatureDet, nbOrbit, TheBound, pos, GetResolution, ListPhiEXT, ListEXT, ListOrbitByRank, iOrbitMain, ListOrbDomains, ListPermGroupsEXT, FuncDeterminant, RepresentativeEquivalenceTesselation_EXT, iOrbit, TheSpa, iRank, TheBoundary, i2, len2, ListOccuringCoefficients, eMulSign, ListSign, iOrb, nbOrb, TheRec, TheInteriorPt, FuncInsert, eInteriorPt, NewListOrbit, EXT, ListPermGens, eMatrGen, eIns, IsOrientable, eRotSubgroup, GRPsym, ListSignGens, len, eStab, eDet, ListMatrGens, eAddElt, eSign2, ListElementM2, eVect2img, ListVectsM2, eElt, eElt2, ListOrb, eSetMain1, TheOrbSmall, eOrb, eSetMain, i, iFace, iFace2, eVect2, testRetract, TheSpaF, TheSpaImg, TheTot, eMatRed, eSign, eVect, TheStab, eEltGRP, eAddEltTspace, eRotSubgroupGRP, eMatrRec, n, ListPhiMatr, eEquivTspace, eEquivGRP, eEquiv, eAddEltGRP, eEltTspace;
   n:=eRecIAI.n;
   TheDim:=Length(OrbitwiseTesselation[1].ListAdj[1].eFac);
   ListEXT:=[];
