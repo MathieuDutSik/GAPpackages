@@ -100,3 +100,26 @@ TreatSingleCase:=function(eCase)
   LATEX_Compilation(FileTable);
   #
 end;
+
+
+
+
+
+
+TreatPerfectCase:=function(n, DoSL)
+  local d, RecOption, SavePrefix, RecFct, eCaseGen2;
+  RecOption:=rec(DoBound:=true,
+                 DoSign:=true,
+                 DoMat:=true,
+                 DoElt:=true,
+                 DoRotationSubgroup:=true);
+  Exec("mkdir -p Result");
+  SavePrefix:=Concatenation("Result/HomologyClassicPerfect_", String(n), "_");
+  eCaseGen2:=GetStandardIntegralVoronoiSpace(n);
+  if DoSL then
+    eCaseGen2.TheFilter:=eCaseGen2.IsInSL;
+  else
+    eCaseGen2.TheFilter:=eCaseGen2.TrivialFilter;
+  fi;
+  RecFct:=DoAllComputations_Perf_Complex_Matrix_SNF(eCaseGen2, SavePrefix);
+end;

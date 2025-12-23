@@ -977,7 +977,7 @@ end;
 
 
 GetStandardVoronoiSpace:=function(n)
-  local TheSuperMat, TheBasis, i, j, eMat, Imultiplication, IsInSL, TrivialFilter, TheFilter;
+  local TheSuperMat, TheBasis, i, j, eMat, Imultiplication, IsInSL, TrivialFilter;
   TheSuperMat:=IdentityMat(n);
   TheBasis:=[];
   for i in [1..n]
@@ -1001,10 +1001,12 @@ GetStandardVoronoiSpace:=function(n)
   TrivialFilter:=function(eMat)
     return true;
   end;
-  TheFilter:=TrivialFilter;
+  Print(NullMat(5));
   return rec(Basis:=TheBasis,
              SuperMat:=TheSuperMat,
              ScalProdMatrix:=GetScalProdMatrix(TheBasis, TheSuperMat),
+             IsInSL:=IsInSL,
+             TrivialFilter:=TrivialFilter,
              TheFilter:=TrivialFilter,
              ListComm:=[],
              SymmGrpPtWs:=Group([IdentityMat(n)]),

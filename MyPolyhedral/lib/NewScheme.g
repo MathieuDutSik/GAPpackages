@@ -40,7 +40,7 @@ end;
 
 InfDel_ZerForm:=function(n)
   return rec(n:=n,
-             EXT:=[Concatenation([1], ListWithIdenticalEntries(n, 0))], 
+             EXT:=[Concatenation([1], ListWithIdenticalEntries(n, 0))],
              VectSpace:=IdentityMat(n),
              TheQuadFunction:=NullMat(n+1,n+1),
              TheQuadForm:=NullMat(n,n));
@@ -699,13 +699,13 @@ end;
 InfDel_CompleteStabilizer:=function(TheDelaunay)
   local n, SPCinner, TheBasis, p, AffBasis, nbVert, GramMat_Discriminant, TheScal, GRPperm, ListMatrGens, GRPmatr, LDim, BigEXT, ListLinGen, ListTransGen, InnerListMatrGen, AffBas, lenAff, lenVect, iAff, iVect, TotalListMatrGen, eLinMat, TheFirstBasis, TheSecondBasis, TheSecondVectSpace, eGen, eTransMat, nVect, jVect;
   n:=TheDelaunay.n;
-  # 
+  #
   # first component, the inner generators
   #
   GramMat_Discriminant:=InfDel_GetGramDiscMat(TheDelaunay, TheDelaunay.EXT);
   GRPperm:=AutomorphismGroupColoredGraph(GramMat_Discriminant);
   InnerListMatrGen:=List(GeneratorsOfGroup(GRPperm), x->InfDel_GetEquivalence(TheDelaunay, TheDelaunay, x));
-  # 
+  #
   # second component, the translations
   #
   AffBas:=CreateAffineBasis(TheDelaunay.EXT);
@@ -723,7 +723,7 @@ InfDel_CompleteStabilizer:=function(TheDelaunay)
       Add(ListTransGen, eTransMat);
     od;
   od;
-  # 
+  #
   # third component, the general linear operations
   #
   ListLinGen:=[];
@@ -747,10 +747,10 @@ InfDel_CompleteStabilizer:=function(TheDelaunay)
   fi;
   TotalListMatrGen:=Concatenation(InnerListMatrGen, ListTransGen, ListLinGen);
   GRPmatr:=Group(TotalListMatrGen);
-  return rec(GRPmatr:=GRPmatr, 
-             GRPperm:=GRPperm, 
-             InnerListMatrGen:=InnerListMatrGen, 
-             ListTransGen:=ListTransGen, 
+  return rec(GRPmatr:=GRPmatr,
+             GRPperm:=GRPperm,
+             InnerListMatrGen:=InnerListMatrGen,
+             ListTransGen:=ListTransGen,
              ListLinGen:=ListLinGen);
 end;
 
@@ -1336,7 +1336,7 @@ InfDel_LtypeSimplification:=function(TheRec)
     do
       Append(ListEqualities, ListEqualitiesDelaunay(eOrb.EXT, eCase.Basis));
     od;
-    ListEqualitiesRed:=List(ListEqualities, x->x{[2..pLin+1]}); 
+    ListEqualitiesRed:=List(ListEqualities, x->x{[2..pLin+1]});
     if Length(ListEqualitiesRed)=0 then
       NSP:=IdentityMat(pLin);
     else
@@ -1463,8 +1463,8 @@ InfDel_GetEigenRationalConditions:=function(PosQuad1, PosQuad2, SPC)
   fi;
   n:=Length(PosQuad1);
   p:=Length(SPC);
-  wMat1:=SPC*(2*PosQuad1+PosQuad2)*TransposedMat(SPC);
-  wMat2:=SPC*(PosQuad1+2*PosQuad2)*TransposedMat(SPC);
+  wMat1:=SPC * (2*PosQuad1+PosQuad2) * TransposedMat(SPC);
+  wMat2:=SPC * (PosQuad1+2*PosQuad2) * TransposedMat(SPC);
   NSP:=NullspaceIntMat(wMat1);
   SPCcpl:=InfDel_BasisCompletion(NSP, IdentityMat(p), p);
   if Length(SPCcpl)=0 then
@@ -1477,7 +1477,7 @@ InfDel_GetEigenRationalConditions:=function(PosQuad1, PosQuad2, SPC)
   ListVect:=[];
   for eEig in ListEig
   do
-    nMat:=RemoveFractionMatrix(-eEig*wMat1+wMat2);
+    nMat:=RemoveFractionMatrix(-eEig*wMat1 + wMat2);
     Append(ListVect, List(NullspaceIntMat(nMat), x->Concatenation([0], x*SPC)));
   od;
   Print("|ListEig|=", Length(ListEig), " |ListVect|=", Length(ListVect), "\n");
@@ -1591,11 +1591,11 @@ InfDel_LiftingDelaunay:=function(TheDelaunay1, TheDelaunay2, TheDelaunay3)
   LinSpace2:=InfDel_GetLinearSpace(TheDelaunay2);
   LinSpace3:=InfDel_GetLinearSpace(TheDelaunay3);
   n:=TheDelaunay1.n;
-  Print("n=", n, 
-        " |LinSpace|=", Length(LinSpace1), " ", Length(LinSpace2), " ", Length(LinSpace3), 
-        " EffRank=", InfDel_GetEffectiveRank(TheDelaunay1), " ", InfDel_GetEffectiveRank(TheDelaunay2), " ", InfDel_GetEffectiveRank(TheDelaunay3), 
-        " |EXT|=", Length(TheDelaunay1.EXT), " ", Length(TheDelaunay2.EXT), " ", Length(TheDelaunay3.EXT), 
-        " dim(VectSpace)=", Length(TheDelaunay1.VectSpace), " ", Length(TheDelaunay2.VectSpace), " ", Length(TheDelaunay3.VectSpace), 
+  Print("n=", n,
+        " |LinSpace|=", Length(LinSpace1), " ", Length(LinSpace2), " ", Length(LinSpace3),
+        " EffRank=", InfDel_GetEffectiveRank(TheDelaunay1), " ", InfDel_GetEffectiveRank(TheDelaunay2), " ", InfDel_GetEffectiveRank(TheDelaunay3),
+        " |EXT|=", Length(TheDelaunay1.EXT), " ", Length(TheDelaunay2.EXT), " ", Length(TheDelaunay3.EXT),
+        " dim(VectSpace)=", Length(TheDelaunay1.VectSpace), " ", Length(TheDelaunay2.VectSpace), " ", Length(TheDelaunay3.VectSpace),
         "\n");
   ListRelVertAdja:=Filtered(InfDel_GetDefiningAdjacentVertices(TheDelaunay1, TheDelaunay2), x->InfDel_IsVertexInDelaunay(x, TheDelaunay3)=true);
   #
@@ -2099,15 +2099,15 @@ InfDel_MyDualDescriptionStandard:=function(EXT, PermGRP, BFpoly)
     fi;
     return __DualDescriptionLRS_Reduction(EXT, GroupExt, ThePath);
   end;
-  DataPolyhedral:=rec(IsBankSave:=IsBankSave, 
+  DataPolyhedral:=rec(IsBankSave:=IsBankSave,
         TheDepth:=0,
-        IsRespawn:=IsRespawn, 
+        IsRespawn:=IsRespawn,
         GetInitialRays:=GetInitialRays_LinProg,
         ProjectionLiftingFramework:=__ProjectionLiftingFramework,
         Saving:=false,
         ThePathSave:="/irrelevant/",
         ThePath:=TmpDir,
-        DualDescriptionFunction:=MyDualDescription, 
+        DualDescriptionFunction:=MyDualDescription,
         GroupFormalism:=OnSetsGroupFormalism(500));
   return __ListFacetByAdjacencyDecompositionMethod(EXT, PermGRP, DataPolyhedral, BFpoly);
 end;
@@ -2243,7 +2243,7 @@ InfDel_SubDelaunayPolytopes:=function(Data, TheDelaunay)
       fi;
     od;
     TheStab:=InfDel_PairStabilizer(TheDelaunay, eDelaunay);
-    ListAdjacentVert:=InfDel_GetAdjacentVertices(eDelaunay); 
+    ListAdjacentVert:=InfDel_GetAdjacentVertices(eDelaunay);
     TheNewRecord:=rec(n:=n, EXT:=eDelaunay.EXT, VectSpace:=eDelaunay.VectSpace, TheQuadForm:=eDelaunay.TheQuadForm, TheQuadFunction:=eDelaunay.TheQuadFunction, TheStab:=TheStab, ListAdjacentVert:=ListAdjacentVert);
     Add(ListOrbit, TheNewRecord);
     Add(ListInvariant, eInv);
@@ -2324,7 +2324,7 @@ InfDel_BankingFormalism:=function(ThePath)
     FileSave:=Concatenation(ThePath, "EXT", String(iFile+1));
     FileSaveDesc:=Concatenation(ThePath, "EXTdesc", String(iFile+1));
 #    Print("FileSave=", FileSave, "\n");
-#    Print("FileSaveDesc=", FileSaveDesc, "\n"); 
+#    Print("FileSaveDesc=", FileSaveDesc, "\n");
     if IsExistingFilePlusTouch(FileSave)=false or IsExistingFilePlusTouch(FileSaveDesc)=false then
       break;
     fi;
@@ -2392,9 +2392,9 @@ InfDel_SubDelaunayPolytopesKernel:=function(TheDelaunay, ThePath, ThePathPoly)
     return [Length(EXT), RankMat(EXT)];
   end;
   BFpoly:=BankRecording(rec(Saving:=true, BankPath:=ThePathPoly), FuncStabilizer, FuncIsomorphy, FuncInvariant, OnSetsGroupFormalism(500));
-  Data:=rec(IsBankSave:=IsBankSave, 
-          FuncCreateAccount:=BF.FuncCreateAccount, 
-          FuncRetrieveListOrbit:=BF.FuncRetrieveListOrbit, 
+  Data:=rec(IsBankSave:=IsBankSave,
+          FuncCreateAccount:=BF.FuncCreateAccount,
+          FuncRetrieveListOrbit:=BF.FuncRetrieveListOrbit,
           BFpoly:=BFpoly);
   return InfDel_SubDelaunayPolytopes(Data, TheDelaunay);
 end;
