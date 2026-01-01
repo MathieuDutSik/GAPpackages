@@ -1,7 +1,12 @@
 BindGlobal("POLYHEDRAL_tmpdir", DirectoryTemporary());
 
 
-
+WriteStringFile:=function(eFile, strOut)
+    local output;
+    output:=OutputTextFile(eFile, true);
+    WriteAll(output, strOut);
+    CloseStream(output);
+end;
 
 
 ReadTextFile:=function(FileName)

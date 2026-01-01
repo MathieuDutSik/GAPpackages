@@ -1,6 +1,55 @@
 FilePEV:=Filename(DirectoriesPackagePrograms("MyPolyhedral"), "GetPEV_forRead");
 FileTspaceStabilizer:=GetBinaryFilename("TSPACE_Stabilizer");
 FileTspaceEquivalence:=GetBinaryFilename("TSPACE_Equivalence");
+FileIsBoundedFace:=GetBinaryFilename("PERF_IsBoundedFace");
+
+
+Perfect_IsBoundedFace:=function(ListMat, SHV)
+    local FileNml, FileOut, FileListMat, FileSHV, FileErr, strOut, TheCommand, result;
+    FileNml:=Filename(POLYHEDRAL_tmpdir,"IsBoundedFace.nml");
+    FileOut:=Filename(POLYHEDRAL_tmpdir,"IsBoundedFace.out");
+    FileListMat:=Filename(POLYHEDRAL_tmpdir,"IsBoundedFace.listmat");
+    FileSHV:=Filename(POLYHEDRAL_tmpdir,"IsBoundedFace.shv");
+    FileErr:=Filename(POLYHEDRAL_tmpdir,"IsBoundedFace.err");
+    #
+    WriteMatrixFile(FileSHV, SHV);
+    WriteListMatrixFile(FileListMat, ListMat);
+    #
+    strOut:="&DATA\n";
+    strOut:=Concatenation(strOut, "  arithmetic = \"gmp\"\n");
+    strOut:=Concatenation(strOut, "  FileSHV = \"", FileSHV, "\"\n");
+    strOut:=Concatenation(strOut, "/\n");
+    strOut:=Concatenation(strOut, "\n");
+    strOut:=Concatenation(strOut, "&TSPACE\n");
+    strOut:=Concatenation(strOut, " SuperMatMethod = \"NotNeeded\"\n");
+    strOut:=Concatenation(strOut, " ListComm = \"Trivial\"\n");
+    strOut:=Concatenation(strOut, " PtGroupMethod = \"Trivial\"\n");
+    strOut:=Concatenation(strOut, " FileListSubspaces = \"unset\"\n");
+    strOut:=Concatenation(strOut, " TypeTspace = \"Raw\"\n");
+    strOut:=Concatenation(strOut, " FileLinSpa = \"unset\"\n");
+    strOut:=Concatenation(strOut, " FileListMat = \"", FileListMat, "\"\n");
+    strOut:=Concatenation(strOut, "/\n");
+    strOut:=Concatenation(strOut, "\n");
+    strOut:=Concatenation(strOut, "&SYSTEM\n");
+    strOut:=Concatenation(strOut, "  OutFormat = \"GAP\"\n");
+    strOut:=Concatenation(strOut, "  OutFile = \"", FileOut, "\"\n");
+    strOut:=Concatenation(strOut, "/\n");
+    #
+    WriteStringFile(FileNml, strOut);
+    #
+#    Print("FileNml=", FileNml, "\n");
+    TheCommand:=Concatenation(FileIsBoundedFace, " ", FileNml, " 2> ", FileErr);
+    Exec(TheCommand);
+#    Print("After FileIsBoundedFace\n");
+    #
+    result:=ReadAsFunction(FileOut)();
+    RemoveFileIfExist(FileNml);
+    RemoveFileIfExist(FileOut);
+    RemoveFileIfExist(FileListMat);
+    RemoveFileIfExist(FileSHV);
+    RemoveFileIfExist(FileErr);
+    return result;
+end;
 
 ConvertNumberToBinary:=function(eNumber)
   local TheRet, idx, eNumberWork, eRes;
@@ -1316,6 +1365,7 @@ Kernel_GetEnumerationPerfectForm:=function(eCaseGen2)
         TheFormal:=TspaceFormalism(eCaseGen2, SHV);
         GRPpermSetIneq:=GetActionOnShortest(TheFormal, SingleOrbInfo);
         ListOrbit:=DualDescriptionStandard(TheFormal.SetIneq, GRPpermSetIneq);
+        TheTesselation[iRecord].ListGroups:=TheFormal.ListGroups;
         TheTesselation[iRecord].ListIneq:=TheFormal.SetIneq;
         TheTesselation[iRecord].PermGRP:=SingleOrbInfo.GRPpermSetIneq;
         TheTesselation[iRecord].MatrixStabDirect:=rec(phi:=SingleOrbInfo.phi_tspace, TheStab:=SingleOrbInfo.TheTspaceMatrStab);
