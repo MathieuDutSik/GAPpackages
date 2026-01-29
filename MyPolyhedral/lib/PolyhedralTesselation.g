@@ -1364,7 +1364,7 @@ end;
 # It is explained in Elbaz-Vincent et al paper Perfect forms
 # and the cohomology of the modular group.
 GetBoundaryDual_CohomologySequenceStyle:=function(OrbitwiseTesselation, FuncDoRetraction, eRecIAI, RecOptionDual)
-  local TheDim, eOrbit, ListStabGens, ListPermGensEXT, eGen, eList, PermGRP, phiEXT, FuncSignatureDet, nbOrbit, TheBound, pos, GetResolution, ListPhiEXT, ListEXT, ListOrbitByRank, iOrbitMain, ListOrbDomains, ListPermGroupsEXT, FuncDeterminant, RepresentativeEquivalenceTesselation_EXT, iOrbit, TheSpa, iRank, TheBoundary, i2, len2, ListOccuringCoefficients, eMulSign, ListSign, iOrb, nbOrb, TheRec, TheInteriorPt, FuncInsert, eInteriorPt, NewListOrbit, EXT, ListPermGens, eMatrGen, eIns, IsOrientable, eRotSubgroup, GRPsym, ListSignGens, len, eStab, eDet, ListMatrGens, eAddElt, eSign2, ListElementM2, eVect2img, ListVectsM2, eElt, eElt2, ListOrb, eSetMain1, TheOrbSmall, eOrb, eSetMain, i, iFace, iFace2, eVect2, testRetract, TheSpaF, TheSpaImg, TheTot, eMatRed, eSign, eVect, TheStab, eEltGRP, eAddEltTspace, eRotSubgroupGRP, eMatrRec, n, ListPhiMatr, eEquivTspace, eEquivGRP, eEquiv, eAddEltGRP, eEltTspace, ListSHV, ListListGroups, SHVmain, test_isBounded;
+  local TheDim, eOrbit, ListStabGens, ListPermGensEXT, eGen, eList, PermGRP, phiEXT, FuncSignatureDet, nbOrbit, TheBound, pos, GetResolution, ListPhiEXT, ListEXT, ListOrbitByRank, iOrbitMain, ListOrbDomains, ListPermGroupsEXT, FuncDeterminant, RepresentativeEquivalenceTesselation_EXT, iOrbit, TheSpa, iRank, TheBoundary, i2, len2, ListOccuringCoefficients, eMulSign, ListSign, iOrb, nbOrb, TheRec, TheInteriorPt, FuncInsert, eInteriorPt, NewListOrbit, EXT, ListPermGens, eMatrGen, eIns, IsOrientable, eRotSubgroup, GRPsym, ListSignGens, len, eStab, eDet, ListMatrGens, eAddElt, eSign2, ListElementM2, eVect2img, ListVectsM2, eElt, eElt2, ListOrb, eSetMain1, TheOrbSmall, eOrb, eSetMain, i, iFace, iFace2, eVect2, testRetract, TheSpaF, TheSpaImg, TheTot, eMatRed, eSign, eVect, TheStab, eEltGRP, eAddEltTspace, eRotSubgroupGRP, eMatrRec, n, ListPhiMatr, eEquivTspace, eEquivGRP, eEquiv, eAddEltGRP, eEltTspace, ListSHV, ListListGroups, SHVmain, test_isBounded, SHVtotal1;
   n:=eRecIAI.n;
   TheDim:=Length(OrbitwiseTesselation[1].ListAdj[1].eFac);
   ListEXT:=[];
@@ -1453,12 +1453,9 @@ GetBoundaryDual_CohomologySequenceStyle:=function(OrbitwiseTesselation, FuncDoRe
     FuncInsert:=function(iOrbitMain, eSetMain)
       local EXT, eInteriorPt, eFace1, iOrbit, eEquiv, TheSpa, eInv;
       EXT:=ListEXT[iOrbitMain]{eSetMain};
-      SHVmain:=ListSHV[iOrbitMain]{Flat(ListListGroups[iOrbitMain]{eSetMain})};
-      test_isBounded:=Perfect_IsBoundedFace(eRecIAI.Basis, SHVmain);
       eInteriorPt:=Sum(EXT);
       TheSpa:=RowReduction(EXT).EXT;
       testRetract:=FuncDoRetraction(eInteriorPt);
-      Print("testRetract=", testRetract, " test_isBounded=", test_isBounded, "\n");
       eInv:=rec(eInvShort:=LinPolytope_Invariant(EXT),
                 eInvIAI:=eRecIAI.FuncInvariant(eInteriorPt));
       eFace1:=rec(iOrbitMain:=iOrbitMain, eSetMain:=eSetMain, EXT:=EXT, InteriorPt:=eInteriorPt, TheSpa:=TheSpa, eInv:=eInv, testRetract:=testRetract);
@@ -1492,13 +1489,17 @@ GetBoundaryDual_CohomologySequenceStyle:=function(OrbitwiseTesselation, FuncDoRe
       PermGRP:=Group(ListPermGens);
       ListOrb:=DualDescriptionStandard(EXT, PermGRP);
       #
-      TheBound:=rec(ListIFace:=[], ListElt:=[], ListEltGRP:=[], ListSign:=[]);
+      SHVtotal1:=ListSHV[iOrbitMain]{Flat(ListListGroups[iOrbitMain]{eSetMain1})};
+      TheBound:=rec(ListIFace:=[], ListElt:=[], ListEltGRP:=[], ListSign:=[], SHVtotal:=SHVtotal1);
       eVect:=Sum(EXT);
       for eOrb in ListOrb
       do
         eSetMain:=eSetMain1{eOrb};
+        SHVmain:=ListSHV[iOrbitMain]{Flat(ListListGroups[iOrbitMain]{eSetMain})};
+#        test_isBounded:=Perfect_IsBoundedFace(eRecIAI.Basis, SHVmain);
         eInteriorPt:=Sum(EXT{eOrb});
         testRetract:=FuncDoRetraction(eInteriorPt);
+#        Print("testRetract=", testRetract, " test_isBounded=", test_isBounded, "\n");
         if RecOptionDual.DoRetracted=true or testRetract=false then
           eIns:=FuncInsert(iOrbitMain, eSetMain);
           TheOrbSmall:=OrbitWithAction(TheStab.TheStab, eInteriorPt, OnPoints);
