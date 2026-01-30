@@ -1364,7 +1364,7 @@ end;
 # It is explained in Elbaz-Vincent et al paper Perfect forms
 # and the cohomology of the modular group.
 GetBoundaryDual_CohomologySequenceStyle:=function(OrbitwiseTesselation, FuncDoRetraction, eRecIAI, RecOptionDual)
-  local TheDim, eOrbit, ListStabGens, ListPermGensEXT, eGen, eList, PermGRP, phiEXT, FuncSignatureDet, nbOrbit, TheBound, pos, GetResolution, ListPhiEXT, ListEXT, ListOrbitByRank, iOrbitMain, ListOrbDomains, ListPermGroupsEXT, FuncDeterminant, RepresentativeEquivalenceTesselation_EXT, iOrbit, TheSpa, iRank, TheBoundary, i2, len2, ListOccuringCoefficients, eMulSign, ListSign, iOrb, nbOrb, TheRec, TheInteriorPt, FuncInsert, eInteriorPt, NewListOrbit, EXT, ListPermGens, eMatrGen, eIns, IsOrientable, eRotSubgroup, GRPsym, ListSignGens, len, eStab, eDet, ListMatrGens, eAddElt, eSign2, ListElementM2, eVect2img, ListVectsM2, eElt, eElt2, ListOrb, eSetMain1, TheOrbSmall, eOrb, eSetMain, i, iFace, iFace2, eVect2, testRetract, TheSpaF, TheSpaImg, TheTot, eMatRed, eSign, eVect, TheStab, eEltGRP, eAddEltTspace, eRotSubgroupGRP, eMatrRec, n, ListPhiMatr, eEquivTspace, eEquivGRP, eEquiv, eAddEltGRP, eEltTspace, ListSHV, ListListGroups, SHVmain, test_isBounded, SHVtotal1;
+  local TheDim, eOrbit, ListStabGens, ListPermGensEXT, eGen, eList, PermGRP, phiEXT, FuncSignatureDet, nbOrbit, TheBound, pos, GetResolution, ListPhiEXT, ListEXT, ListOrbitByRank, iOrbitMain, ListOrbDomains, ListPermGroupsEXT, FuncDeterminant, RepresentativeEquivalenceTesselation_EXT, iOrbit, TheSpa, iRank, TheBoundary, i2, len2, ListOccuringCoefficients, eMulSign, ListSign, iOrb, nbOrb, TheRec, TheInteriorPt, FuncInsert, eInteriorPt, NewListOrbit, EXT, ListPermGens, eMatrGen, eIns, IsOrientable, eRotSubgroup, GRPsym, ListSignGens, len, eStab, eDet, ListMatrGens, eAddElt, eSign2, ListElementM2, eVect2img, ListVectsM2, eElt, eElt2, ListOrb, eSetMainBig, TheOrbSmall, eOrb, eSetMain, i, iFace, iFace2, eVect2, testRetract, TheSpaF, TheSpaImg, TheTot, eMatRed, eSign, eVect, TheStab, eEltGRP, eAddEltTspace, eRotSubgroupGRP, eMatrRec, n, ListPhiMatr, eEquivTspace, eEquivGRP, eEquiv, eAddEltGRP, eEltTspace, ListSHV, ListListGroups, SHVmain, test_isBounded, RecTotalBig, GetRecTotal, RecIns, eMat;
   n:=eRecIAI.n;
   TheDim:=Length(OrbitwiseTesselation[1].ListAdj[1].eFac);
   ListEXT:=[];
@@ -1392,6 +1392,27 @@ GetBoundaryDual_CohomologySequenceStyle:=function(OrbitwiseTesselation, FuncDoRe
     Add(ListPhiEXT, phiEXT);
     Add(ListPhiMatr, eOrbit.MatrixStab.phi);
   od;
+  GetRecTotal:=function(eRec)
+      local iOrbitMain, eSetMain, PosEXT, EXT, SHV, pos, eGroup, u;
+      iOrbitMain:=eRec.iOrbitMain;
+      eSetMain:=eRec.eSetMain;
+      PosEXT:=[];
+      EXT:=[];
+      SHV:=[];
+      pos:=0;
+      for i in eSetMain
+      do
+          pos:=pos+1;
+          eGroup:=ListListGroups[iOrbitMain][i];
+          Add(EXT, ListEXT[iOrbitMain][i]);
+          for u in eGroup
+          do
+              Add(PosEXT, pos);
+          od;
+          Append(SHV, ListSHV[iOrbitMain]{eGroup});
+      od;
+      return rec(SHV:=SHV, EXT:=EXT, PosEXT:=PosEXT);
+  end;
   FuncSignatureDet:=function(iRank, iFace, eElt)
     local NewMat, TheSpa;
     TheSpa:=ListOrbitByRank[iRank][iFace].TheSpa;
@@ -1451,7 +1472,7 @@ GetBoundaryDual_CohomologySequenceStyle:=function(OrbitwiseTesselation, FuncDoRe
     Print("iRank=", iRank, "/", TheDim, "\n");
     NewListOrbit:=[];
     FuncInsert:=function(iOrbitMain, eSetMain)
-      local EXT, eInteriorPt, eFace1, iOrbit, eEquiv, TheSpa, eInv;
+      local EXT, eInteriorPt, eFace1, iOrbit, eEquiv, TheSpa, eInv, Rec1, Rec2, eMat;
       EXT:=ListEXT[iOrbitMain]{eSetMain};
       eInteriorPt:=Sum(EXT);
       TheSpa:=RowReduction(EXT).EXT;
@@ -1463,6 +1484,15 @@ GetBoundaryDual_CohomologySequenceStyle:=function(OrbitwiseTesselation, FuncDoRe
       do
         eEquiv:=RepresentativeEquivalenceTesselation_EXT(NewListOrbit[iOrbit], eFace1);
         if eEquiv<>fail then
+          Rec1:=GetRecTotal(NewListOrbit[iOrbit]);
+          Rec2:=GetRecTotal(eFace1);
+          eMat:=Inverse(eEquiv.eEquivGRP);
+          if Set(Rec1.SHV * eMat) <> Set(Rec2.SHV) then
+              Error("SHV1 not mapped correctly");
+          fi;
+          if Set(Rec1.EXT * eEquiv.eEquivTspace) <> Set(Rec2.EXT) then
+              Error("EXT1 not mapped correctly");
+          fi;
           return rec(iOrbit:=iOrbit, eEquiv:=eEquiv);
         fi;
       od;
@@ -1477,7 +1507,7 @@ GetBoundaryDual_CohomologySequenceStyle:=function(OrbitwiseTesselation, FuncDoRe
       EXT:=ListOrbitByRank[iRank-1][iOrbit].EXT;
       TheSpa:=ListOrbitByRank[iRank-1][iOrbit].TheSpa;
       iOrbitMain:=ListOrbitByRank[iRank-1][iOrbit].iOrbitMain;
-      eSetMain1:=ListOrbitByRank[iRank-1][iOrbit].eSetMain;
+      eSetMainBig:=ListOrbitByRank[iRank-1][iOrbit].eSetMain;
       TheStab:=ListOrbitByRank[iRank-1][iOrbit].TheStab;
       ListMatrGens:=GeneratorsOfGroup(TheStab.TheStab);
       ListPermGens:=[];
@@ -1489,19 +1519,27 @@ GetBoundaryDual_CohomologySequenceStyle:=function(OrbitwiseTesselation, FuncDoRe
       PermGRP:=Group(ListPermGens);
       ListOrb:=DualDescriptionStandard(EXT, PermGRP);
       #
-      SHVtotal1:=ListSHV[iOrbitMain]{Flat(ListListGroups[iOrbitMain]{eSetMain1})};
-      TheBound:=rec(ListIFace:=[], ListElt:=[], ListEltGRP:=[], ListSign:=[], SHVtotal:=SHVtotal1);
+      RecTotalBig:=GetRecTotal(ListOrbitByRank[iRank-1][iOrbit]);
+      TheBound:=rec(ListIFace:=[], ListElt:=[], ListEltGRP:=[], ListSign:=[], RecTotal:=RecTotalBig);
       eVect:=Sum(EXT);
       for eOrb in ListOrb
       do
-        eSetMain:=eSetMain1{eOrb};
-        SHVmain:=ListSHV[iOrbitMain]{Flat(ListListGroups[iOrbitMain]{eSetMain})};
+        eSetMain:=eSetMainBig{eOrb};
+#        SHVmain:=ListSHV[iOrbitMain]{Flat(ListListGroups[iOrbitMain]{eSetMain})};
 #        test_isBounded:=Perfect_IsBoundedFace(eRecIAI.Basis, SHVmain);
         eInteriorPt:=Sum(EXT{eOrb});
         testRetract:=FuncDoRetraction(eInteriorPt);
 #        Print("testRetract=", testRetract, " test_isBounded=", test_isBounded, "\n");
         if RecOptionDual.DoRetracted=true or testRetract=false then
           eIns:=FuncInsert(iOrbitMain, eSetMain);
+          RecIns:=GetRecTotal(NewListOrbit[eIns.iOrbit]);
+          eMat:=Inverse(eIns.eEquiv.eEquivGRP);
+          if IsSubset(Set(RecTotalBig.SHV), Set(RecIns.SHV * eMat)) = false then
+              Error("RecIns.SHV should be mapped to a subset of RecTotalBig (case 1)");
+          fi;
+          if IsSubset(Set(RecTotalBig.EXT), Set(RecIns.EXT * eIns.eEquiv.eEquivTspace)) = false then
+              Error("RecIns.EXT should be mapped to a subset of RecTotalBig (case 1)");
+          fi;
           TheOrbSmall:=OrbitWithAction(TheStab.TheStab, eInteriorPt, OnPoints);
           Append(TheBound.ListIFace, ListWithIdenticalEntries(Length(TheOrbSmall.ListElement), eIns.iOrbit));
           TheSpaF:=NewListOrbit[eIns.iOrbit].TheSpa;
@@ -1509,9 +1547,16 @@ GetBoundaryDual_CohomologySequenceStyle:=function(OrbitwiseTesselation, FuncDoRe
           do
             eEltGRP:=PreImagesRepresentative(TheStab.phi, eEltTspace);
             eAddEltTspace:=eIns.eEquiv.eEquivTspace * eEltTspace;
-            eAddEltGRP:=eIns.eEquiv.eEquivGRP * eEltGRP;
+            eAddEltGRP:=eEltGRP * eIns.eEquiv.eEquivGRP;
             Add(TheBound.ListElt, eAddEltTspace);
             Add(TheBound.ListEltGRP, eAddEltGRP);
+            eMat:=Inverse(eAddEltGRP);
+            if IsSubset(Set(RecTotalBig.SHV), Set(RecIns.SHV * eMat)) = false then
+                Error("RecIns.SHV should be mapped to a subset of RecTotalBig (case 2)");
+            fi;
+            if IsSubset(Set(RecTotalBig.EXT), Set(RecIns.EXT * eAddEltTspace)) = false then
+                Error("RecIns.EXT should be mapped to a subset of RecTotalBig (case 2)");
+            fi;
             TheSpaImg:=TheSpaF * eAddEltTspace;
 #            eVect:=First(TheSpa, x->SolutionMat(TheSpaImg, x)=fail);
             TheTot:=Concatenation(TheSpaImg, [eVect]);
