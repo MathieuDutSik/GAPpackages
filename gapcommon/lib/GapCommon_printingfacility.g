@@ -17,7 +17,7 @@ STRING_Split:=function(eStr, ePat)
   if nbMatch=0 then
     return rec(ListStrInter:=[eStr], ListMatch:=[]);
   fi;
-  Print("nbMatch=", nbMatch, "\n");
+#  Print("nbMatch=", nbMatch, "\n");
   ListStrInter:=[];
   for iVal in [1..nbMatch]
   do

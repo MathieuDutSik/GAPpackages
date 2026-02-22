@@ -14,15 +14,162 @@ FileLpsolveExtractSolution:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),
 FileGLPSOL_ExtractXsol:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"GLPSOL_ExtractXsol");
 
 
+ReadGLPSOL_out_file:=function(FileOut)
+    local list_lines, n_lines, row_line1, row_line2, row_line3, col_line1, col_line2, col_line3, status_line1, status_line2, status_line3, nb_row, nb_col, nb_ineq, l_str, k_str, pos_row, pos_column, pos_activity, pos_marginal, iLineRow, iLineCol, TheObjective1, INEQ_eps, INEQ_NL, eLine, fLine, TheObjective, NL_val, eps_val, eCol, eXol, COL_Ret, COL_NearZero, eVal, abs_val, eValWrite, iLine, iIneq, NearZero, eRec, Thr, iCol, eVal_q, is_line_row, is_line_col;
+    list_lines:=ReadTextFile(FileOut);
+    n_lines:=Length(list_lines);
+    #
+    row_line1:=list_lines[2];
+    row_line2:=starts_with(row_line1, "Rows:");
+    if row_line2=fail then
+        Error("line should start with Rows:");
+    fi;
+    l_str:=SplitString(row_line2, " ");
+    k_str:=Filtered(l_str, x->Length(x)>0);
+    nb_row:=Int(k_str[1]);
+    if nb_row=fail then
+        Error("Failed to read the number of rows");
+    fi;
+    nb_ineq:=nb_row - 1;
+    #
+    col_line1:=list_lines[3];
+    col_line2:=starts_with(col_line1, "Columns:");
+    if col_line2=fail then
+        Error("line should start with Columns:");
+    fi;
+    l_str:=SplitString(col_line2, " ");
+    k_str:=Filtered(l_str, x->Length(x)>0);
+    nb_col:=Int(k_str[1]);
+    if nb_col=fail then
+        Error("Failed to read the number of columns");
+    fi;
+    #
+    status_line1:=list_lines[5];
+    status_line2:=starts_with(status_line1, "Status:");
+    if status_line2=fail then
+        Error("line should start with Status:");
+    fi;
+    status_line3:=drop_spaces(status_line2);
+    if status_line3="UNDEFINED" then
+        return rec(Status:="Undefined");
+    fi;
+    #
+    iLineCol:=fail;
+    iLineRow:=fail;
+    TheObjective:=fail;
+    is_line_row:=function(eLine)
+        l_str:=SplitString(eLine, " ");
+        pos_row:=Position(l_str, "Row");
+        pos_activity:=Position(l_str, "Activity");
+        return pos_row<>fail and pos_activity<>fail;
+    end;
+    is_line_col:=function(eLine)
+        l_str:=SplitString(eLine, " ");
+        pos_col:=Position(l_str, "Column");
+        pos_activity:=Position(l_str, "Activity");
+        return pos_col<>fail and pos_activity<>fail;
+    end;
+    for iLine in [6..n_lines]
+    do
+        eLine:=list_lines[iLine];
+        if is_line_row(eLine) then
+            iLineRow:=iLine;
+        fi;
+        if is_line_col(eLine) then
+            iLineCol:=iLine;
+        fi;
+        fLine:=starts_with(eLine, "Objective:");
+        if fLine<>fail then
+            l_str:=SplitString(fLine, "=");
+            if Length(l_str)<>2 then
+                Error("The line should be <Objective:  obj = 4 (MINimum)>");
+            fi;
+            l_str:=SplitString(l_str[2], " ");
+            k_str:=Filtered(l_str, x->Length(x)>0);
+            TheObjective1:=drop_spaces(k_str[1]);
+            TheObjective:=Int(TheObjective1);
+        fi;
+    od;
+    if iLineRow=fail or iLineCol=fail then
+        Print("iLineRow=", iLineRow, " iLineCol=", iLineCol, "\n");
+        Error("Incorrect iLineRow / iLineCol");
+    fi;
+    INEQ_eps:=[];
+    INEQ_NL:=[];
+    for iIneq in [1..nb_ineq]
+    do
+        eLine:=list_lines[iLineRow + 2 + iIneq];
+        eCol:=Concatenation("c", String(iIneq));
+        l_str:=STRING_Split(eLine, eCol).ListStrInter;
+        if Length(l_str) <> 2 then
+            Print("The line should contain eCol=", eCol, "\n");
+            Error("Wrong input string");
+        fi;
+        fLine:=l_str[2];
+        l_str:=SplitString(fLine, " ");
+        k_str:=Filtered(l_str, x->Length(x)>0);
+        NL_val:=0;
+        eps_val:=0;
+        if k_str[1] = "NL" then
+            NL_val:=1;
+        fi;
+        if k_str[Length(k_str)] = "eps" then
+            eps_val:=1;
+        fi;
+        Add(INEQ_NL, NL_val);
+        Add(INEQ_eps, eps_val);
+    od;
+    Thr:=0.001;
+    COL_Ret:=[];
+    COL_NearZero:=[];
+    for iCol in [1..nb_col]
+    do
+        eLine:=list_lines[iLineCol + 1 + iCol];
+        eXol:=Concatenation("x", String(iCol));
+        l_str:=STRING_Split(eLine, eXol).ListStrInter;
+        if Length(l_str) <> 2 then
+            Print("The line should contain eXol=", eXol, "\n");
+            Error("Wrong input string");
+        fi;
+        fLine:=l_str[2];
+        l_str:=SplitString(fLine, " ");
+        k_str:=Filtered(l_str, x->Length(x)>0);
+        eVal:=k_str[Length(k_str)];
+        if eVal = "eps" then
+            eValWrite:=0;
+        else
+            eValWrite:=Float(eVal);
+        fi;
+        NearZero:=1;
+        if eValWrite > Thr or -eValWrite > Thr then
+            NearZero:=0;
+        fi;
+        eVal_q:=Rat(eValWrite);
+        Add(COL_Ret, eVal_q);
+        Add(COL_NearZero, NearZero);
+    od;
+    eRec:=rec(Status:="Defined",
+              eVect:=COL_Ret,
+              INEQ_eps:=INEQ_eps,
+              INEQ_NL:=INEQ_NL,
+              NearZero:=COL_NearZero);
+    if TheObjective<>fail then
+        eRec.Objective:=TheObjective;
+    fi;
+    return eRec;
+end;
+
+
+
+
+
 
 CPP_RedundancyReduction:=function(EXT)
-  local FileExt, FileOut, output, TheCommand, TheRet;
+  local FileExt, FileOut, TheCommand, TheRet;
   FileExt:=Filename(POLYHEDRAL_tmpdir,"Redund.ext");
   FileOut:=Filename(POLYHEDRAL_tmpdir,"Redund.out");
   #
-  output:=OutputTextFile(FileExt, true);;
-  CPP_WriteMatrix(output, EXT);
-  CloseStream(output);
+  WriteMatrixFile(FileExt, EXT);
   #
   TheCommand:=Concatenation(FilePolyRedundancy, " ", FileExt, " ", FileOut);
   Exec(TheCommand);
@@ -1817,10 +1964,11 @@ GLPK_LinearProgrammingPlusEqua_General_SparseMat:=function(Aspmat, ListAconst, B
   TheCommand1:=Concatenation(FileGlpsol, RecOpt.optimString, " --output ", FileOut, " --math ", FileMath, " > ", FileErr1, " 2> ", FileErr2);
   Exec(TheCommand1);
   #
-  TheCommand2:=Concatenation(FileGLPSOL_ExtractXsol, " ", FileOut, " > ", FileOutRes);
-  Exec(TheCommand2);
+#  TheCommand2:=Concatenation(FileGLPSOL_ExtractXsol, " ", FileOut, " > ", FileOutRes);
+#  Exec(TheCommand2);
+#  TheResult:=ReadAsFunction(FileOutRes)();
   #
-  TheResult:=ReadAsFunction(FileOutRes)();
+  TheResult:=ReadGLPSOL_out_file(FileOut);
   RemoveFileIfExist(FileOut);
   RemoveFileIfExist(FileErr1);
   RemoveFileIfExist(FileErr2);

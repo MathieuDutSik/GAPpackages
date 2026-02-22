@@ -1379,7 +1379,7 @@ Kernel_GetEnumerationPerfectForm:=function(eCaseGen2)
           if IsValidGram(FlippedGram) then
             TheAdj:=FuncInsert(FlippedGram);
             eFac:=__FindFacetInequality(TheFormal.ListExpressionRays, eOrb);
-            Print("iOrb=", iOrb, "/", nbOrb, " orbit\n");
+#            Print("iOrb=", iOrb, "/", nbOrb, " orbit\n");
             TheAdj.eFac:=eFac;
             TheAdj.eOrb:=eOrb;
             TheAdj.FlippedGram:=FlippedGram;
