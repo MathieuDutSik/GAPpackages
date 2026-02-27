@@ -15,7 +15,7 @@ FileGLPSOL_ExtractXsol:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"GLP
 
 
 ReadGLPSOL_out_file:=function(FileOut)
-    local list_lines, n_lines, row_line1, row_line2, row_line3, col_line1, col_line2, col_line3, status_line1, status_line2, status_line3, nb_row, nb_col, nb_ineq, l_str, k_str, pos_row, pos_column, pos_activity, pos_marginal, iLineRow, iLineCol, TheObjective1, INEQ_eps, INEQ_NL, eLine, fLine, TheObjective, NL_val, eps_val, eCol, eXol, COL_Ret, COL_NearZero, eVal, abs_val, eValWrite, iLine, iIneq, NearZero, eRec, Thr, iCol, eVal_q, is_line_row, is_line_col;
+    local list_lines, n_lines, row_line1, row_line2, row_line3, col_line1, col_line2, col_line3, status_line1, status_line2, status_line3, nb_row, nb_col, nb_ineq, l_str, k_str, pos_row, pos_column, pos_activity, pos_marginal, iLineRow, iLineCol, TheObjective1, INEQ_eps, INEQ_NL, eLine, fLine, TheObjective, NL_val, eps_val, eCol, eXol, COL_Ret, COL_NearZero, eVal, abs_val, eValWrite, iLine, iIneq, NearZero, eRec, Thr, iCol, eVal_q, is_line_row, is_line_col, pos_col;
     list_lines:=ReadTextFile(FileOut);
     n_lines:=Length(list_lines);
     #
