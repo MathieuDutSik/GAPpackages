@@ -2258,7 +2258,7 @@ end;
 
 
 ReadMatrixFile:=function(eFile)
-    local ReadLineRed, file, line, LStr, nbRow, nbCol, TheMat, iRow, eLine, eStr, val;
+    local ReadLineRed, file, line, LStr, nbRow, nbCol, TheMat, iRow, eLine, fLine, eStr, val;
     ReadLineRed:=function(file)
         local line, n_char, lineRed;
         line:=ReadLine(file);
@@ -2290,22 +2290,18 @@ ReadMatrixFile:=function(eFile)
     do
         line:=ReadLineRed(file);
         LStr:=SplitString(line, " ");
-        eLine:=[];
-        for eStr in LStr
-        do
-            if Length(eStr) > 0 then
-                val:=Rat(eStr);
-                Add(eLine, val);
-            fi;
-        od;
-        if Length(eLine)<>nbCol then
+        eLine:=Filtered(LStr, x->Length(x)>0);
+        fLine:=List(eLine, Rat);
+        if Length(fLine)<>nbCol then
             Print("eFile=", eFile, "\n");
             Print("iRow=", iRow, "\n");
             Print("line=", line, "\n");
+            Print("eLine=", eLine, "\n");
+            Print("fLine=", fLine, "\n");
             Print("|eLine|=", Length(eLine), " nbCol=", nbCol, "\n");
             Error("Inconsistent length of vector");
         fi;
-        Add(TheMat, eLine);
+        Add(TheMat, fLine);
     od;
     CloseStream(file);
     return TheMat;
