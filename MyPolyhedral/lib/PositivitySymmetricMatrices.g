@@ -1,8 +1,3 @@
-FilePositiveVector:=GetBinaryFilename("LATT_FindPositiveVector");
-FileGetShortVector:=GetBinaryFilename("SHORT_GetShortVector");
-FileLattCanonicalization:=GetBinaryFilename("LATT_canonicalize");
-FileLattCanonicalizationMultiple:=GetBinaryFilename("LATT_canonicalizeMultiple");
-
 SymmetricExtractSubMatrix:=function(SymMat, eSet)
   return List(SymMat{eSet}, x->x{eSet});
 end;
@@ -15,7 +10,7 @@ end;
 
 
 PositiveDefiniteCanonicalization:=function(SymMat)
-  local FileIn, FileOut, FileErr, output, TheCommand, TheResult;
+  local FileLattCanonicalization, FileIn, FileOut, FileErr, output, TheCommand, TheResult;
   FileIn:=Filename(POLYHEDRAL_tmpdir,"MATRIX_canonic.input");
   FileOut:=Filename(POLYHEDRAL_tmpdir,"MATRIX_canonic.output");
   FileErr:=Filename(POLYHEDRAL_tmpdir,"MATRIX_canonic.error");
@@ -25,6 +20,7 @@ PositiveDefiniteCanonicalization:=function(SymMat)
   CPP_WriteMatrix(output, SymMat);
   CloseStream(output);
   #
+  FileLattCanonicalization:=GetBinaryFilename("LATT_canonicalize");
 #  TheCommand:=Concatenation(FileLattCanonicalization, " 2 ", FileIn, " ", FileOut, " 2> ", FileErr);
   TheCommand:=Concatenation(FileLattCanonicalization, " 2 ", FileIn, " ", FileOut);
 #  Print("TheCommand=", TheCommand, "\n");
@@ -40,7 +36,7 @@ end;
 # Only the first form has to be positive definite.
 # The others do not even have to be symmetric.
 PositiveDefiniteCanonicalizationMultiple:=function(ListMat)
-  local FileIn, FileOut, FileErr, output, eMat, TheCommand, TheResult;
+  local FileLattCanonicalizationMultiple, FileIn, FileOut, FileErr, output, eMat, TheCommand, TheResult;
   FileIn:=Filename(POLYHEDRAL_tmpdir,"MATRIX_canonic.input");
   FileOut:=Filename(POLYHEDRAL_tmpdir,"MATRIX_canonic.output");
   FileErr:=Filename(POLYHEDRAL_tmpdir,"MATRIX_canonic.error");
@@ -54,6 +50,7 @@ PositiveDefiniteCanonicalizationMultiple:=function(ListMat)
   od;
   CloseStream(output);
   #
+  FileLattCanonicalizationMultiple:=GetBinaryFilename("LATT_canonicalizeMultiple");
 #  TheCommand:=Concatenation(FileLattCanonicalizationMultiple, " 2 ", FileIn, " ", FileOut, " 2> ", FileErr);
   TheCommand:=Concatenation(FileLattCanonicalizationMultiple, " 2 ", FileIn, " ", FileOut);
 #  Print("TheCommand=", TheCommand, "\n");
@@ -344,35 +341,38 @@ end;
 
 
 SHORT_GetShortVector_InfinitePrecision:=function(TheMat, CritNorm, StrictIneq, NeedNonZero)
-  local FileInput, FileOutput, TheCommand, TheResult;
-  FileInput :=Filename(POLYHEDRAL_tmpdir,"InfPrec_Input");
-  FileOutput:=Filename(POLYHEDRAL_tmpdir,"InfPrec_Output");
-  SHORT_WriteEigenvalueProblem(FileInput, TheMat, CritNorm, StrictIneq, NeedNonZero);
+  local FileGetShortVector, FileI, FileO, FileE, TheCommand, TheResult;
+  FileI:=Filename(POLYHEDRAL_tmpdir,"InfPrec.in");
+  FileO:=Filename(POLYHEDRAL_tmpdir,"InfPrec.out");
+  FileE:=Filename(POLYHEDRAL_tmpdir,"InfPrec.err");
+  SHORT_WriteEigenvalueProblem(FileI, TheMat, CritNorm, StrictIneq, NeedNonZero);
   #
-  TheCommand:=Concatenation(FileGetShortVector, " ", FileInput, " ", FileOutput);
-  Print("TheCommand=", TheCommand, "\n");
+  FileGetShortVector:=GetBinaryFilename("SHORT_GetShortVector");
+  TheCommand:=Concatenation(FileGetShortVector, " ", FileI, " ", FileO, " 2> ", FileE);
   Exec(TheCommand);
   #
-  TheResult:=ReadAsFunction(FileOutput)();
-  RemoveFileIfExist(FileInput);
-  RemoveFileIfExist(FileOutput);
+  TheResult:=ReadAsFunction(FileO)();
+  RemoveFile(FileI);
+  RemoveFile(FileO);
+  RemoveFile(FileE);
   return TheResult;
 end;
 
 
 FindNegativeVector:=function(M)
-  local FileI, FileO, FileE, CritNorm, StrictIneq, eCommand, TheReply;
+  local FilePositiveVector, FileI, FileO, FileE, CritNorm, StrictIneq, eCommand, TheReply;
   FileI:=Filename(POLYHEDRAL_tmpdir,"Negative.input");
   FileO:=Filename(POLYHEDRAL_tmpdir,"Negative.output");
   FileE:=Filename(POLYHEDRAL_tmpdir,"Negative.error");
   WriteMatrixFile(FileI, -M); # The program search for positive.
   CritNorm:="0";
   StrictIneq:="T";
+  FilePositiveVector:=GetBinaryFilename("LATT_FindPositiveVector");
   eCommand:=Concatenation(FilePositiveVector, " gmp ", FileI, " ", CritNorm, " ", StrictIneq, " GAP ", FileO, " 2> ", FileE);
   Exec(eCommand);
   TheReply:=ReadAsFunction(FileO)();
-  RemoveFileIfExist(FileI);
-  RemoveFileIfExist(FileO);
-  RemoveFileIfExist(FileE);
+  RemoveFile(FileI);
+  RemoveFile(FileO);
+  RemoveFile(FileE);
   return TheReply;
 end;

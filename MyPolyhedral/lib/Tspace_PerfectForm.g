@@ -1,11 +1,5 @@
-FilePEV:=Filename(DirectoriesPackagePrograms("MyPolyhedral"), "GetPEV_forRead");
-FileTspaceStabilizer:=GetBinaryFilename("TSPACE_Stabilizer");
-FileTspaceEquivalence:=GetBinaryFilename("TSPACE_Equivalence");
-FileIsBoundedFace:=GetBinaryFilename("PERF_IsBoundedFace");
-
-
 Perfect_IsBoundedFace:=function(ListMat, SHV)
-    local FileNml, FileOut, FileListMat, FileSHV, FileErr, strOut, TheCommand, result;
+    local FileIsBoundedFace, FileNml, FileOut, FileListMat, FileSHV, FileErr, strOut, TheCommand, result;
     FileNml:=Filename(POLYHEDRAL_tmpdir,"IsBoundedFace.nml");
     FileOut:=Filename(POLYHEDRAL_tmpdir,"IsBoundedFace.out");
     FileListMat:=Filename(POLYHEDRAL_tmpdir,"IsBoundedFace.listmat");
@@ -37,7 +31,8 @@ Perfect_IsBoundedFace:=function(ListMat, SHV)
     #
     WriteStringFile(FileNml, strOut);
     #
-#    Print("FileNml=", FileNml, "\n");
+    #    Print("FileNml=", FileNml, "\n");
+    FileIsBoundedFace:=GetBinaryFilename("PERF_IsBoundedFace");
     TheCommand:=Concatenation(FileIsBoundedFace, " ", FileNml, " 2> ", FileErr);
     Exec(TheCommand);
 #    Print("After FileIsBoundedFace\n");
@@ -92,8 +87,9 @@ end;
 # See his database on
 # http://www-fourier.ujf-grenoble.fr/~pev/PFPK/
 GetPEV_DataSet:=function(ListSHV, eFile)
-  local eFileOut, eList, ListCases, eEnt, eNumber, eIdx, eSHV, eSet, eCase;
+  local eFileOut, FilePEV, eList, ListCases, eEnt, eNumber, eIdx, eSHV, eSet, eCase;
   eFileOut:=Filename(POLYHEDRAL_tmpdir,"PEVout");
+  FilePEV:=Filename(DirectoriesPackagePrograms("MyPolyhedral"), "GetPEV_forRead");
   Exec(FilePEV, " ", eFile, " ", eFileOut);
   #
   eList:=ReadAsFunction(eFileOut)();
@@ -939,7 +935,7 @@ EQUIV_TspaceExpressionDual:=function(eCase, eEquiv)
 end;
 
 GetStabilizerTspace_CPP:=function(eCase, GramMat)
-  local FileTspace, FileMatrix, FileResult, FileError, TheGRP;
+  local FileTspaceStabilizer, FileTspace, FileMatrix, FileResult, FileError, TheGRP;
   FileTspace:=Filename(POLYHEDRAL_tmpdir, "StabComp.tspace");
   FileMatrix:=Filename(POLYHEDRAL_tmpdir, "StabComp.matrix");
   FileResult:=Filename(POLYHEDRAL_tmpdir, "StabComp.result");
@@ -947,6 +943,7 @@ GetStabilizerTspace_CPP:=function(eCase, GramMat)
   #
   WriteLinSpaceFile(FileTspace, eCase);
   WriteMatrixFile(FileMatrix, GramMat);
+  FileTspaceStabilizer:=GetBinaryFilename("TSPACE_Stabilizer");
   Exec(FileTspaceStabilizer, " ", FileTspace, " ", FileMatrix, " GAP ", FileResult, " 2> ", FileError);
   TheGRP:=ReadAsFunction(FileResult)();
   RemoveFileIfExist(FileTspace);
@@ -1071,7 +1068,7 @@ end;
 
 
 TestEquivalenceTspace_CPP:=function(eCase, GramMat1, GramMat2)
-  local FileTspace, FileGram1, FileGram2, FileResult, FileError, TheResult;
+  local FileTspaceEquivalence, FileTspace, FileGram1, FileGram2, FileResult, FileError, TheResult;
   FileTspace:=Filename(POLYHEDRAL_tmpdir, "StabEqui.tspace");
   FileGram1:=Filename(POLYHEDRAL_tmpdir, "StabEqui.matrix1");
   FileGram2:=Filename(POLYHEDRAL_tmpdir, "StabEqui.matrix2");
@@ -1084,6 +1081,7 @@ TestEquivalenceTspace_CPP:=function(eCase, GramMat1, GramMat2)
   Exec("cp ", FileTspace, " Equiv.tspace");
   Exec("cp ", FileGram1, " Equiv.gram1");
   Exec("cp ", FileGram2, " Equiv.gram2");
+  FileTspaceEquivalence:=GetBinaryFilename("TSPACE_Equivalence");
   Exec(FileTspaceEquivalence, " ", FileTspace, " ", FileGram1, " ", FileGram2, " GAP ", FileResult, " 2> ", FileError);
   TheResult:=ReadAsFunction(FileResult)();
   RemoveFileIfExist(FileTspace);

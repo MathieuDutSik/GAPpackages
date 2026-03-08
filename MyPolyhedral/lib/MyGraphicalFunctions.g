@@ -1,9 +1,3 @@
-FileDR2:=GetBinaryFilename("dreadnaut");
-FileAMTOG:=GetBinaryFilename("amtog");
-FileGENG:=GetBinaryFilename("geng");
-FileLISTG:=GetBinaryFilename("listg");
-
-
 ReadNautyGroupOutput:=function(FileName)
     local list_lines, f_str_red, list_gen, str_gen, f_flush, f_append, eLine, rec_red;
     list_lines:=ReadTextFile(FileName);
@@ -490,7 +484,7 @@ end;
 
 
 __GetGraph6Expression:=function(ListAdj)
-  local FileInput, FileOut6, FileError, n, output, i, j, TheStr, list_lines;
+  local FileAMTOG, FileInput, FileOut6, FileError, n, output, i, j, TheStr, list_lines;
   FileInput:=Filename(POLYHEDRAL_tmpdir, "GraphMat");
   FileOut6:=Filename(POLYHEDRAL_tmpdir, "Graph6");
   FileError:=Filename(POLYHEDRAL_tmpdir, "GraphError");
@@ -510,6 +504,7 @@ __GetGraph6Expression:=function(ListAdj)
     AppendTo(output, "\n");
   od;
   CloseStream(output);
+  FileAMTOG:=GetBinaryFilename("amtog");
   Exec(FileAMTOG, " ", FileInput, " > ", FileOut6, " 2>", FileError);
   list_lines:=ReadTextFile(FileOut6);
   TheStr:=list_lines[1];
@@ -607,9 +602,11 @@ end;
 
 
 GetIsomorphismTypeGraph:=function(n)
-  local TheCommand, ListG, FileResult;
+  local FileGENG, FileLISTG, TheCommand, ListG, FileResult;
   FileResult:=Filename(POLYHEDRAL_tmpdir, "res");
   RemoveFileIfExist(FileResult);
+  FileGENG:=GetBinaryFilename("geng");
+  FileLISTG:=GetBinaryFilename("listg");
   TheCommand:=Concatenation(FileGENG, " ", String(n), " | ", FileLISTG, " > ", FileResult);
   Exec(TheCommand);
   ListG:=ReadGraphsFromFile(FileResult);
@@ -619,9 +616,11 @@ end;
 
 
 GetIsomorphismTypeGraphSpecEdges:=function(n, nbEdge)
-  local TheCommand, ListG, FileResult;
+  local FileGENG, FileLISTG, TheCommand, ListG, FileResult;
   FileResult:=Filename(POLYHEDRAL_tmpdir, "res");
   RemoveFileIfExist(FileResult);
+  FileGENG:=GetBinaryFilename("geng");
+  FileLISTG:=GetBinaryFilename("listg");
   TheCommand:=Concatenation(FileGENG, " ", String(n), " ", String(nbEdge), " | ", FileLISTG, " > ", FileResult);
   Exec(TheCommand);
   ListG:=ReadGraphsFromFile(FileResult);
@@ -631,9 +630,11 @@ end;
 
 
 GetIsomorphismTypeGraphOption:=function(n, strOpt)
-  local TheCommand, ListG, FileResult;
+  local FileGENG, FileLISTG, TheCommand, ListG, FileResult;
   FileResult:=Filename(POLYHEDRAL_tmpdir, "res");
   RemoveFileIfExist(FileResult);
+  FileGENG:=GetBinaryFilename("geng");
+  FileLISTG:=GetBinaryFilename("listg");
   TheCommand:=Concatenation(FileGENG, " ", String(n), " ", strOpt, " | ", FileLISTG, " > ", FileResult);
   Exec(TheCommand);
   ListG:=ReadGraphsFromFile(FileResult);
@@ -709,7 +710,7 @@ __GetListAdjacency:=function(TheGraph)
 end;
 
 SymmetryGroupVertexColoredGraphAdjList:=function(ListAdjacency, ThePartition)
-    local FileNauty, FileDR, FileError, n, output, TheGroup;
+    local FileDR2, FileNauty, FileDR, FileError, n, output, TheGroup;
     FileNauty:=Filename(POLYHEDRAL_tmpdir, "GraphInput");
     FileDR:=Filename(POLYHEDRAL_tmpdir, "GraphDRout");
     FileError:=Filename(POLYHEDRAL_tmpdir, "GraphError");
@@ -720,6 +721,7 @@ SymmetryGroupVertexColoredGraphAdjList:=function(ListAdjacency, ThePartition)
     __PrintGraph(output, ListAdjacency);
     AppendTo(output, "x\n");
     CloseStream(output);
+    FileDR2:=GetBinaryFilename("dreadnaut");
     Exec(FileDR2, " < ", FileNauty, " > ", FileDR, " 2>", FileError);
     if IsExistingFile(FileDR)=false or IsExistingFile(FileError)=false then
         Error("The file FileDR and FileError are missing");
@@ -733,7 +735,7 @@ end;
 
 
 SymmetryGroupVertexColoredGraphAdjList_Scalable:=function(eRecGraph)
-  local FileNauty, FileDR, FileRead, FileError, n, output, TheGroup;
+  local FileDR2, FileNauty, FileDR, FileRead, FileError, n, output, TheGroup;
   FileNauty:=Filename(POLYHEDRAL_tmpdir, "GraphInput");
   FileDR:=Filename(POLYHEDRAL_tmpdir, "GraphDRout");
   FileRead:=Filename(POLYHEDRAL_tmpdir, "GraphRead");
@@ -744,6 +746,7 @@ SymmetryGroupVertexColoredGraphAdjList_Scalable:=function(eRecGraph)
   __PrintGraph_Scalable(output, eRecGraph);
   AppendTo(output, "x\n");
   CloseStream(output);
+  FileDR2:=GetBinaryFilename("dreadnaut");
   Exec(FileDR2, " < ", FileNauty, " > ", FileDR, " 2>", FileError);
   Print("Case 2\n");
   TheGroup:=ReadNautyGroupOutput(FileDR);
@@ -804,7 +807,7 @@ end;
 
 
 CanonicalRepresentativeVertexColoredGraphAdjList:=function(ListAdjacency, ThePartition)
-  local FileNauty, FileDR, FileError, n, output, CanonicalEList, CanonicalDesc, i, iV, Ladj, kV, DirectImg, ReverseImg, CanonicalList, CanonicalRevList, j;
+  local FileDR2, FileNauty, FileDR, FileError, n, output, CanonicalEList, CanonicalDesc, i, iV, Ladj, kV, DirectImg, ReverseImg, CanonicalList, CanonicalRevList, j;
   FileNauty:=Filename(POLYHEDRAL_tmpdir, "GraphInput");
   FileDR:=Filename(POLYHEDRAL_tmpdir, "GraphDRout");
   FileError:=Filename(POLYHEDRAL_tmpdir, "GraphError");
@@ -817,6 +820,7 @@ CanonicalRepresentativeVertexColoredGraphAdjList:=function(ListAdjacency, ThePar
   AppendTo(output, "x\n");
   AppendTo(output, "b\n");
   CloseStream(output);
+  FileDR2:=GetBinaryFilename("dreadnaut");
   Exec(FileDR2, " < ", FileNauty, " > ", FileDR, " 2>", FileError);
   if IsExistingFile(FileDR)=false or IsExistingFile(FileError)=false then
       Error("We have FileDR or FileError missing");
@@ -926,7 +930,7 @@ end;
 
 
 EquivalenceVertexColoredGraphAdjList:=function(ListAdjacency1, ListAdjacency2, ThePartition)
-  local FileNauty, FileDR, FileError, n, output, TheReply;
+  local FileDR2, FileNauty, FileDR, FileError, n, output, TheReply;
   FileNauty:=Filename(POLYHEDRAL_tmpdir, "GraphInput");
   FileDR:=Filename(POLYHEDRAL_tmpdir, "GraphDRout");
   FileError:=Filename(POLYHEDRAL_tmpdir, "GraphError");
@@ -942,6 +946,7 @@ EquivalenceVertexColoredGraphAdjList:=function(ListAdjacency1, ListAdjacency2, T
   __PrintGraph(output, ListAdjacency2);
   AppendTo(output, "x ##\n");
   CloseStream(output);
+  FileDR2:=GetBinaryFilename("dreadnaut");
   Exec(FileDR2, " < ", FileNauty, " > ", FileDR, " 2>", FileError);
   if IsEmptyFile(FileError)=false then
     Error("Error in EquivalenceVertexColoredGraphAdjList");
@@ -955,7 +960,7 @@ end;
 
 
 EquivalenceVertexColoredGraphAdjList_Scalable:=function(eRecGraph1, eRecGraph2)
-  local FileNauty, FileDR, FileError, n, output, TheReply;
+  local FileDR2, FileNauty, FileDR, FileError, n, output, TheReply;
   FileNauty:=Filename(POLYHEDRAL_tmpdir, "GraphInput");
   FileDR:=Filename(POLYHEDRAL_tmpdir, "GraphDRout");
   FileError:=Filename(POLYHEDRAL_tmpdir, "GraphError");
@@ -968,6 +973,7 @@ EquivalenceVertexColoredGraphAdjList_Scalable:=function(eRecGraph1, eRecGraph2)
   __PrintGraph_Scalable(output, eRecGraph2);
   AppendTo(output, "x ##\n");
   CloseStream(output);
+  FileDR2:=GetBinaryFilename("dreadnaut");
   Exec(FileDR2, " < ", FileNauty, " > ", FileDR, " 2>", FileError);
   if IsEmptyFile(FileError)=false then
     Error("Error in EquivalenceVertexColoredGraphAdjList_Scalable");

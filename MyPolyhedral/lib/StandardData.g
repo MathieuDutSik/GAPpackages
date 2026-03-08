@@ -1,5 +1,3 @@
-FileGetFacetOneDomain:=GetBinaryFilename("COXDYN_GetFacetOneDomain");
-
 ReadGramMatFile:=function(TheFile)
   local PMat, iLin, iCol, GramMat;
   PMat:=ReadVectorFile(TheFile);
@@ -3625,12 +3623,13 @@ ClassicalExtremeDelaunayPolytopes:=function(TheName)
 end;
 
 GetSimpleRootSystem:=function(eG)
-    local SHV, FileI, FileE, FileO, SHVred;
+    local FileGetFacetOneDomain, SHV, FileI, FileE, FileO, SHVred;
     SHV:=ShortestVectorDutourVersion(eG);
     FileI:=Filename(POLYHEDRAL_tmpdir,"GetDomain.input");
     FileE:=Filename(POLYHEDRAL_tmpdir,"GetDomain.err");
     FileO:=Filename(POLYHEDRAL_tmpdir,"GetDomain.output");
     SYMPOL_PrintMatrix(FileI, SHV);
+    FileGetFacetOneDomain:=GetBinaryFilename("COXDYN_GetFacetOneDomain");
     Exec(FileGetFacetOneDomain, " ", FileI, " ", FileO, " 2> ", FileE);
     SHVred:=ReadAsFunction(FileO)();
     RemoveFile(FileI);

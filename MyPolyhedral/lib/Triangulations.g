@@ -1,9 +1,3 @@
-ExtractTriangulation:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"ExtractTriangulation");
-ExtractTriangulationFacet:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"ExtractTriangulationFacet");
-ExtractTopcomResults:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"ExtractTopcomResult");
-TopComPoints2triang:=GetBinaryFilename("points2triangs");
-
-
 __RandomPositiveDefiniteMatrix:=function(n)
   local TheMat, TheInt, i, j, alpha;
   TheMat:=NullMat(n,n);
@@ -59,7 +53,7 @@ end;
 
 
 GetAllTriangulationsEquivariant:=function(EXT, GRP)
-  local FileIn, FileOut, FileErr, FileRes, TheCommand, TheResult, NewListTrig, eTrig, NewTrig;
+  local TopComPoints2triang, ExtractTopcomResults, FileIn, FileOut, FileErr, FileRes, TheCommand, TheResult, NewListTrig, eTrig, NewTrig;
   FileIn:=Filename(POLYHEDRAL_tmpdir,"Topcom.input");
   FileErr:=Filename(POLYHEDRAL_tmpdir,"Topcom.err");
   FileOut:=Filename(POLYHEDRAL_tmpdir,"Topcom.out");
@@ -69,8 +63,10 @@ GetAllTriangulationsEquivariant:=function(EXT, GRP)
   RemoveFileIfExist(FileRes);
   #
   OutputToTopcom(FileIn, EXT, GRP);
+  TopComPoints2triang:=GetBinaryFilename("points2triangs");
   TheCommand:=Concatenation(TopComPoints2triang, " < ", FileIn, " > ", FileOut, " 2> ", FileErr);
   Exec(TheCommand);
+  ExtractTopcomResults:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"ExtractTopcomResult");
   TheCommand:=Concatenation(ExtractTopcomResults, " ", FileOut, " ", FileRes);
   Exec(TheCommand);
   #
@@ -176,10 +172,10 @@ end;
 
 
 GetTriangulationFromLRS:=function(EXT)
-  local FileExt, FileTriangulation, output, TheTrig;
-  FileExt:=Filename(POLYHEDRAL_tmpdir,"Project.ext");
-  FileTriangulation:=Filename(POLYHEDRAL_tmpdir,"Project.triangulation");
-  output:=OutputTextFile(FileExt, true);;
+  local ExtractTriangulation, FileI, FileO, output, TheTrig;
+  FileI:=Filename(POLYHEDRAL_tmpdir,"Project.ext");
+  FileO:=Filename(POLYHEDRAL_tmpdir,"Project.out");
+  output:=OutputTextFile(FileI, true);;
   AppendTo(output, "V-representation\n");
   AppendTo(output, "begin\n");
   AppendTo(output, Length(EXT), " ", Length(EXT[1]), " integer\n");
@@ -187,15 +183,16 @@ GetTriangulationFromLRS:=function(EXT)
   AppendTo(output, "end\n");
   AppendTo(output, "printcobasis 1\n");
   CloseStream(output);
-  Exec(FileGLRS, " ", FileExt, " | ", ExtractTriangulation, " > ", FileTriangulation);
-  TheTrig:=ReadAsFunction(FileTriangulation)();
-  RemoveFile(FileExt);
-  RemoveFile(FileTriangulation);
+  ExtractTriangulation:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"ExtractTriangulation");
+  Exec(FileGLRS, " ", FileI, " | ", ExtractTriangulation, " > ", FileO);
+  TheTrig:=ReadAsFunction(FileO)();
+  RemoveFile(FileI);
+  RemoveFile(FileO);
   return TheTrig;
 end;
 
 GetFacetsAndTriangulationFromLRS:=function(EXT)
-  local FileExt, FileTriangulation, FileFacet, FileMeta, output, TheTrig, ListFacets;
+  local ExtractTriangulationFacet, FileExt, FileTriangulation, FileFacet, FileMeta, output, TheTrig, ListFacets;
   FileExt:=Filename(POLYHEDRAL_tmpdir,"Project.ext");
   FileTriangulation:=Filename(POLYHEDRAL_tmpdir,"Project.triangulation");
   FileFacet:=Filename(POLYHEDRAL_tmpdir,"Project.facet");
@@ -208,6 +205,7 @@ GetFacetsAndTriangulationFromLRS:=function(EXT)
   AppendTo(output, "end\n");
   AppendTo(output, "printcobasis 1\n");
   CloseStream(output);
+  ExtractTriangulationFacet:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"ExtractTriangulationFacet");
   Exec(FileGLRS, " ", FileExt, " | ", ExtractTriangulationFacet, " ", FileTriangulation, " ", FileFacet, " ", FileMeta);
   TheTrig:=ReadAsFunction(FileTriangulation)();
   ListFacets:=ReadVectorFile(FileFacet);
@@ -219,7 +217,7 @@ GetFacetsAndTriangulationFromLRS:=function(EXT)
 end;
 
 GetFacetsAndTriangulationFromLRS_Reduction:=function(EXT, GroupEXT)
-  local FileExt, FileTriangulation, FileFacet, FileMeta, FileGroup, FileSupport, FileScratch, FileOutput, FileError, output, ListTrig, ListInc;
+  local ExtractTriangulationFacet, FileExt, FileTriangulation, FileFacet, FileMeta, FileGroup, FileSupport, FileScratch, FileOutput, FileError, output, ListTrig, ListInc;
   FileExt:=Filename(POLYHEDRAL_tmpdir,"Project.ext");
   FileTriangulation:=Filename(POLYHEDRAL_tmpdir,"Project.triangulation");
   FileFacet:=Filename(POLYHEDRAL_tmpdir,"Project.facet");
@@ -238,6 +236,7 @@ GetFacetsAndTriangulationFromLRS_Reduction:=function(EXT, GroupEXT)
   AppendTo(output, "end\n");
   AppendTo(output, "printcobasis 1\n");
   CloseStream(output);
+  ExtractTriangulationFacet:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"ExtractTriangulationFacet");
   Exec(FileGLRS, " ", FileExt, " | ", ExtractTriangulationFacet, " ", FileTriangulation, " ", FileFacet, " ", FileMeta);
   ListTrig:=ReadAsFunction(FileTriangulation)();
   #
