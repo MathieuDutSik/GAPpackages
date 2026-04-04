@@ -2275,12 +2275,13 @@ ReadMatrixFile:=function(eFile)
         Error("We should have been able to read a line");
     fi;
     LStr:=SplitString(line, " ");
-    if Length(LStr)<>2 then
-        Print("line=", line, " |LStr|=", Length(LStr), "\n");
-        Error("LStr should have length 2");
+    eLine:=Filtered(LStr, x->Length(x)>0);
+    if Length(eLine)<>2 then
+        Print("line=", line, " |eLine|=", Length(eLine), "\n");
+        Error("eLine should have length 2");
     fi;
-    nbRow:=Int(LStr[1]);
-    nbCol:=Int(LStr[2]);
+    nbRow:=Int(eLine[1]);
+    nbCol:=Int(eLine[2]);
     if nbRow=fail or nbCol=fail then
         Print("nbRow=", nbRow, " nbCol=", nbCol, "\n");
         Error("Failed to read the nbRow / nbCol correctly");

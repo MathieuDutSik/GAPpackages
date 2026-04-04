@@ -1800,15 +1800,15 @@ FindMaximalCycles:=function(GRA)
         eLast:=eConf[Length(eConf)];
         LAdj:=Adjacency(GRA, eLast);
         if Position(LAdj, eFirst)<>fail and Length(eConf)>2 then
-	  Add(ListMaximalCycle, eConf);
-	fi;
-	for eAdj in LAdj
-	do
-	  if Position(eConf, eAdj)=fail then
-	    NewConf:=Concatenation(eConf, [eAdj]);
-	    Add(NewListConf, NewConf);
-	  fi;
-	od;
+          Add(ListMaximalCycle, eConf);
+        fi;
+        for eAdj in LAdj
+        do
+          if Position(eConf, eAdj)=fail then
+            NewConf:=Concatenation(eConf, [eAdj]);
+            Add(NewListConf, NewConf);
+          fi;
+        od;
       od;
       if Length(NewListConf)=0 then
         break;
@@ -2054,10 +2054,10 @@ GRAPH_EnumerateCycles:=function(TheGRA, GRPvert, RecOpt)
       local eOrbMin, fOrb;
       if RecOpt.UseMinimumOrbit then
         eOrbMin:=Minimum(Orbit(GRPvert, eOrb, OnTuples));
-	if Position(NewListOrb, eOrbMin)<>fail then
-	  return;
-	fi;
-	Add(NewListOrb, eOrbMin);
+        if Position(NewListOrb, eOrbMin)<>fail then
+          return;
+        fi;
+        Add(NewListOrb, eOrbMin);
       else
         for fOrb in NewListOrb
         do
@@ -2547,7 +2547,7 @@ InverseLineGraphConnected:=function(G)
 #      Sete:=[];
 #      for j in [1..Length(P[i])]
 #      do
-#	    Sete[j]:=G.names[P[i][j]];
+#        Sete[j]:=G.names[P[i][j]];
 #      od;
 #      Q[i]:=Sete;
 #    od;

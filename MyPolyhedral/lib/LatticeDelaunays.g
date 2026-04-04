@@ -1,6 +1,3 @@
-FileCompEngelSymbol:=GetBinaryFilename("POLY_ComputeEngelSymbol");
-FileFaceLattice:=GetBinaryFilename("POLY_FaceLatticeDirect");
-
 GetClassificationLatticeDelaunayPolytopes:=function(n)
   local eDir, eFile;
   if n>6 then
@@ -6656,10 +6653,10 @@ DelaunayComputationStandardFunctions:=function(TheGramMat)
       return GetMD5expressionOfGraph(CanonDesc);
     end;
     GetSubordinationInformation:=function()
-      local FileI, FileO, FileErr, output, TheCommand, eSymbol;
+      local FileCompEngelSymbol, FileI, FileO, FileE, output, TheCommand, eSymbol;
       FileI:=Filename(POLYHEDRAL_tmpdir, "FileIn");
       FileO:=Filename(POLYHEDRAL_tmpdir, "FileOut");
-      FileErr:=Filename(POLYHEDRAL_tmpdir, "FileErr");
+      FileE:=Filename(POLYHEDRAL_tmpdir, "FileErr");
       output:=OutputTextFile(FileI, true);
       AppendTo(output, Length(EXT), " ", Length(EXT[1]), "\n");
       WriteMatrix(output, EXT);
@@ -6667,12 +6664,14 @@ DelaunayComputationStandardFunctions:=function(TheGramMat)
       WriteMatrix(output, FAC);
       CloseStream(output);
       #
-      TheCommand:=Concatenation(FileCompEngelSymbol, " ", FileI, " ", FileO, " 2> ", FileErr);
+      FileCompEngelSymbol:=GetBinaryFilename("POLY_ComputeEngelSymbol");
+      TheCommand:=Concatenation(FileCompEngelSymbol, " ", FileI, " ", FileO, " 2> ", FileE);
       Exec(TheCommand);
       #
       eSymbol:=ReadAsFunction(FileO)();
-      RemoveFileIfExist(FileI);
-      RemoveFileIfExist(FileO);
+      RemoveFile(FileI);
+      RemoveFile(FileO);
+      RemoveFile(FileE);
       return eSymbol;
     end;
     GetFaceLattice:=function()
