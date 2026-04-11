@@ -8,6 +8,7 @@ FileTestlp:=GetBinaryFilename("testlp1_gmp");
 FileAdjacency:=GetBinaryFilename("adjacency_gmp");
 FileGlpsol:=GetBinaryFilename("glpsol");
 FileLpsolve:=GetBinaryFilename("lp_solve");
+FileScip:=GetBinaryFilename("scip");
 
 
 FileLpsolveExtractSolution:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"LPSOLVE_ExtractSolution");
@@ -156,6 +157,74 @@ ReadGLPSOL_out_file:=function(FileOut)
     if TheObjective<>fail then
         eRec.Objective:=TheObjective;
     fi;
+    return eRec;
+end;
+
+
+ReadSCIP_out_file:=function(FileOut, nbVar)
+    local list_lines, status_line, iLine, eLine, TheObjective, eVect, eVar, l_str, k_str, fLine, eVal, eRec;
+    list_lines:=ReadTextFile(FileOut);
+    status_line:=fail;
+    for iLine in [1..Length(list_lines)]
+    do
+        eLine:=list_lines[iLine];
+        if starts_with(eLine, "SCIP Status")<>fail then
+            status_line:=eLine;
+            break;
+        fi;
+    od;
+    if status_line=fail then
+        Error("Failed to find SCIP status line");
+    fi;
+    if PositionSublist(status_line, "[optimal solution found]")=fail then
+        return rec(Status:="Undefined");
+    fi;
+    TheObjective:=fail;
+    for iLine in [1..Length(list_lines)]
+    do
+        eLine:=list_lines[iLine];
+        fLine:=starts_with(eLine, "objective value:");
+        if fLine<>fail then
+            l_str:=SplitString(fLine, " \t");
+            k_str:=Filtered(l_str, x->Length(x)>0);
+            if Length(k_str)=0 then
+                Error("Failed to read the SCIP objective");
+            fi;
+            TheObjective:=Rat(Float(k_str[1]));
+            break;
+        fi;
+    od;
+    if TheObjective=fail then
+        Error("Failed to find SCIP objective");
+    fi;
+    eVect:=[];
+    for eVar in [1..nbVar]
+    do
+        eVal:=fail;
+        for iLine in [1..Length(list_lines)]
+        do
+            eLine:=list_lines[iLine];
+            fLine:=starts_with(eLine, Concatenation("x", String(eVar)));
+            if fLine<>fail then
+                l_str:=SplitString(fLine, " \t");
+                k_str:=Filtered(l_str, x->Length(x)>0);
+                if Length(k_str)=0 then
+                    Error("Failed to read the SCIP variable value");
+                fi;
+                eVal:=Rat(Float(k_str[1]));
+                break;
+            fi;
+        od;
+        if eVal=fail then
+            eVal:=0;
+        fi;
+        Add(eVect, eVal);
+    od;
+    eRec:=rec(Status:="Defined",
+              Objective:=TheObjective,
+              optimal:=TheObjective,
+              eVect:=eVect,
+              TheVert:=Concatenation([1], eVect));
     return eRec;
 end;
 
@@ -2148,6 +2217,94 @@ GLPK_IntegerLinearProgramming:=function(ListIneq, ToBeMinimized)
     TheLP2.TheVert:=Concatenation([1], TheLP2.eVect);
   fi;
   return TheLP2;
+end;
+
+
+SCIP_IntegerLinearProgramming:=function(ListIneq, ToBeMinimized)
+  local TheLP1, ListIneqRed, FileIn, FileOut, FileErr, output, nbVar, nbIneq, PrintLinearExpression, iIneq, eIneq, iVar, TheCommand, TheResult;
+  #
+  # Now try the ILP with SCIP.
+  #
+  ListIneqRed:=List(ListIneq, RemoveFraction);
+  if IsIntegralVector(ToBeMinimized)=false then
+    Error("For integral programming, the objective must be integral");
+  fi;
+  nbVar:=Length(ToBeMinimized)-1;
+  nbIneq:=Length(ListIneqRed);
+  FileIn:=Filename(POLYHEDRAL_tmpdir, "SCIP.lp");
+  FileOut:=Filename(POLYHEDRAL_tmpdir, "SCIP.out");
+  FileErr:=Filename(POLYHEDRAL_tmpdir, "SCIP.err");
+  RemoveFileIfExist(FileIn);
+  RemoveFileIfExist(FileOut);
+  RemoveFileIfExist(FileErr);
+  output:=OutputTextFile(FileIn, true);
+  PrintLinearExpression:=function(eVect)
+    local iVar, eVal, IsFirst;
+    IsFirst:=true;
+    for iVar in [1..Length(eVect)]
+    do
+      eVal:=eVect[iVar];
+      if eVal<>0 then
+        if IsFirst then
+          if eVal=1 then
+            AppendTo(output, " x", iVar);
+          elif eVal=-1 then
+            AppendTo(output, " - x", iVar);
+          elif eVal < 0 then
+            AppendTo(output, " - ", -eVal, " x", iVar);
+          else
+            AppendTo(output, " ", eVal, " x", iVar);
+          fi;
+        else
+          if eVal=1 then
+            AppendTo(output, " + x", iVar);
+          elif eVal=-1 then
+            AppendTo(output, " - x", iVar);
+          elif eVal < 0 then
+            AppendTo(output, " - ", -eVal, " x", iVar);
+          else
+            AppendTo(output, " + ", eVal, " x", iVar);
+          fi;
+        fi;
+        IsFirst:=false;
+      fi;
+    od;
+    if IsFirst then
+      AppendTo(output, " 0");
+    fi;
+  end;
+  AppendTo(output, "Minimize\n");
+  AppendTo(output, " obj:");
+  PrintLinearExpression(ToBeMinimized{[2..nbVar+1]});
+  AppendTo(output, "\n\n");
+  AppendTo(output, "Subject To\n");
+  for iIneq in [1..nbIneq]
+  do
+    eIneq:=ListIneqRed[iIneq];
+    AppendTo(output, " c", iIneq, ":");
+    PrintLinearExpression(eIneq{[2..nbVar+1]});
+    AppendTo(output, " >= ", -eIneq[1], "\n");
+  od;
+  AppendTo(output, "\nBounds\n");
+  for iVar in [1..nbVar]
+  do
+    AppendTo(output, " x", iVar, " free\n");
+  od;
+  AppendTo(output, "\nGenerals\n");
+  for iVar in [1..nbVar]
+  do
+    AppendTo(output, " x", iVar);
+  od;
+  AppendTo(output, "\n\nEnd\n");
+  CloseStream(output);
+  TheCommand:=Concatenation(FileScip, " -f ", FileIn, " > ", FileOut, " 2> ", FileErr);
+  Exec(TheCommand);
+  TheResult:=ReadSCIP_out_file(FileOut, nbVar);
+  TheResult.method:="scip";
+  RemoveFileIfExist(FileIn);
+  RemoveFileIfExist(FileOut);
+  RemoveFileIfExist(FileErr);
+  return TheResult;
 end;
 
 
