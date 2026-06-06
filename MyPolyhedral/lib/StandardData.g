@@ -3622,9 +3622,9 @@ ClassicalExtremeDelaunayPolytopes:=function(TheName)
   Error("Sorry, could not find what you want");
 end;
 
-GetSimpleRootSystem:=function(eG)
-    local FileGetFacetOneDomain, SHV, FileI, FileE, FileO, SHVred;
-    SHV:=ShortestVectorDutourVersion(eG);
+
+GetSimpleRootSystem_SHV:=function(eG, SHV)
+    local FileGetFacetOneDomain, FileI, FileE, FileO, SHVred;
     FileI:=Filename(POLYHEDRAL_tmpdir,"GetDomain.input");
     FileE:=Filename(POLYHEDRAL_tmpdir,"GetDomain.err");
     FileO:=Filename(POLYHEDRAL_tmpdir,"GetDomain.output");
@@ -3637,6 +3637,14 @@ GetSimpleRootSystem:=function(eG)
     RemoveFile(FileO);
     return SHVred;
 end;
+
+GetSimpleRootSystem:=function(eG)
+    local SHV;
+    SHV:=ShortestVectorDutourVersion(eG);
+    return GetSimpleRootSystem_SHV(eG, SHV);
+end;
+
+
 
 
 LatticeAn:=function(n)
@@ -3670,6 +3678,65 @@ LatticeAn:=function(n)
   od;
   return rec(GramMat:=TheGramMat, ListQuotient:=ListQuotient);
 end;
+
+# Those are not really lattices, but are root systems with two
+# different lengths which have their own interest.
+LatticeBn_Cn:=function(n, choice)
+    local SignBasis, ListPos, i, j, n_tot, TotalSHV, scalar, fVect, TheBasis, v1, v2, vN, GramMat, SHV;
+    if choice <> "B" and choice<>"C" then
+        Error("The input choice should be B or C");
+    fi;
+    SignBasis:=Concatenation(IdentityMat(n), -IdentityMat(n));
+    ListPos:=[];
+    for i in [1..n]
+    do
+        Add(ListPos, i);
+    od;
+    for i in [1..n]
+    do
+        Add(ListPos, i);
+    od;
+    n_tot:=2*n;
+    TotalSHV:=[];
+    if choice = "B" then
+        scalar:=1;
+    else
+        scalar:=2;
+    fi;
+    for i in [1..n_tot]
+    do
+        Add(TotalSHV, scalar * SignBasis[i]);
+        for j in [i+1..n_tot]
+        do
+            if ListPos[i]<>ListPos[j] then
+                fVect:=SignBasis[i] + SignBasis[j];
+                Add(TotalSHV, fVect);
+            fi;
+        od;
+    od;
+    TheBasis:=[];
+    for i in [1..n-1]
+    do
+        v1:=SignBasis[i];
+        v2:=SignBasis[i + 1];
+        fVect:=v1 - v2;
+        Add(TheBasis, fVect);
+    od;
+    vN:=SignBasis[n];
+    Add(TheBasis, scalar * vN);
+    GramMat:=TheBasis * TransposedMat(TheBasis);
+    SHV:=List(TotalSHV, x->SolutionMat(TheBasis, x));
+    return rec(TheBasis:=TheBasis, GramMat:=GramMat, SHV:=SHV);
+end;
+
+LatticeBn:=function(n)
+    return LatticeBn_Cn(n, "B");
+end;
+
+LatticeCn:=function(n)
+    return LatticeBn_Cn(n, "C");
+end;
+
 
 #
 # We follow Kervaire notations in "Unimodular lattices with a complete root system"

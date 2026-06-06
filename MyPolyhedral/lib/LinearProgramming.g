@@ -2220,16 +2220,37 @@ GLPK_IntegerLinearProgramming:=function(ListIneq, ToBeMinimized)
 end;
 
 
-SCIP_IntegerLinearProgramming:=function(ListIneq, ToBeMinimized)
-  local TheLP1, ListIneqRed, FileIn, FileOut, FileErr, output, nbVar, nbIneq, PrintLinearExpression, iIneq, eIneq, iVar, TheCommand, TheResult;
+SCIP_IntegerQuadraticProgramming:=function(ListIneq, QuadMat, ToBeMinimized)
+  local ListIneqRed, FileIn, FileOut, FileErr, output, nbVar, nbIneq, PrintLinearExpression, HasLinearTerm, HasQuadTerm, PrintQuadraticExpression, iIneq, eIneq, iVar, jVar, TheCommand, TheResult;
   #
-  # Now try the ILP with SCIP.
+  # Integer quadratic programming via SCIP.
+  # Minimize x^T QuadMat x + sum_i ToBeMinimized[i+1] * x_i
+  # subject to ListIneq * (1,x) >= 0 and x integral.
+  # QuadMat must be a symmetric integer matrix of size nbVar x nbVar.
   #
   ListIneqRed:=List(ListIneq, RemoveFraction);
   if IsIntegralVector(ToBeMinimized)=false then
-    Error("For integral programming, the objective must be integral");
+    Error("For integer programming, the linear objective must be integral");
   fi;
   nbVar:=Length(ToBeMinimized)-1;
+  if Length(QuadMat)<>nbVar then
+    Error("QuadMat must have nbVar rows");
+  fi;
+  for iVar in [1..nbVar]
+  do
+    if Length(QuadMat[iVar])<>nbVar then
+      Error("QuadMat must be a square matrix of size nbVar x nbVar");
+    fi;
+    if IsIntegralVector(QuadMat[iVar])=false then
+      Error("For integer programming, QuadMat must be integral");
+    fi;
+    for jVar in [iVar+1..nbVar]
+    do
+      if QuadMat[iVar][jVar]<>QuadMat[jVar][iVar] then
+        Error("QuadMat must be symmetric");
+      fi;
+    od;
+  od;
   nbIneq:=Length(ListIneqRed);
   FileIn:=Filename(POLYHEDRAL_tmpdir, "SCIP.lp");
   FileOut:=Filename(POLYHEDRAL_tmpdir, "SCIP.out");
@@ -2273,9 +2294,90 @@ SCIP_IntegerLinearProgramming:=function(ListIneq, ToBeMinimized)
       AppendTo(output, " 0");
     fi;
   end;
+  # The SCIP/CPLEX LP format expresses a quadratic objective as
+  # "[ ... ] / 2". Therefore to encode x^T QuadMat x we write 2*Q[i][i]
+  # for diagonal terms x_i^2 and 4*Q[i][j] for off-diagonal i<j terms.
+  HasQuadTerm:=false;
+  for iVar in [1..nbVar]
+  do
+    for jVar in [iVar..nbVar]
+    do
+      if QuadMat[iVar][jVar]<>0 then
+        HasQuadTerm:=true;
+      fi;
+    od;
+  od;
+  PrintQuadraticExpression:=function()
+    local iVar, jVar, eVal, IsFirst;
+    IsFirst:=true;
+    for iVar in [1..nbVar]
+    do
+      eVal:=2 * QuadMat[iVar][iVar];
+      if eVal<>0 then
+        if IsFirst then
+          if eVal < 0 then
+            AppendTo(output, " - ", -eVal, " x", iVar, "^2");
+          else
+            AppendTo(output, " ", eVal, " x", iVar, "^2");
+          fi;
+        else
+          if eVal < 0 then
+            AppendTo(output, " - ", -eVal, " x", iVar, "^2");
+          else
+            AppendTo(output, " + ", eVal, " x", iVar, "^2");
+          fi;
+        fi;
+        IsFirst:=false;
+      fi;
+    od;
+    for iVar in [1..nbVar]
+    do
+      for jVar in [iVar+1..nbVar]
+      do
+        eVal:=4 * QuadMat[iVar][jVar];
+        if eVal<>0 then
+          if IsFirst then
+            if eVal < 0 then
+              AppendTo(output, " - ", -eVal, " x", iVar, " * x", jVar);
+            else
+              AppendTo(output, " ", eVal, " x", iVar, " * x", jVar);
+            fi;
+          else
+            if eVal < 0 then
+              AppendTo(output, " - ", -eVal, " x", iVar, " * x", jVar);
+            else
+              AppendTo(output, " + ", eVal, " x", iVar, " * x", jVar);
+            fi;
+          fi;
+          IsFirst:=false;
+        fi;
+      od;
+    od;
+  end;
+  HasLinearTerm:=false;
+  for iVar in [2..nbVar+1]
+  do
+    if ToBeMinimized[iVar]<>0 then
+      HasLinearTerm:=true;
+    fi;
+  od;
   AppendTo(output, "Minimize\n");
   AppendTo(output, " obj:");
-  PrintLinearExpression(ToBeMinimized{[2..nbVar+1]});
+  if HasLinearTerm then
+    PrintLinearExpression(ToBeMinimized{[2..nbVar+1]});
+  fi;
+  if HasQuadTerm then
+    if HasLinearTerm then
+      AppendTo(output, " + [");
+    else
+      AppendTo(output, " [");
+    fi;
+    PrintQuadraticExpression();
+    AppendTo(output, " ] / 2");
+  fi;
+  if HasLinearTerm=false and HasQuadTerm=false then
+    AppendTo(output, " 0");
+  fi;
   AppendTo(output, "\n\n");
   AppendTo(output, "Subject To\n");
   for iIneq in [1..nbIneq]
@@ -2299,6 +2401,10 @@ SCIP_IntegerLinearProgramming:=function(ListIneq, ToBeMinimized)
   CloseStream(output);
   TheCommand:=Concatenation(FileScip, " -f ", FileIn, " > ", FileOut, " 2> ", FileErr);
   Exec(TheCommand);
+  if IsExistingFile(FileOut)=false then
+      Print("FileOut=", FileOut, "\n");
+      Error("The output file is missing in SCIP_IntegerQuadraticProgramming");
+  fi;
   TheResult:=ReadSCIP_out_file(FileOut, nbVar);
   TheResult.method:="scip";
   RemoveFileIfExist(FileIn);
