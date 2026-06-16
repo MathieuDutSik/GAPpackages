@@ -48,7 +48,6 @@ NudifyCDD.reductionNG
 NautyToGRAPE
 POLY_FaceLatticeDirect
 zsolve
-ExtractTriangulation
 ExtractTriangulationFacet
 ExtractTopcomResult
 points2triangs

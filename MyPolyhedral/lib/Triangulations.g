@@ -172,19 +172,13 @@ end;
 
 
 GetTriangulationFromLRS:=function(EXT)
-  local ExtractTriangulation, FileI, FileO, output, TheTrig;
+  local FileI, FileO, POLY_lrs_triangulation, command, TheTrig;
   FileI:=Filename(POLYHEDRAL_tmpdir,"Project.ext");
   FileO:=Filename(POLYHEDRAL_tmpdir,"Project.out");
-  output:=OutputTextFile(FileI, true);;
-  AppendTo(output, "V-representation\n");
-  AppendTo(output, "begin\n");
-  AppendTo(output, Length(EXT), " ", Length(EXT[1]), " integer\n");
-  WriteMatrix(output, EXT);
-  AppendTo(output, "end\n");
-  AppendTo(output, "printcobasis 1\n");
-  CloseStream(output);
-  ExtractTriangulation:=Filename(DirectoriesPackagePrograms("MyPolyhedral"),"ExtractTriangulation");
-  Exec(FileGLRS, " ", FileI, " | ", ExtractTriangulation, " > ", FileO);
+  WriteMatrixFile(FileI, EXT);
+  POLY_lrs_triangulation:=GetBinaryFilename("POLY_lrs_triangulation");
+  command:=Concatenation(POLY_lrs_triangulation, " mpq_class ", FileI, " GAPtrig_det ", FileO);
+  Exec(command);
   TheTrig:=ReadAsFunction(FileO)();
   RemoveFile(FileI);
   RemoveFile(FileO);
