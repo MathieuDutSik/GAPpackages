@@ -3623,8 +3623,28 @@ ClassicalExtremeDelaunayPolytopes:=function(TheName)
 end;
 
 
+GetSimpleSystem:=function(SHV)
+    local eVect, nPlus, nMinus;
+    for eVect in SHV
+    do
+        nPlus:=Length(Filtered(eVect, x->x > 0));
+        nMinus:=Length(Filtered(eVect, x->x < 0));
+        if nPlus > 0 and nMinus > 0 then
+            return fail;
+        fi;
+    od;
+    n_col:=Length(SHV[1]);
+    return IdentityMat(n_col);
+end;
+
+
+
 GetSimpleRootSystem_SHV:=function(eG, SHV)
-    local FileGetFacetOneDomain, FileI, FileE, FileO, SHVred;
+    local result, FileGetFacetOneDomain, FileI, FileE, FileO, SHVred;
+    result:=GetSimpleSystem(SHV);
+    if result=fail then
+        return result;
+    fi;
     FileI:=Filename(POLYHEDRAL_tmpdir,"GetDomain.input");
     FileE:=Filename(POLYHEDRAL_tmpdir,"GetDomain.err");
     FileO:=Filename(POLYHEDRAL_tmpdir,"GetDomain.output");
@@ -3682,7 +3702,7 @@ end;
 # Those are not really lattices, but are root systems with two
 # different lengths which have their own interest.
 LatticeBn_Cn:=function(n, choice)
-    local SignBasis, ListPos, i, j, n_tot, TotalSHV, scalar, fVect, TheBasis, v1, v2, vN, GramMat, SHV;
+    local SignBasis, ListPos, i, j, n_tot, TotalSHV, scalar, fVect, TheBasis, v1, v2, vN, GramMat, SHV, eSol, nPlus, nMinus;
     if choice <> "B" and choice<>"C" then
         Error("The input choice should be B or C");
     fi;
@@ -3725,7 +3745,20 @@ LatticeBn_Cn:=function(n, choice)
     vN:=SignBasis[n];
     Add(TheBasis, scalar * vN);
     GramMat:=TheBasis * TransposedMat(TheBasis);
-    SHV:=List(TotalSHV, x->SolutionMat(TheBasis, x));
+    SHV:=[];
+    for eVect in TotalSHV
+    do
+        eSol:=SolutionMat(TheBasis, eVect);
+        nPlus:=Length(Filtered(eSol, x->x > 0));
+        nMinus:=Length(Filtered(eSol, x->x < 0));
+        if nPlus>0 and nMinus>0 then
+            # For the Coxeter system, the simple system
+            # should get all plus or all minus by the
+            # theory of Coxeter groups.
+            Error("It should all be positive or negative");
+        fi;
+        Add(SHV, eSol);
+    od;
     return rec(TheBasis:=TheBasis, GramMat:=GramMat, SHV:=SHV);
 end;
 

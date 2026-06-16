@@ -2905,9 +2905,19 @@ WriteMatrixFile:=function(eFile, eMat)
     CloseStream(output);
 end;
 
+WriteVectorStream:=function(outputarg, eLine)
+    local eVal;
+    AppendTo(outputarg, Length(eLine), "\n");
+    for eVal in eLine
+    do
+        WriteAll(outputarg, Concatenation(" ", String(eVal)));
+    od;
+    WriteAll(outputarg, "\n");
+end;
+
 WriteVectorFile:=function(eFile, eV)
     local output;
     output:=OutputTextFile(eFile, true);
-    WriteVector(output, eV);
+    WriteVectorStream(output, eV);
     CloseStream(output);
 end;

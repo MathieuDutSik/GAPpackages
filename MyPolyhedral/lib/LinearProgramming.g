@@ -2220,13 +2220,15 @@ GLPK_IntegerLinearProgramming:=function(ListIneq, ToBeMinimized)
 end;
 
 
-SCIP_IntegerQuadraticProgramming:=function(ListIneq, QuadMat, ToBeMinimized)
+SCIP_IntegerQuadraticProgramming_Kernel:=function(ListIneq, QuadMat, ToBeMinimized, B)
   local ListIneqRed, FileIn, FileOut, FileErr, output, nbVar, nbIneq, PrintLinearExpression, HasLinearTerm, HasQuadTerm, PrintQuadraticExpression, iIneq, eIneq, iVar, jVar, TheCommand, TheResult;
   #
   # Integer quadratic programming via SCIP.
   # Minimize x^T QuadMat x + sum_i ToBeMinimized[i+1] * x_i
   # subject to ListIneq * (1,x) >= 0 and x integral.
   # QuadMat must be a symmetric integer matrix of size nbVar x nbVar.
+  # B is either the string "no bound" (variables stay free) or a positive
+  # number, in which case the constraints -B <= x_i <= B are added.
   #
   ListIneqRed:=List(ListIneq, RemoveFraction);
   if IsIntegralVector(ToBeMinimized)=false then
@@ -2297,16 +2299,7 @@ SCIP_IntegerQuadraticProgramming:=function(ListIneq, QuadMat, ToBeMinimized)
   # The SCIP/CPLEX LP format expresses a quadratic objective as
   # "[ ... ] / 2". Therefore to encode x^T QuadMat x we write 2*Q[i][i]
   # for diagonal terms x_i^2 and 4*Q[i][j] for off-diagonal i<j terms.
-  HasQuadTerm:=false;
-  for iVar in [1..nbVar]
-  do
-    for jVar in [iVar..nbVar]
-    do
-      if QuadMat[iVar][jVar]<>0 then
-        HasQuadTerm:=true;
-      fi;
-    od;
-  od;
+  HasQuadTerm:=not IsZero(QuadMat);
   PrintQuadraticExpression:=function()
     local iVar, jVar, eVal, IsFirst;
     IsFirst:=true;
@@ -2390,7 +2383,11 @@ SCIP_IntegerQuadraticProgramming:=function(ListIneq, QuadMat, ToBeMinimized)
   AppendTo(output, "\nBounds\n");
   for iVar in [1..nbVar]
   do
-    AppendTo(output, " x", iVar, " free\n");
+    if B = "no bound" then
+      AppendTo(output, " x", iVar, " free\n");
+    else
+      AppendTo(output, " -", B, " <= x", iVar, " <= ", B, "\n");
+    fi;
   od;
   AppendTo(output, "\nGenerals\n");
   for iVar in [1..nbVar]
@@ -2400,6 +2397,7 @@ SCIP_IntegerQuadraticProgramming:=function(ListIneq, QuadMat, ToBeMinimized)
   AppendTo(output, "\n\nEnd\n");
   CloseStream(output);
   TheCommand:=Concatenation(FileScip, " -f ", FileIn, " > ", FileOut, " 2> ", FileErr);
+#  Print("TheCommand=", TheCommand, "\n");
   Exec(TheCommand);
   if IsExistingFile(FileOut)=false then
       Print("FileOut=", FileOut, "\n");
@@ -2411,6 +2409,42 @@ SCIP_IntegerQuadraticProgramming:=function(ListIneq, QuadMat, ToBeMinimized)
   RemoveFileIfExist(FileOut);
   RemoveFileIfExist(FileErr);
   return TheResult;
+end;
+
+
+SCIP_IntegerQuadraticProgramming:=function(ListIneq, QuadMat, ToBeMinimized)
+  local nbVar, B, TheResult, HitsBound, iVar, eVal;
+  #
+  # Wrapper around SCIP_IntegerQuadraticProgramming_Kernel that supplies a
+  # box bound B on every variable. Free integer variables make SCIP's
+  # bilinear-term relaxations trivial and the branch-and-bound can hang
+  # even when QuadMat is positive definite. We start at B=100 and grow
+  # it by a factor of 10 whenever the integer optimum lies on +/-B.
+  # Heuristic only: a non-convex problem may have its true optimum
+  # strictly outside every B we try.
+  #
+  nbVar:=Length(ToBeMinimized)-1;
+  B:=100;
+  while true
+  do
+    TheResult:=SCIP_IntegerQuadraticProgramming_Kernel(ListIneq, QuadMat, ToBeMinimized, B);
+    if TheResult.Status<>"Defined" then
+      return TheResult;
+    fi;
+    HitsBound:=false;
+    for iVar in [1..nbVar]
+    do
+      eVal:=TheResult.eVect[iVar];
+      if eVal=B or eVal=-B then
+        HitsBound:=true;
+      fi;
+    od;
+    if HitsBound=false then
+      return TheResult;
+    fi;
+    Print("SCIP_IntegerQuadraticProgramming: optimum hit |x|=", B, "; retrying with bound ", B * 10, "\n");
+    B:=B*10;
+  od;
 end;
 
 
