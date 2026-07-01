@@ -3624,7 +3624,7 @@ end;
 
 
 GetSimpleSystem:=function(SHV)
-    local eVect, nPlus, nMinus;
+    local eVect, nPlus, nMinus, n_col;
     for eVect in SHV
     do
         nPlus:=Length(Filtered(eVect, x->x > 0));
@@ -3702,7 +3702,7 @@ end;
 # Those are not really lattices, but are root systems with two
 # different lengths which have their own interest.
 LatticeBn_Cn:=function(n, choice)
-    local SignBasis, ListPos, i, j, n_tot, TotalSHV, scalar, fVect, TheBasis, v1, v2, vN, GramMat, SHV, eSol, nPlus, nMinus;
+    local SignBasis, ListPos, i, j, n_tot, TotalSHV, scalar, fVect, TheBasis, v1, v2, vN, GramMat, SHV, eSol, nPlus, nMinus, eVect;
     if choice <> "B" and choice<>"C" then
         Error("The input choice should be B or C");
     fi;
@@ -3987,6 +3987,36 @@ Dutour_InfiniteSerie:=function(n)
   GRP:=Group(ListPermGens);
   return rec(EXT:=EXT, ThePartition:=ThePartition, GRP:=GRP);
 end;
+
+Dutour_InfiniteSerie_Gram:=function(n)
+    local eRec, eV1, LDiff, TheBasis, EXT, eEXT, eDiff, eSol, fEXT, GramMatrix;
+    eRec:=Dutour_InfiniteSerie(n);
+#    Print("eRec.EXT=\n");
+#    PrintArray(eRec.EXT);
+    eV1:=eRec.EXT[1];
+    LDiff:=List(eRec.EXT, x->x - eV1);
+#    Print("LDiff=\n");
+#    PrintArray(LDiff);
+    TheBasis:=GetZbasis(LDiff);
+#    Print("TheBasis=\n");
+#    PrintArray(TheBasis);
+    EXT:=[];
+    for eEXT in eRec.EXT
+    do
+        eDiff:=eEXT - eV1;
+        eSol:=SolutionIntMat(TheBasis, eDiff);
+        fEXT:=eV1 + Concatenation([0], eSol);
+        Add(EXT, fEXT);
+    od;
+#    Print("EXT=\n");
+#    PrintArray(EXT);
+    GramMatrix:=FuncExtreme(EXT).GramMatrix;
+    return GramMatrix;
+end;
+
+
+
+
 
 CutPolytope:=function(n)
   local LSET, EXT, eSet, V, i, j, H, DistMat, eList, CyclePerm, CycleList, ListVect, eVect, rVect, fVect, ePerm, ListPermGenRed, eGen, GRPred, EXTdelaunay;

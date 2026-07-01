@@ -5062,7 +5062,7 @@ end;
 
 
 QuantizationIntegral:=function(DataLattice, DelaunayDatabase, TheVert)
-  local n, GroupExpressionInTheBasis, FuncRespawn, TransformIntegral, FuncLiftIntegralStd, TheVol, TheBarycenter, TheRes, __RecursiveIntegralEvaluation, ListOrbitIntegrals, FuncCheckInBank, TheInit, TheInt, SecMoment, i, j;
+  local n, GroupExpressionInTheBasis, FuncRespawn, TransformIntegral, FuncLiftIntegralStd, TheVol, TheBarycenter, TheRes, __RecursiveIntegralEvaluation, ListOrbitIntegrals, FuncCheckInBank, TheInit, TheInt, SecMoment, SecMomentMat, i, j;
   n:=DataLattice.n;
   #
   # find the barycenter of the orbit of TheExt under TheMatGrp
@@ -5192,16 +5192,24 @@ QuantizationIntegral:=function(DataLattice, DelaunayDatabase, TheVert)
   TheRes:=__RecursiveIntegralEvaluation(TheInit);
   TheInt:=TransformIntegral(TheRes.TheIntegral, TheRes.TheBasis, IdentityMat(n+1));
   SecMoment:=0;
+  SecMomentMat:=NullMat(n, n);
   for i in [1..n]
   do
     for j in [1..n]
     do
+      SecMomentMat[i][j]:=TheInt[i+1][j+1];
       SecMoment:=SecMoment+DataLattice.GramMat[i][j]*TheInt[i+1][j+1];
     od;
   od;
   TheVol:=TheInt[1][1];
   TheBarycenter:=TheInt[1]/TheVol;
-  return rec(SecMoment:=SecMoment, TheVolume:=TheVol, TheBarycenter:=TheBarycenter);
+  # SecMomentMat[i][j] = int_{V_0(G)} u_i u_j du in lattice coordinates;
+  # SecMoment = trace(GramMat * SecMomentMat) = int u^T G u du.
+  # Zamir-Feder (IEEE Trans. Inf. Theory 42(4):1152-1159, 1996, Thm 1):
+  # in orthonormal coordinates the second-moment matrix R_z is proportional
+  # to the identity; equivalently in lattice coordinates GramMat * SecMomentMat
+  # is the scalar matrix (SecMoment/n) * I.
+  return rec(SecMoment:=SecMoment, SecMomentMat:=SecMomentMat, TheVolume:=TheVol, TheBarycenter:=TheBarycenter);
 end;
 
 
@@ -6420,7 +6428,7 @@ end;
 
 
 DelaunayComputationStandardFunctions:=function(TheGramMat)
-  local n, InvariantBasis, PointGRP, ThePrefix, IsSaving, KillingDelaunay, KillingAdjacency, DLPD, TheReply, GetQuantization_ConwaySloane, GetQuantization, GetVoronoiVertices, GetFreeVectors, GetDelaunayDescription, GetRigidityDegree, GetRadiusInformations, GetListRadiuses, ComputeListRadiuses, ListRadius, IsComputedRadius, TestCoveringMaximality, TestCoveringPessimum, GetListTdesignDelaunays, GetMatrixGroup, GetOrbitDefiningVoronoiFacetInequalities, GetDLPD, IsComputedLspace, TheLspace, ComputeLspace, GetLspace, GetLatticeLtypeInfo, TestMorseFunction, ComputeListEutacticity, IsComputedEutacticity, ListEutacticity, GetListEutacticity, ListWeakEutacticity, GetListWeakEutacticity, ComputeListWeakEutacticity, IsComputedWeakEutacticity, GetInvariantBasis, GetNeighborhood, GetRecordOfDelaunay, VoronoiFacetInequalities, IsComputedFacetInequalities, ListFreeInformation, GetStronglyTransversal, ComputeVoronoiFacetInequalities, ComputeFreeVectors, IsComputedFreeVectors, HasStronglyTransversal, ComputeStronglyTransversal, ListStronglyTransversal, ComputeOrbitsForbiddenSubsets, HasForbiddenSubsets, GetOrbitsForbiddenSubsets, ListOrbitForbiddenSubsets, CheckDelaunayTesselation, FlagFunctions, GetSpaceGroup, MaximalMemorySave, GetInternationalTableGroupName, GetCoveringDensity, GetSingleDelaunayComplete, GetTotalNrDelaunay, GetListSizePolytope, GetListRankPolytope, GetListVolumePolytope, IsLatticeEutactic, __GetCentralDelaunay, IsComputedCentralDelaunay, ListCentralDelaunay, GetForbiddenMagazinov, ComputeCentralDelaunay, GetContainingCell, GetAllTranslationClassesDelaunay, GetAllContainingCells, GetDelaunayDescriptionSmallerGroup, GetOrbitCells, GetVoronoiVertices_V1, RecSVR, PrintOutputToFile, GetGraphOfPoints, GetAoverB, GetKdimensionalCells, ApproximateInfinity, GetMagazinovTwoDimensionalComplex, GetOrbitVoronoiVertices;
+  local n, InvariantBasis, PointGRP, ThePrefix, IsSaving, KillingDelaunay, KillingAdjacency, DLPD, TheReply, GetQuantization_ConwaySloane, GetQuantization, GetSecondMomentMatrix, GetQuantizationExtremalityData, IsLatticeQuantizationExtremal, GetVoronoiVertices, GetFreeVectors, GetDelaunayDescription, GetRigidityDegree, GetRadiusInformations, GetListRadiuses, ComputeListRadiuses, ListRadius, IsComputedRadius, TestCoveringMaximality, TestCoveringPessimum, GetListTdesignDelaunays, GetMatrixGroup, GetOrbitDefiningVoronoiFacetInequalities, GetDLPD, IsComputedLspace, TheLspace, ComputeLspace, GetLspace, GetLatticeLtypeInfo, TestMorseFunction, ComputeListEutacticity, IsComputedEutacticity, ListEutacticity, GetListEutacticity, ListWeakEutacticity, GetListWeakEutacticity, ComputeListWeakEutacticity, IsComputedWeakEutacticity, GetInvariantBasis, GetNeighborhood, GetRecordOfDelaunay, VoronoiFacetInequalities, IsComputedFacetInequalities, ListFreeInformation, GetStronglyTransversal, ComputeVoronoiFacetInequalities, ComputeFreeVectors, IsComputedFreeVectors, HasStronglyTransversal, ComputeStronglyTransversal, ListStronglyTransversal, ComputeOrbitsForbiddenSubsets, HasForbiddenSubsets, GetOrbitsForbiddenSubsets, ListOrbitForbiddenSubsets, CheckDelaunayTesselation, FlagFunctions, GetSpaceGroup, MaximalMemorySave, GetInternationalTableGroupName, GetCoveringDensity, GetSingleDelaunayComplete, GetTotalNrDelaunay, GetListSizePolytope, GetListRankPolytope, GetListVolumePolytope, IsLatticeEutactic, __GetCentralDelaunay, IsComputedCentralDelaunay, ListCentralDelaunay, GetForbiddenMagazinov, ComputeCentralDelaunay, GetContainingCell, GetAllTranslationClassesDelaunay, GetAllContainingCells, GetDelaunayDescriptionSmallerGroup, GetOrbitCells, GetVoronoiVertices_V1, RecSVR, PrintOutputToFile, GetGraphOfPoints, GetAoverB, GetKdimensionalCells, ApproximateInfinity, GetMagazinovTwoDimensionalComplex, GetOrbitVoronoiVertices;
   n:=Length(TheGramMat);
   InvariantBasis:=__ExtractInvariantZBasisShortVectorNoGroup(TheGramMat);
   Print("DelaunayComputationStandardFunctions, |InvariantBasis|=", Length(InvariantBasis), " det=", AbsInt(DeterminantMat(BaseIntMat(InvariantBasis))), "\n");
@@ -6519,6 +6527,45 @@ DelaunayComputationStandardFunctions:=function(TheGramMat)
       eDim:=Length(TheGramMat);
       eExpo:=-1 / eDim + 0.0;
       return (1/eDim) * (TheDet^eExpo) * SecMoment;
+  end;
+  # Returns M[i][j] = int_{V_0(G)} u_i u_j du, the second-moment matrix of
+  # the Voronoi cell in lattice coordinates (cell volume is normalized to 1).
+  GetSecondMomentMatrix:=function()
+    local TheOrigin, TheInt;
+    TheOrigin:=ListWithIdenticalEntries(n+1,0);
+    TheOrigin[1]:=1;
+    TheInt:=QuantizationIntegral(DLPD.DataLattice, DLPD.DelaunayDatabase, TheOrigin);
+    if TheInt.TheVolume<>1 then
+      Error("We have an inconsistency in volume integral computation");
+    fi;
+    if TheInt.TheBarycenter<>TheOrigin then
+      Error("We have an inconsistency in barycenter integral computation");
+    fi;
+    return TheInt.SecMomentMat;
+  end;
+  # Zamir-Feder Theorem 1 (1996): the optimal lattice quantizer is "white",
+  # i.e. the autocorrelation R_z of the noise vector z ~ U(V) satisfies
+  # R_z = (G_K^opt * V^{2/K}) * I in orthonormal coordinates. In the
+  # Gram-matrix picture (lattice coordinates) this reads
+  #   GramMat * M = (SecMoment / n) * I,
+  # equivalently M = (SecMoment / n) * GramMat^{-1}, where
+  # M[i][j] = int_{V_0(G)} u_i u_j du and the Voronoi cell is normalized
+  # to volume 1.
+  GetQuantizationExtremalityData:=function()
+    local SecMomentMat, GMat, Prod, Lambda, DefectMat;
+    SecMomentMat:=GetSecondMomentMatrix();
+    GMat:=DLPD.DataLattice.GramMat;
+    Prod:=GMat*SecMomentMat;
+    Lambda:=TraceMat(Prod)/n;
+    DefectMat:=Prod - Lambda*IdentityMat(n);
+    return rec(SecMomentMat:=SecMomentMat,
+               GramTimesSecMomentMat:=Prod,
+               Lambda:=Lambda,
+               DefectMat:=DefectMat,
+               IsExtremal:=DefectMat=NullMat(n, n));
+  end;
+  IsLatticeQuantizationExtremal:=function()
+    return GetQuantizationExtremalityData().IsExtremal;
   end;
   GetAoverB:=function()
     local TheOrigin, TheInt, ListRadiuses, CovRad, AoverB;
@@ -7426,6 +7473,9 @@ DelaunayComputationStandardFunctions:=function(TheGramMat)
              GetTotalNrDelaunay:=GetTotalNrDelaunay,
              GetQuantization:=GetQuantization,
              GetQuantization_ConwaySloane:=GetQuantization_ConwaySloane,
+             GetSecondMomentMatrix:=GetSecondMomentMatrix,
+             GetQuantizationExtremalityData:=GetQuantizationExtremalityData,
+             IsLatticeQuantizationExtremal:=IsLatticeQuantizationExtremal,
              GetCoveringDensity:=GetCoveringDensity,
              GetSingleDelaunayComplete:=GetSingleDelaunayComplete,
              FlagFunctions:=FlagFunctions,
@@ -7446,6 +7496,26 @@ DelaunayComputationStandardFunctions:=function(TheGramMat)
              GetCoveringDensity:=GetCoveringDensity,
              PrintOutputToFile:=PrintOutputToFile,
              GetOrbitVoronoiVertices:=GetOrbitVoronoiVertices);
+end;
+
+
+# Standalone Zamir-Feder test: build the Delaunay description for TheGramMat,
+# compute the second-moment matrix of its Voronoi cell, and check whether
+# GramMat * M is a scalar multiple of the identity. Returns true iff so.
+# Reference: R. Zamir and M. Feder, "On lattice quantization noise",
+# IEEE Trans. Inf. Theory 42(4):1152-1159, July 1996, Theorem 1.
+IsGramMatQuantizationExtremal:=function(TheGramMat)
+  local ListFunc;
+  ListFunc:=DelaunayComputationStandardFunctions(TheGramMat);
+  return ListFunc.IsLatticeQuantizationExtremal();
+end;
+
+# Same but returns the full diagnostic record:
+# SecMomentMat, GramTimesSecMomentMat, Lambda, DefectMat, IsExtremal.
+GramMatQuantizationExtremalityData:=function(TheGramMat)
+  local ListFunc;
+  ListFunc:=DelaunayComputationStandardFunctions(TheGramMat);
+  return ListFunc.GetQuantizationExtremalityData();
 end;
 
 
